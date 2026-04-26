@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest-900: #1B4332;
+  --forest-800: #2D6A4F;
+  --forest-700: #40916C;
+  --forest-600: #52B788;
+  --forest-500: #74C69D;
+  --forest-400: #95D5B2;
+  --forest-300: #B7E4C7;
+  --forest-200: #D8F3DC;
+  --forest-100: #EDF7F0;
+  --cream-100: #FEFAE0;
+  --cream-200: #F5F1E8;
+  --cream-300: #EDE8D9;
+  --warm-800: #3D2C1E;
+  --warm-600: #6B5B4F;
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #F9F7F3;
+    color: #2D2D2D;
+  }
+}
+
+@layer components {
+  .forest-gradient {
+    background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
+  }
+  
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(27, 67, 50, 0.12);
+  }
+
+  .status-pulse {
+    animation: pulse-green 2s infinite;
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}
