@@ -1,1 +1,20 @@
-\n## Privacy Policy\n\n### 1. Information We Collect\nWe collect the following types of information from our users:  \n- **Contact Information**: Your name, email address, and phone number.  \n- **Pet Information**: Details about your pet, including breed, age, and any special needs.  \n- **Service Details**: Information about the services you request or purchase.  \n- **Payment Information**: Payment details (processed securely through our payment provider).  \n\n### 2. How We Use Your Information\nWe use your information for the following purposes:  \n- **Service Delivery**: To provide you with the services you requested.  \n- **SMS Notifications**: To send you updates and alerts about your service.  \n- **Payments**: To process your transactions.  \n- **Support**: To assist you with any inquiries or issues related to your service.  \n- **Improvements**: To improve our services based on user feedback and preferences.  \n\n### 3. SMS Usage & Disclosure\nWe use SMS solely for service notifications.  \n- No marketing messages will be sent.  \n- Your information will not be shared with third parties.  \n- Message rates may apply depending on your carrier.  \n\n### 4. Data Sharing Policy\nWe do not sell, rent, or share your personal information.  \n- Exceptions only apply for legal requirements or to protect our rights.  \n\n### 5. SMS Consent & Opt-Out\nYou can opt-out of receiving SMS notifications at any time by texting **STOP** to our number.  \n- For assistance, you can text **HELP**.  \n\n### 6. Your Rights\nAs a user, you have the following rights regarding your data:  \n- **Access**: You can request a copy of the information we hold about you.  \n- **Correction**: You can request corrections to your personal information.  \n- **Deletion**: You can request the deletion of your personal data.  \n- **Opt-Out**: You can opt-out of communications at any time.  \n\n### 7. Data Security\nWe implement reasonable security measures to protect your information from unauthorized access or disclosure.  \n\n### 8. Contact Us\nIf you have any questions or concerns about our privacy policy, please contact us at:  \n- **Email**: support@dogchauffeur.com  \n- **Phone**: (123) 456-7890  \n- **Mail**: 123 Dog Chauffeur Ave, Suite 100, Dog City, USA  \n
+import React from 'react';
+
+const PrivacyPolicy = () => {
+    return (
+        <div className="privacy-policy">
+            <h1>Privacy Policy</h1>
+            <p>This Privacy Policy outlines how we handle your personal information.</p>
+            <h2>Information Collection</h2>
+            <p>We collect various types of information in connection with the services we provide.</p>
+            <h2>Use of Information</h2>
+            <p>Your information is used to improve our services and communicate with you.</p>
+            <h2>Cookies</h2>
+            <p>We use cookies to enhance user experience and analyze site traffic.</p>
+            <h2>Contact Us</h2>
+            <p>If you have any questions about this Privacy Policy, please contact us.</p>
+        </div>
+    );
+};
+
+export default PrivacyPolicy;
