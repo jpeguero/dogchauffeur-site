@@ -206,9 +206,9 @@ export default function PublicSite() {
                     "Door-to-door pickup and drop-off",
                     "Real-time ride updates",
                     "Clean, secured vehicle",
-                    "Certified behavior-aware handling",
-                    "Calm, low-stimulation loading",
-                    "Ideal for reactive or nervous dogs"
+                    "Certified behavior-aware handling for sensitive dogs",
+                    "Calm, low-stimulation loading and unloading",
+                    "Reduced stress for anxious or reactive pets"
                   ].map(f => (
                     <li key={f} className="flex items-start gap-2.5 text-sm text-white/90">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D] shrink-0 mt-1.5" />{f}
