@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, Dog, Plus, Calculator, Loader2, Shield, Sparkles } from "lucide-react";
+import { CheckCircle2, Dog, Shield, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useBooking } from "@/lib/BookingContext";
@@ -195,21 +193,10 @@ const VET_CLINICS = [
 
 export default function BookingRequest() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const { bookingState, setDogBehavior, resetBooking } = useBooking();
   const urlRef = new URLSearchParams(window.location.search).get("ref");
   const isPartnerRef = urlRef === "partner";
   const isCustomerRef = urlRef && urlRef !== "partner";
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
-  const { data: pets = [] } = useQuery({
-    queryKey: ["booking-pets", user?.email],
-    queryFn: () => base44.entities.Pet.filter({ owner_email: user.email }),
-    enabled: !!user,
-  });
 
   const [form, setForm] = useState({
     full_name: "", phone: "", email: "",
@@ -227,43 +214,9 @@ export default function BookingRequest() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [priceEstimate, setPriceEstimate] = useState(null); // { price, miles, distance_text, duration_text }
-  const [calculatingPrice, setCalculatingPrice] = useState(false);
-  const [priceError, setPriceError] = useState(null);
-
-  const calculatePrice = async () => {
-    if (!form.pickup_address || !form.dropoff_address) return;
-    setCalculatingPrice(true);
-    setPriceError(null);
-    setPriceEstimate(null);
-    try {
-      const res = await base44.functions.invoke('calculateDistance', {
-        pickup: form.pickup_address,
-        dropoff: form.dropoff_address,
-      });
-      setPriceEstimate(res.data);
-    } catch (err) {
-      setPriceError("Could not calculate price. Please check the addresses.");
-    }
-    setCalculatingPrice(false);
-  };
-
+  // TODO: Price calculation will be added after backend is complete
+  
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
-
-  const handlePetSelection = (petId) => {
-    if (petId === "add-new") {
-      navigate(createPageUrl("Pets"));
-      return;
-    }
-    const pet = pets.find(p => p.id === petId);
-    if (pet) {
-      set("pet_id", petId);
-      set("pet_name", pet.name || "");
-      set("pet_breed", pet.breed || "");
-      set("pet_weight", pet.weight ? String(pet.weight) : "");
-      set("pet_temperament", pet.temperament || "");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -340,14 +293,6 @@ export default function BookingRequest() {
             )}
             <span className="text-sm font-semibold">{form.service_type || "Standard Transport"}</span>
           </div>
-          
-          {priceEstimate && (
-            <div className="bg-[#EDF7F0] rounded-xl px-5 py-3 mb-6 text-center">
-              <p className="text-xs text-[#6B5B4F] mb-1">Estimated Ride Price</p>
-              <p className="text-3xl font-bold text-[#1B4332]">${priceEstimate.price.toFixed(2)}</p>
-              <p className="text-xs text-[#40916C] mt-1">{priceEstimate.distance_text} - {priceEstimate.duration_text}</p>
-            </div>
-          )}
           
           {/* SMS Updates Info */}
           <div className="bg-[#EDF7F0] rounded-xl p-4 mb-6 text-left">
@@ -542,38 +487,11 @@ export default function BookingRequest() {
                 placeholder="456 Elm Ave, Chicago, IL or Denver, CO" className="rounded-xl border-[#D8F3DC]" />
             </div>
 
-            {/* Price estimate trigger */}
-            {form.pickup_address && form.dropoff_address && !priceEstimate && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={calculatePrice}
-                disabled={calculatingPrice}
-                className="w-full border-[#40916C] text-[#1B4332] rounded-xl hover:bg-[#EDF7F0]"
-              >
-                {calculatingPrice
-                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Calculating…</>
-                  : <><Calculator className="w-4 h-4 mr-2" /> Get Price Estimate</>
-                }
-              </Button>
-            )}
-            {priceError && <p className="text-sm text-red-500">{priceError}</p>}
-
-            {/* Price estimate result */}
-            {priceEstimate && (
-              <div className="bg-[#D8F3DC] border border-[#40916C] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[#1B4332] font-semibold text-sm">Estimated Ride Price</span>
-                  <span className="text-2xl font-bold text-[#1B4332]">${priceEstimate.price.toFixed(2)}</span>
-                </div>
-                <div className="flex gap-4 text-xs text-[#2D6A4F]">
-                  <span>📍 {priceEstimate.distance_text}</span>
-                  <span>🕐 {priceEstimate.duration_text}</span>
-                </div>
-                <p className="text-xs text-[#2D6A4F] mt-2">Final price confirmed after request review. Base $20 + $2.25/mi, minimum $25.</p>
-                <button type="button" onClick={() => { setPriceEstimate(null); }} className="text-xs text-[#40916C] underline mt-1">Recalculate</button>
-              </div>
-            )}
+            {/* Pricing info - calculation coming soon */}
+            <div className="bg-[#EDF7F0] border border-[#D8F3DC] rounded-xl p-4">
+              <p className="text-sm text-[#1B4332] font-medium">Pricing: Base $20 + $2.25/mile</p>
+              <p className="text-xs text-[#6B5B4F] mt-1">Final price confirmed after we review your request.</p>
+            </div>
 
             {/* Date & Time */}
             <div className="grid sm:grid-cols-2 gap-4">
@@ -589,45 +507,55 @@ export default function BookingRequest() {
               </div>
             </div>
 
-            {/* Pet selector */}
-             <div className="space-y-3">
-               <Label className="text-[#1B4332]">Select a Pet Profile (optional)</Label>
-               <Select value={form.pet_id} onValueChange={handlePetSelection}>
-                 <SelectTrigger className="rounded-xl border-[#D8F3DC]">
-                   <SelectValue placeholder={pets.length > 0 ? "Choose from your saved pets…" : "Create a pet profile first"} />
-                 </SelectTrigger>
-                 <SelectContent>
-                   {pets.map(p => (
-                     <SelectItem key={p.id} value={p.id}>{p.name}{p.breed ? ` — ${p.breed}` : p.pet_type ? ` (${p.pet_type})` : ""}</SelectItem>
-                   ))}
-                   <SelectItem value="add-new" className="flex items-center gap-2">
-                     <Plus className="w-3.5 h-3.5" /> Add New Pet
-                   </SelectItem>
-                 </SelectContent>
-               </Select>
-
-               {form.pet_id && form.pet_id !== "add-new" && (() => {
-                 const pet = pets.find(p => p.id === form.pet_id);
-                 if (!pet) return null;
-                 return (
-                   <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-2">
-                     <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                       {pet.breed && <div><span className="font-semibold text-blue-900">Breed:</span> <span className="text-blue-800">{pet.breed}</span></div>}
-                       {pet.weight && <div><span className="font-semibold text-blue-900">Weight:</span> <span className="text-blue-800">{pet.weight} lbs</span></div>}
-                       {pet.temperament && <div><span className="font-semibold text-blue-900">Temperament:</span> <span className="text-blue-800 capitalize">{pet.temperament}</span></div>}
-                       {pet.age && <div><span className="font-semibold text-blue-900">Age:</span> <span className="text-blue-800">{pet.age} years</span></div>}
-                     </div>
-                     {(pet.medical_notes || pet.behavioral_notes || pet.special_care_instructions) && (
-                       <div className="border-t border-blue-100 pt-2 space-y-1 text-xs">
-                         {pet.medical_notes && <p><strong>Medical:</strong> {pet.medical_notes}</p>}
-                         {pet.behavioral_notes && <p><strong>Behavioral:</strong> {pet.behavioral_notes}</p>}
-                         {pet.special_care_instructions && <p><strong>Special Care:</strong> {pet.special_care_instructions}</p>}
-                       </div>
-                     )}
-                   </div>
-                 );
-               })()}
-             </div>
+            {/* Pet Information - Manual Entry */}
+            <div className="space-y-4">
+              <Label className="text-[#1B4332] font-semibold">Pet Information</Label>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332]">Pet Name</Label>
+                  <Input 
+                    value={form.pet_name} 
+                    onChange={e => set("pet_name", e.target.value)}
+                    placeholder="e.g. Max" 
+                    className="rounded-xl border-[#D8F3DC]" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332]">Breed</Label>
+                  <Input 
+                    value={form.pet_breed} 
+                    onChange={e => set("pet_breed", e.target.value)}
+                    placeholder="e.g. Golden Retriever" 
+                    className="rounded-xl border-[#D8F3DC]" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332]">Weight (lbs)</Label>
+                  <Input 
+                    type="number"
+                    value={form.pet_weight} 
+                    onChange={e => set("pet_weight", e.target.value)}
+                    placeholder="e.g. 50" 
+                    className="rounded-xl border-[#D8F3DC]" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332]">Temperament</Label>
+                  <Select value={form.pet_temperament} onValueChange={v => set("pet_temperament", v)}>
+                    <SelectTrigger className="rounded-xl border-[#D8F3DC]">
+                      <SelectValue placeholder="Select temperament..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="calm">Calm</SelectItem>
+                      <SelectItem value="friendly">Friendly</SelectItem>
+                      <SelectItem value="anxious">Anxious</SelectItem>
+                      <SelectItem value="energetic">Energetic</SelectItem>
+                      <SelectItem value="reactive">Reactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
 
             {/* Dog Behavior Selector */}
             <div className="space-y-3">
