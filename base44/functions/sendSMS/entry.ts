@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
 
-    const { phone, pet_name, event_type, driver_name, dropoff_address, trip_id } = body;
+    const { phone, pet_name, event_type, driver_name, dropoff_address, trip_id, date_time, service_type } = body;
 
     if (!phone) {
       return Response.json({ error: "Phone number required" }, { status: 400 });
@@ -24,17 +24,19 @@ Deno.serve(async (req) => {
     let message = "";
 
     const trackingLink = trip_id ? `\nTrack: https://app.base44.com/apps/67c8952edaa6ee3ba12ddc8f/TrackRide?id=${trip_id}` : "";
+    const serviceNote = service_type === "Behavior-Aware Transport" ? " (Behavior-Aware)" : "";
 
     if (event_type === "ride_received") {
-      message = `DogChauffeur: We received your ride request for ${pet_name}. We'll confirm shortly.${trackingLink}`;
+      const dateStr = date_time ? ` for ${date_time}` : "";
+      message = `DogChauffeur: Your ride${serviceNote} is confirmed${dateStr}. We'll notify you when your driver is on the way. Reply STOP to opt out.`;
     } else if (event_type === "ride_confirmed") {
       message = `DogChauffeur: Your ride for ${pet_name} is confirmed! Driver: ${driver_name}.${trackingLink}`;
     } else if (event_type === "en_route") {
-      message = `DogChauffeur: Your driver is on the way to pick up ${pet_name}!${trackingLink}`;
+      message = `DogChauffeur: Your driver is on the way to pick up ${pet_name || "your dog"}!${trackingLink}`;
     } else if (event_type === "pet_picked_up") {
-      message = `DogChauffeur: ${pet_name} has been picked up and is on the way!${trackingLink}`;
+      message = `DogChauffeur: ${pet_name || "Your dog"} has been picked up and is on the way!${trackingLink}`;
     } else if (event_type === "pet_delivered") {
-      message = `DogChauffeur: ${pet_name} has arrived safely at ${dropoff_address}. Thank you for using DogChauffeur!`;
+      message = `DogChauffeur: ${pet_name || "Your dog"} has safely arrived at ${dropoff_address || "the destination"}. Thank you for using DogChauffeur!`;
     }
 
     // Format phone: remove non-digits and ensure +1 prefix

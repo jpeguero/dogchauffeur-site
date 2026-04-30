@@ -5,6 +5,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { BookingProvider } from '@/lib/BookingContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import SafetyStandardsPage from './pages/SafetyStandards';
 import RevenueAnalyticsPage from './pages/RevenueAnalytics';
@@ -83,12 +84,14 @@ function App() {
 
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
+      <BookingProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </BookingProvider>
     </AuthProvider>
   )
 }

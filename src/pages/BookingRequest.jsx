@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, Dog, Plus, Calculator, Loader2 } from "lucide-react";
+import { CheckCircle2, Dog, Plus, Calculator, Loader2, Shield, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useBooking } from "@/lib/BookingContext";
 
 const ADMIN_EMAIL = "jpeguero@gmail.com";
 
@@ -195,6 +196,7 @@ const VET_CLINICS = [
 export default function BookingRequest() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const { bookingState, setDogBehavior, resetBooking } = useBooking();
   const urlRef = new URLSearchParams(window.location.search).get("ref");
   const isPartnerRef = urlRef === "partner";
   const isCustomerRef = urlRef && urlRef !== "partner";
@@ -211,11 +213,13 @@ export default function BookingRequest() {
 
   const [form, setForm] = useState({
     full_name: "", phone: "", email: "",
-    service_type: "", trip_direction: "", ride_type: "",
+    service_type: bookingState.serviceType === "premium" ? "Behavior-Aware Transport" : "Standard Transport", 
+    trip_direction: "", ride_type: "",
     pickup_address: "", dropoff_address: "",
     preferred_date: "", preferred_time_window: "",
     number_of_dogs: "", dog_sizes: "", notes: "", is_urgent: false, pet_id: "", pet_name: "",
     pet_breed: "", pet_weight: "", pet_temperament: "",
+    dog_behavior: bookingState.dogBehavior || "",
     referral_source: isPartnerRef ? "partner" : isCustomerRef ? "customer" : "",
     referrer_id: isCustomerRef ? urlRef : "",
     partner_type: "",
@@ -290,10 +294,15 @@ export default function BookingRequest() {
       // Send SMS notification if phone is provided
       if (form.phone) {
         try {
+          const dateTimeStr = form.preferred_date 
+            ? `${form.preferred_date}${form.preferred_time_window ? ` at ${form.preferred_time_window}` : ""}`
+            : "";
           await base44.functions.invoke('sendSMS', {
             phone: form.phone,
-            pet_name: form.pet_name || "your pet",
-            event_type: "ride_received"
+            pet_name: form.pet_name || "your dog",
+            event_type: "ride_received",
+            date_time: dateTimeStr,
+            service_type: form.service_type,
           });
         } catch (smsError) {
           console.error("SMS notification error:", smsError);
@@ -319,19 +328,57 @@ export default function BookingRequest() {
           <div className="w-16 h-16 rounded-3xl bg-[#D8F3DC] flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-8 h-8 text-[#1B4332]" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1B4332] mb-2">Request Received!</h2>
+          <h2 className="text-2xl font-bold text-[#1B4332] mb-2">Your Ride Has Been Scheduled!</h2>
           <p className="text-[#6B5B4F]/70 mb-4">
-            Thanks, {form.full_name}! We got your request and will be in touch shortly to confirm the details.
+            Thanks, {form.full_name}! We&apos;ll keep you updated via SMS.
           </p>
+          
+          {/* Service Type Badge */}
+          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 ${
+            form.service_type === "Behavior-Aware Transport" 
+              ? "bg-[#1B4332] text-white" 
+              : "bg-[#EDF7F0] text-[#1B4332]"
+          }`}>
+            {form.service_type === "Behavior-Aware Transport" ? (
+              <Sparkles className="w-4 h-4" />
+            ) : (
+              <Shield className="w-4 h-4" />
+            )}
+            <span className="text-sm font-semibold">{form.service_type || "Standard Transport"}</span>
+          </div>
+          
           {priceEstimate && (
             <div className="bg-[#EDF7F0] rounded-xl px-5 py-3 mb-6 text-center">
               <p className="text-xs text-[#6B5B4F] mb-1">Estimated Ride Price</p>
               <p className="text-3xl font-bold text-[#1B4332]">${priceEstimate.price.toFixed(2)}</p>
-              <p className="text-xs text-[#40916C] mt-1">{priceEstimate.distance_text} · {priceEstimate.duration_text}</p>
+              <p className="text-xs text-[#40916C] mt-1">{priceEstimate.distance_text} - {priceEstimate.duration_text}</p>
             </div>
           )}
+          
+          {/* SMS Updates Info */}
+          <div className="bg-[#EDF7F0] rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm font-semibold text-[#1B4332] mb-2">You&apos;ll receive SMS updates:</p>
+            <ul className="space-y-1.5 text-xs text-[#6B5B4F]">
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+                When your driver is on the way
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+                When your dog is picked up
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+                When your dog arrives safely
+              </li>
+            </ul>
+          </div>
+          
           <Link to={createPageUrl("PublicSite")}>
-            <Button className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl w-full">
+            <Button 
+              onClick={() => resetBooking()}
+              className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl w-full"
+            >
               Back to Home
             </Button>
           </Link>
@@ -358,8 +405,55 @@ export default function BookingRequest() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-[#1B4332] mb-2">Book a Ride or Request a Quote</h1>
-            <p className="text-[#6B5B4F]/60">Fill in the details below and we'll get back to you promptly.</p>
+            <p className="text-[#6B5B4F]/60">Fill in the details below and we&apos;ll get back to you promptly.</p>
           </div>
+          
+          {/* Service Type Banner */}
+          {bookingState.serviceType && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`rounded-2xl p-4 mb-6 ${
+                bookingState.serviceType === "premium" 
+                  ? "bg-[#1B4332] text-white" 
+                  : "bg-[#EDF7F0] text-[#1B4332]"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {bookingState.serviceType === "premium" ? (
+                  <div className="w-10 h-10 rounded-xl bg-[#52B788]/30 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5 text-[#B7E4C7]" />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-[#1B4332]/10 flex items-center justify-center shrink-0">
+                    <Shield className="w-5 h-5 text-[#1B4332]" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">
+                    {bookingState.serviceType === "premium" ? "Behavior-Aware Transport" : "Standard Transport"}
+                  </p>
+                  {bookingState.recommendedPremium && bookingState.serviceType === "premium" && (
+                    <p className="text-xs text-[#B7E4C7] mt-0.5">
+                      We&apos;ve selected this for your dog&apos;s comfort
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newType = bookingState.serviceType === "premium" ? "standard" : "premium";
+                    set("service_type", newType === "premium" ? "Behavior-Aware Transport" : "Standard Transport");
+                  }}
+                  className={`text-xs underline ${
+                    bookingState.serviceType === "premium" ? "text-[#B7E4C7]" : "text-[#6B5B4F]"
+                  }`}
+                >
+                  Change
+                </button>
+              </div>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8 space-y-5">
 
@@ -541,6 +635,61 @@ export default function BookingRequest() {
                })()}
              </div>
 
+            {/* Dog Behavior Selector */}
+            <div className="space-y-3">
+              <Label className="text-[#1B4332] font-semibold">How does your dog behave during travel?</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { value: "calm", label: "Calm", desc: "Relaxed in vehicles" },
+                  { value: "slightly_anxious", label: "Slightly Anxious", desc: "Needs some reassurance" },
+                  { value: "reactive", label: "Very Reactive", desc: "Gets stressed easily" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      set("dog_behavior", option.value);
+                      setDogBehavior(option.value);
+                      // Auto-update service type based on behavior
+                      if (option.value === "slightly_anxious" || option.value === "reactive") {
+                        set("service_type", "Behavior-Aware Transport");
+                      }
+                    }}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      form.dog_behavior === option.value
+                        ? option.value === "calm" 
+                          ? "border-[#52B788] bg-[#EDF7F0]"
+                          : "border-[#1B4332] bg-[#1B4332] text-white"
+                        : "border-[#D8F3DC] hover:border-[#B7E4C7]"
+                    }`}
+                  >
+                    <p className={`font-semibold text-sm ${
+                      form.dog_behavior === option.value && option.value !== "calm" ? "text-white" : "text-[#1B4332]"
+                    }`}>
+                      {option.label}
+                    </p>
+                    <p className={`text-xs mt-0.5 ${
+                      form.dog_behavior === option.value && option.value !== "calm" ? "text-white/70" : "text-[#6B5B4F]/70"
+                    }`}>
+                      {option.desc}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              {(form.dog_behavior === "slightly_anxious" || form.dog_behavior === "reactive") && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-[#1B4332] rounded-xl p-3 flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-[#B7E4C7] shrink-0" />
+                  <p className="text-xs text-white">
+                    We&apos;ve selected <span className="font-semibold text-[#B7E4C7]">Behavior-Aware Transport</span> for your dog&apos;s comfort
+                  </p>
+                </motion.div>
+              )}
+            </div>
+
             {/* Dogs */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -552,7 +701,7 @@ export default function BookingRequest() {
                 <Label className="text-[#1B4332]">Dog Size(s)</Label>
                 <Select value={form.dog_sizes} onValueChange={v => set("dog_sizes", v)}>
                   <SelectTrigger className="rounded-xl border-[#D8F3DC]">
-                    <SelectValue placeholder="Select size…" />
+                    <SelectValue placeholder="Select size..." />
                   </SelectTrigger>
                   <SelectContent>
                     {DOG_SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}

@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { MapPin, Car, Plane, Zap, Route, Heart, Dog, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PriceEstimator from "@/components/PriceEstimator";
+import { useBooking } from "@/lib/BookingContext";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -16,6 +17,8 @@ const fade = (delay = 0) => ({
 export default function PublicSite() {
   const [highlightPremium, setHighlightPremium] = React.useState(false);
   const [premiumSelected, setPremiumSelected] = React.useState(false);
+  const navigate = useNavigate();
+  const { setServiceType } = useBooking();
   
   const scrollToEstimator = () => {
     document.getElementById("price-estimator")?.scrollIntoView({ behavior: "smooth" });
@@ -31,6 +34,16 @@ export default function PublicSite() {
       setPremiumSelected(true);
       setTimeout(() => setHighlightPremium(false), 1500);
     }
+  };
+  
+  const handleBookStandard = () => {
+    setServiceType("standard", false);
+    navigate(createPageUrl("BookingRequest"));
+  };
+  
+  const handleBookPremium = (fromBridge = false) => {
+    setServiceType("premium", fromBridge || premiumSelected);
+    navigate(createPageUrl("BookingRequest"));
   };
 
   return (
@@ -260,11 +273,12 @@ export default function PublicSite() {
               </div>
               
               <div className="mt-4 pt-4 border-t border-[#EDF7F0]">
-                <Link to={createPageUrl("BookingRequest")}>
-                  <Button className="w-full bg-white hover:bg-[#EDF7F0] text-[#1B4332] border-2 border-[#1B4332] rounded-xl font-semibold h-12">
-                    Book Standard Ride
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={handleBookStandard}
+                  className="w-full bg-white hover:bg-[#EDF7F0] text-[#1B4332] border-2 border-[#1B4332] rounded-xl font-semibold h-12"
+                >
+                  Book Standard Ride
+                </Button>
                 <a 
                   href="#premium-card" 
                   onClick={scrollToPremium}
@@ -329,15 +343,16 @@ export default function PublicSite() {
                 </ul>
                 
                 <div className="mt-6 pt-4 border-t border-white/10">
-                  <Link to={createPageUrl("BookingRequest")}>
-                    <Button className={`w-full bg-[#52B788] hover:bg-[#74C69D] text-[#1B4332] rounded-xl font-bold h-12 transition-all duration-300 ${
+                  <Button 
+                    onClick={() => handleBookPremium(premiumSelected)}
+                    className={`w-full bg-[#52B788] hover:bg-[#74C69D] text-[#1B4332] rounded-xl font-bold h-12 transition-all duration-300 ${
                       highlightPremium 
                         ? 'shadow-[0_0_20px_rgba(82,183,136,0.6)] scale-[1.02]' 
                         : ''
-                    }`}>
-                      Choose Behavior-Aware Transport
-                    </Button>
-                  </Link>
+                    }`}
+                  >
+                    Choose Behavior-Aware Transport
+                  </Button>
                   <p className="text-[11px] text-[#B7E4C7]/80 text-center mt-2">
                     You&apos;re choosing a calmer, lower-stress experience for your dog
                   </p>
