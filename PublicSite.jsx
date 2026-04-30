@@ -330,7 +330,11 @@ export default function PublicSite() {
                 
                 <div className="mt-6 pt-4 border-t border-white/10">
                   <Link to={createPageUrl("BookingRequest")}>
-                    <Button className="w-full bg-[#52B788] hover:bg-[#74C69D] text-[#1B4332] rounded-xl font-bold h-12">
+                    <Button className={`w-full bg-[#52B788] hover:bg-[#74C69D] text-[#1B4332] rounded-xl font-bold h-12 transition-all duration-300 ${
+                      highlightPremium 
+                        ? 'shadow-[0_0_20px_rgba(82,183,136,0.6)] scale-[1.02]' 
+                        : ''
+                    }`}>
                       Choose Behavior-Aware Transport
                     </Button>
                   </Link>
