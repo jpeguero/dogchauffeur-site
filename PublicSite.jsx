@@ -25,7 +25,8 @@ export default function PublicSite() {
     e.preventDefault();
     const premiumCard = document.getElementById("premium-card");
     if (premiumCard) {
-      premiumCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      const offsetTop = premiumCard.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: offsetTop, behavior: "smooth" });
       setHighlightPremium(true);
       setPremiumSelected(true);
       setTimeout(() => setHighlightPremium(false), 1500);
