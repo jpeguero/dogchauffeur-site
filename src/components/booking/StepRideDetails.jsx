@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +10,6 @@ import { MapPin, Calendar, Clock, PawPrint, ChevronRight, PlusCircle, Phone, Cal
 import {
   calculatePrice,
   formatPriceDisplay,
-  normalizeAddress,
   mapTemperamentToBehavior,
   SERVICE_TYPES,
 } from "@/utils/pricing";
@@ -19,8 +17,6 @@ import {
 export default function StepRideDetails({ form, onChange, pets, onContinue, onAddPet, onPricingCalculated, selectedPetNeedsExpert }) {
   const [pricing, setPricing] = useState(null);
   const [isCalculating, setIsCalc] = useState(false);
-  const [distanceInfo, setDistanceInfo] = useState(null); // { miles, distance_text, duration_text }
-  const [distanceError, setDistanceError] = useState(false);
 
   const selectedPet = pets.find(p => p.id === form.pet_id);
   const canCalculate = form.pickup_location && form.dropoff_location && form.pet_id;
@@ -37,8 +33,6 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
   // Reset pricing when addresses or pet change
   const resetPricing = () => {
     setPricing(null);
-    setDistanceInfo(null);
-    setDistanceError(false);
     onPricingCalculated && onPricingCalculated(null);
   };
 
@@ -52,42 +46,15 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
     resetPricing();
   };
 
-  // Calculate price with optional distance lookup
-  const handleCalculatePrice = async () => {
+  // Calculate price locally (no external API calls)
+  const handleCalculatePrice = () => {
     setIsCalc(true);
-    setDistanceError(false);
     
-    // Normalize addresses
-    const normalizedPickup = normalizeAddress(form.pickup_location);
-    const normalizedDropoff = normalizeAddress(form.dropoff_location);
+    // Distance is not available in this MVP - will be added later via Vercel API route
+    // For now, pricing is estimate-only without distance
+    const distanceMiles = null;
 
-    // Try to get distance from Google Maps API
-    let distanceMiles = null;
-    let distanceText = null;
-    let durationText = null;
-
-    try {
-      // Try to get distance via the existing Base44 function (uses Google Maps API)
-      const res = await base44.functions.invoke('calculateDistance', {
-        pickup: normalizedPickup,
-        dropoff: normalizedDropoff,
-        pet_weight: selectedPet?.weight || 0,
-      });
-
-      const data = res.data;
-      if (data && data.miles && !data.out_of_service_area) {
-        distanceMiles = data.miles;
-        distanceText = data.distance_text;
-        durationText = data.duration_text;
-        setDistanceInfo({ miles: distanceMiles, distance_text: distanceText, duration_text: durationText });
-      }
-    } catch {
-      // Distance calculation failed - continue with fallback pricing
-      // This is expected and does NOT block the booking
-      setDistanceError(true);
-    }
-
-    // Calculate price (works with or without distance)
+    // Calculate price (works without distance)
     const priceResult = calculatePrice({
       transportTier,
       tripType: form.trip_type || 'one_way',
@@ -99,11 +66,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
     setPricing(priceResult);
     
     if (onPricingCalculated) {
-      onPricingCalculated({
-        ...priceResult,
-        distance_text: distanceText,
-        duration_text: durationText,
-      });
+      onPricingCalculated(priceResult);
     }
 
     setIsCalc(false);
@@ -117,15 +80,11 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
         tripType: form.trip_type || 'one_way',
         serviceType: form.service_type || 'custom',
         behaviorLevel,
-        distanceMiles: distanceInfo?.miles || null,
+        distanceMiles: null,
       });
       setPricing(priceResult);
       if (onPricingCalculated) {
-        onPricingCalculated({
-          ...priceResult,
-          distance_text: distanceInfo?.distance_text,
-          duration_text: distanceInfo?.duration_text,
-        });
+        onPricingCalculated(priceResult);
       }
     }
   }, [form.trip_type, form.service_type, transportTier, behaviorLevel]);
@@ -351,21 +310,12 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
                 )}
               </div>
 
-              {/* Distance info if available */}
-              {distanceInfo && (
-                <p className="text-xs text-[#6B5B4F]/60 pt-1">
-                  {distanceInfo.distance_text} · {distanceInfo.duration_text}
+              {/* Confirmation message - distance not yet available */}
+              <div className="pt-2 border-t border-[#EDF7F0]">
+                <p className="text-xs text-[#6B5B4F]">
+                  We will confirm final pricing after booking
                 </p>
-              )}
-
-              {/* Fallback message if distance failed */}
-              {distanceError && (
-                <div className="pt-2 border-t border-[#EDF7F0]">
-                  <p className="text-xs text-[#6B5B4F]">
-                    We will confirm pricing after booking
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
