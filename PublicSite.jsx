@@ -290,7 +290,7 @@ export default function PublicSite() {
                 {highlightPremium && (
                   <div className="inline-flex items-center gap-1.5 bg-white/95 rounded-full px-3 py-1.5 text-xs font-semibold text-[#1B4332] mb-3 w-fit animate-pulse shadow-lg">
                     <span className="text-[#52B788]">&#10003;</span>
-                    Recommended based on your selection
+                    Best choice for anxious or first-time dogs
                   </div>
                 )}
                 
