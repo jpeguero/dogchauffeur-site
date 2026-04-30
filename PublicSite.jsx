@@ -286,8 +286,16 @@ export default function PublicSite() {
               <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-[#2D6A4F]/30 pointer-events-none" />
               
               <div className="relative z-10 flex flex-col h-full">
+                {/* Selection Confirmation Badge - shows after bridge click */}
+                {highlightPremium && (
+                  <div className="inline-flex items-center gap-1.5 bg-white/95 rounded-full px-3 py-1.5 text-xs font-semibold text-[#1B4332] mb-3 w-fit animate-pulse shadow-lg">
+                    <span className="text-[#52B788]">&#10003;</span>
+                    Recommended based on your selection
+                  </div>
+                )}
+                
                 {/* Recommended Badge */}
-                <div className="inline-flex items-center gap-1.5 bg-[#52B788] rounded-full px-3 py-1 text-xs font-bold text-white mb-3 w-fit">
+                <div className={`inline-flex items-center gap-1.5 bg-[#52B788] rounded-full px-3 py-1 text-xs font-bold text-white mb-3 w-fit ${highlightPremium ? 'opacity-0 h-0 mb-0 overflow-hidden' : ''}`}>
                   Recommended
                 </div>
                 
