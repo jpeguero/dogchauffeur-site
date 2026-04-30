@@ -13,6 +13,51 @@ const HEAVY_THRESHOLD  = 75;    // lbs
 const HOME_BASE           = "60628, Chicago, IL";
 const SERVICE_RADIUS_MILES = 25;
 
+// ── US state abbreviation map ────────────────────────────────────────────────
+const STATE_ABBREVS: Record<string, string> = {
+  alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA',
+  colorado: 'CO', connecticut: 'CT', delaware: 'DE', florida: 'FL', georgia: 'GA',
+  hawaii: 'HI', idaho: 'ID', illinois: 'IL', indiana: 'IN', iowa: 'IA',
+  kansas: 'KS', kentucky: 'KY', louisiana: 'LA', maine: 'ME', maryland: 'MD',
+  massachusetts: 'MA', michigan: 'MI', minnesota: 'MN', mississippi: 'MS', missouri: 'MO',
+  montana: 'MT', nebraska: 'NE', nevada: 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ',
+  'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', ohio: 'OH',
+  oklahoma: 'OK', oregon: 'OR', pennsylvania: 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+  'south dakota': 'SD', tennessee: 'TN', texas: 'TX', utah: 'UT', vermont: 'VT',
+  virginia: 'VA', washington: 'WA', 'west virginia': 'WV', wisconsin: 'WI', wyoming: 'WY',
+  'district of columbia': 'DC',
+};
+
+// ── Address normalizer ───────────────────────────────────────────────────────
+// Converts "Chicago,Il" → "Chicago, IL", trims extra spaces, uppercase state codes
+function normalizeAddress(address: string): string {
+  if (!address) return address;
+
+  // 1. Trim overall and collapse multiple spaces into one
+  let normalized = address.trim().replace(/\s+/g, ' ');
+
+  // 2. Ensure space after commas: "Chicago,IL" → "Chicago, IL"
+  normalized = normalized.replace(/,(\S)/g, ', $1');
+
+  // 3. Normalize state abbreviations to uppercase
+  //    Match ", XX" or ", XX 12345" pattern at end (state + optional ZIP)
+  normalized = normalized.replace(
+    /,\s*([a-zA-Z]{2})(\s+\d{5}(-\d{4})?)?$/,
+    (_, state, zip) => `, ${state.toUpperCase()}${zip || ''}`
+  );
+
+  // 4. Convert full state names to abbreviations (case insensitive)
+  for (const [fullName, abbrev] of Object.entries(STATE_ABBREVS)) {
+    const regex = new RegExp(`,\\s*${fullName}(\\s+\\d{5}(-\\d{4})?)?$`, 'i');
+    if (regex.test(normalized)) {
+      normalized = normalized.replace(regex, (_, zip) => `, ${abbrev}${zip || ''}`);
+      break;
+    }
+  }
+
+  return normalized;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -24,6 +69,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'pickup and dropoff are required' }, { status: 400 });
     }
 
+    // Normalize addresses before sending to Google Maps API
+    const normalizedPickup = normalizeAddress(pickup);
+    const normalizedDropoff = normalizeAddress(dropoff);
+
     const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
     if (!apiKey) {
       return Response.json({ error: 'Google Maps API key not configured' }, { status: 500 });
@@ -32,8 +81,8 @@ Deno.serve(async (req) => {
     // Two origins: pickup (for trip distance) and home base (for service area check)
     // Two destinations: dropoff and pickup
     const url = `https://maps.googleapis.com/maps/api/distancematrix/json` +
-      `?origins=${encodeURIComponent(pickup)}|${encodeURIComponent(HOME_BASE)}` +
-      `&destinations=${encodeURIComponent(dropoff)}|${encodeURIComponent(pickup)}` +
+      `?origins=${encodeURIComponent(normalizedPickup)}|${encodeURIComponent(HOME_BASE)}` +
+      `&destinations=${encodeURIComponent(normalizedDropoff)}|${encodeURIComponent(normalizedPickup)}` +
       `&units=imperial&key=${apiKey}`;
 
     const res  = await fetch(url);
