@@ -121,7 +121,7 @@ export default function PublicSite() {
           </div>
         </motion.div>
 
-        {/* Safety Comes First — Certification Trust Section */}
+        {/* Safety Comes First �� Certification Trust Section */}
         <motion.div {...fade(0.05)}>
           <div className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-10">
             <div className="text-center mb-8">
@@ -157,6 +157,16 @@ export default function PublicSite() {
             <h2 className="text-2xl md:text-3xl font-bold text-[#1B4332] mb-2">Choose Your Service Level</h2>
             <p className="text-sm text-[#6B5B4F]/70">Every dog is different. We have you covered either way.</p>
           </div>
+          
+          {/* Service Selection Guide */}
+          <div className="bg-[#EDF7F0] rounded-2xl p-5 mb-6">
+            <p className="text-sm font-semibold text-[#1B4332] mb-2">Not sure which option is right?</p>
+            <ul className="space-y-1.5 text-sm text-[#6B5B4F]">
+              <li>If your dog is calm and used to travel → <span className="font-medium text-[#1B4332]">Standard is perfect</span></li>
+              <li>If your dog gets anxious, reactive, or easily stressed → <span className="font-medium text-[#1B4332]">Premium is recommended</span></li>
+            </ul>
+          </div>
+          
           <div className="grid sm:grid-cols-2 gap-5">
             <div className="bg-white rounded-3xl border border-[#EDF7F0] p-7 flex flex-col gap-3">
               <div className="text-2xl">🐶</div>
@@ -178,7 +188,8 @@ export default function PublicSite() {
                 </div>
                 <div className="text-2xl mb-1">🐕</div>
                 <h3 className="text-lg font-bold text-white">Behavior-Aware Transport</h3>
-                <p className="text-sm text-white/75 leading-relaxed mt-2">Ideal for anxious, reactive, or high-energy dogs who need a handler with extra patience and experience.</p>
+                <p className="text-sm text-white/75 leading-relaxed mt-2">Designed for dogs that need extra patience, calm handling, and a stress-reduced experience during transport.</p>
+                <p className="text-xs font-semibold text-[#B7E4C7] mt-2 bg-[#52B788]/20 rounded-lg px-3 py-1.5 inline-block">Recommended for anxious, reactive, or first-time riders</p>
                 <ul className="space-y-1.5 mt-3">
                   {["Everything in Standard", "Certified behavior-aware handling", "Calm, low-stimulation loading & unloading", "Ideal for reactive or nervous dogs"].map(f => (
                     <li key={f} className="flex items-center gap-2 text-sm text-white/85">
@@ -192,7 +203,7 @@ export default function PublicSite() {
           <div className="text-center mt-6">
             <Link to={createPageUrl("BookingRequest")}>
               <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                Book the Right Ride for Your Dog
+                Book Premium Care Ride
               </Button>
             </Link>
           </div>
