@@ -269,38 +269,45 @@ export default function BookingRequest() {
     e.preventDefault();
     setSubmitting(true);
 
-    const data = {
-      ...form,
-      number_of_dogs: Number(form.number_of_dogs) || 1,
-      ...(priceEstimate ? { estimated_price: priceEstimate.price, estimated_miles: priceEstimate.miles } : {}),
-    };
-    await base44.entities.Booking.create(data);
-
     try {
-      // Send professional customer confirmation email
-      await base44.integrations.Core.SendEmail({
-        to: form.email,
-        subject: `DogChauffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
-        body: generateCustomerEmail(form),
+      // Submit to API endpoint
+      const response = await fetch("/api/book-ride", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          serviceType: bookingState.serviceType || "standard",
+          dogBehavior: form.dog_behavior || "calm",
+          customerName: form.full_name,
+          phone: form.phone,
+          pickupAddress: form.pickup_address,
+          dropoffAddress: form.dropoff_address,
+          date: form.preferred_date,
+          time: form.preferred_time_window,
+          notes: form.notes,
+        }),
       });
 
-      // Send admin notification email
-      await base44.integrations.Core.SendEmail({
-        to: ADMIN_EMAIL,
-        subject: `New DogChauffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
-        body: generateAdminEmail(form),
-      });
+      const result = await response.json();
 
-      // TODO: Twilio SMS will be connected after A2P campaign approval.
-      // SMS notifications are disabled until carrier registration is complete.
-      // When enabled, send confirmation to: form.phone
-      // Message types: ride_received, en_route, pet_picked_up, pet_delivered
-    } catch (e) {
-      console.error("Notification error:", e);
+      if (!response.ok || !result.success) {
+        const errorMsg = result.details?.join(", ") || result.error || "Booking failed";
+        toast.error(errorMsg);
+        setSubmitting(false);
+        return;
+      }
+
+      // TODO: Database persistence and Twilio SMS will be added after approval.
+      // For now, booking is stored in memory on the server.
+      
+      toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Booking submission error:", error);
+      toast.error("Something went wrong. Please try again.");
     }
-
-    toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
-    setSubmitted(true);
+    
     setSubmitting(false);
   };
 
