@@ -14,8 +14,20 @@ const fade = (delay = 0) => ({
 });
 
 export default function PublicSite() {
+  const [highlightPremium, setHighlightPremium] = React.useState(false);
+  
   const scrollToEstimator = () => {
     document.getElementById("price-estimator")?.scrollIntoView({ behavior: "smooth" });
+  };
+  
+  const scrollToPremium = (e) => {
+    e.preventDefault();
+    const premiumCard = document.getElementById("premium-card");
+    if (premiumCard) {
+      premiumCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightPremium(true);
+      setTimeout(() => setHighlightPremium(false), 1500);
+    }
   };
 
   return (
@@ -217,7 +229,7 @@ export default function PublicSite() {
                     </li>
                   </ul>
                 </div>
-                <div className="bg-amber-50/80 rounded-xl p-3 border border-amber-200/50">
+                <div className="bg-amber-50/60 rounded-xl p-3 border border-amber-200/40">
                   <p className="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1.5">
                     <span className="text-amber-500">&#9888;</span>
                     Not recommended for:
@@ -232,10 +244,15 @@ export default function PublicSite() {
                       First-time riders
                     </li>
                   </ul>
-                  <p className="text-xs font-medium text-[#1B4332] flex items-center gap-1.5 pt-2 border-t border-amber-200/50">
-                    <span className="text-[#52B788]">&rarr;</span>
+                  <a 
+                    href="#premium-card" 
+                    onClick={scrollToPremium}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#1B4332] hover:text-[#52B788] pt-2 border-t border-amber-200/40 transition-colors cursor-pointer group"
+                  >
+                    <span className="text-[#52B788] group-hover:translate-x-0.5 transition-transform">&rarr;</span>
                     For these cases, choose Behavior-Aware Transport
-                  </p>
+                  </a>
+                  <p className="text-[10px] text-amber-600/80 mt-1.5 italic">Most chosen for first-time or anxious dogs</p>
                 </div>
               </div>
               
@@ -245,11 +262,25 @@ export default function PublicSite() {
                     Book Standard Ride
                   </Button>
                 </Link>
+                <a 
+                  href="#premium-card" 
+                  onClick={scrollToPremium}
+                  className="block text-center text-[11px] text-[#6B5B4F]/70 mt-2 hover:text-[#1B4332] transition-colors cursor-pointer"
+                >
+                  Unsure? Most first-time riders choose <span className="font-medium text-[#1B4332]">Behavior-Aware Transport</span>.
+                </a>
               </div>
             </div>
             
             {/* Premium Card - Highlighted */}
-            <div className="bg-[#1B4332] rounded-3xl p-7 flex flex-col text-white relative overflow-hidden ring-4 ring-[#52B788]/30 sm:scale-[1.02] sm:-my-2">
+            <div 
+              id="premium-card"
+              className={`bg-[#1B4332] rounded-3xl p-7 flex flex-col text-white relative overflow-hidden sm:scale-[1.02] sm:-my-2 transition-all duration-300 ${
+                highlightPremium 
+                  ? 'ring-4 ring-[#52B788] shadow-2xl shadow-[#52B788]/30' 
+                  : 'ring-4 ring-[#52B788]/30'
+              }`}
+            >
               {/* Decorative elements */}
               <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#2D6A4F]/50 pointer-events-none" />
               <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-[#2D6A4F]/30 pointer-events-none" />
@@ -276,7 +307,7 @@ export default function PublicSite() {
                     </span>
                     Includes everything in Standard
                   </li>
-                  {["Certified behavior-aware handling", "Calm, low-stimulation environment", "Extra patience for nervous dogs", "Specialized loading techniques"].map(f => (
+                  {["Reduced stress during pickup and transport", "Certified behavior-aware handling", "Calm, low-stimulation environment", "Extra patience for nervous dogs"].map(f => (
                     <li key={f} className="flex items-center gap-2.5 text-sm text-white/85">
                       <span className="w-5 h-5 rounded-full bg-[#2D6A4F] flex items-center justify-center shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D]" />
