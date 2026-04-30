@@ -291,23 +291,10 @@ export default function BookingRequest() {
         body: generateAdminEmail(form),
       });
 
-      // Send SMS notification if phone is provided
-      if (form.phone) {
-        try {
-          const dateTimeStr = form.preferred_date 
-            ? `${form.preferred_date}${form.preferred_time_window ? ` at ${form.preferred_time_window}` : ""}`
-            : "";
-          await base44.functions.invoke('sendSMS', {
-            phone: form.phone,
-            pet_name: form.pet_name || "your dog",
-            event_type: "ride_received",
-            date_time: dateTimeStr,
-            service_type: form.service_type,
-          });
-        } catch (smsError) {
-          console.error("SMS notification error:", smsError);
-        }
-      }
+      // TODO: Twilio SMS will be connected after A2P campaign approval.
+      // SMS notifications are disabled until carrier registration is complete.
+      // When enabled, send confirmation to: form.phone
+      // Message types: ride_received, en_route, pet_picked_up, pet_delivered
     } catch (e) {
       console.error("Notification error:", e);
     }
