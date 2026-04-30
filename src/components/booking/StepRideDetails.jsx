@@ -1,47 +1,136 @@
-import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Calendar, Clock, PawPrint, ChevronRight, PlusCircle, Phone, Calculator, AlertTriangle } from "lucide-react";
+import { MapPin, Calendar, Clock, PawPrint, ChevronRight, PlusCircle, Phone, Calculator, AlertTriangle, Info } from "lucide-react";
+import {
+  calculatePrice,
+  formatPriceDisplay,
+  normalizeAddress,
+  mapTemperamentToBehavior,
+  SERVICE_TYPES,
+} from "@/utils/pricing";
 
 export default function StepRideDetails({ form, onChange, pets, onContinue, onAddPet, onPricingCalculated, selectedPetNeedsExpert }) {
-  const [pricing, setPricing]         = useState(null);
-  const [isCalculating, setIsCalc]    = useState(false);
-  const [pricingError, setPricingErr] = useState(null);
+  const [pricing, setPricing] = useState(null);
+  const [isCalculating, setIsCalc] = useState(false);
+  const [distanceInfo, setDistanceInfo] = useState(null); // { miles, distance_text, duration_text }
+  const [distanceError, setDistanceError] = useState(false);
 
-  const selectedPet  = pets.find(p => p.id === form.pet_id);
+  const selectedPet = pets.find(p => p.id === form.pet_id);
   const canCalculate = form.pickup_location && form.dropoff_location && form.pet_id;
-  const isValid      = form.pickup_location && form.dropoff_location && form.scheduled_date && form.pet_id && form.phone;
-  const isBlocked    = pricing?.out_of_service_area;
+  const isValid = form.pickup_location && form.dropoff_location && form.scheduled_date && form.pet_id && form.phone;
 
-  const resetPricing = () => { setPricing(null); onPricingCalculated && onPricingCalculated(null); };
+  // Determine behavior level from pet
+  const behaviorLevel = selectedPet
+    ? mapTemperamentToBehavior(selectedPet.temperament, selectedPetNeedsExpert)
+    : 'calm';
 
-  const handleAddressChange = (key, val) => { onChange(key, val); resetPricing(); };
-  const handlePetChange     = (val) => { onChange("pet_id", val); resetPricing(); };
+  // Determine transport tier (recommend premium for reactive pets)
+  const transportTier = selectedPetNeedsExpert || behaviorLevel === 'reactive' ? 'premium' : 'standard';
 
+  // Reset pricing when addresses or pet change
+  const resetPricing = () => {
+    setPricing(null);
+    setDistanceInfo(null);
+    setDistanceError(false);
+    onPricingCalculated && onPricingCalculated(null);
+  };
+
+  const handleAddressChange = (key, val) => {
+    onChange(key, val);
+    resetPricing();
+  };
+
+  const handlePetChange = (val) => {
+    onChange("pet_id", val);
+    resetPricing();
+  };
+
+  // Calculate price with optional distance lookup
   const handleCalculatePrice = async () => {
     setIsCalc(true);
-    setPricingErr(null);
-    setPricing(null);
+    setDistanceError(false);
+    
+    // Normalize addresses
+    const normalizedPickup = normalizeAddress(form.pickup_location);
+    const normalizedDropoff = normalizeAddress(form.dropoff_location);
+
+    // Try to get distance from Google Maps API
+    let distanceMiles = null;
+    let distanceText = null;
+    let durationText = null;
+
     try {
+      // Try to get distance via the existing Base44 function (uses Google Maps API)
       const res = await base44.functions.invoke('calculateDistance', {
-        pickup:     form.pickup_location,
-        dropoff:    form.dropoff_location,
+        pickup: normalizedPickup,
+        dropoff: normalizedDropoff,
         pet_weight: selectedPet?.weight || 0,
       });
+
       const data = res.data;
-      setPricing(data);
-      if (!data.out_of_service_area && onPricingCalculated) onPricingCalculated(data);
+      if (data && data.miles && !data.out_of_service_area) {
+        distanceMiles = data.miles;
+        distanceText = data.distance_text;
+        durationText = data.duration_text;
+        setDistanceInfo({ miles: distanceMiles, distance_text: distanceText, duration_text: durationText });
+      }
     } catch {
-      setPricingErr("price_unavailable");
+      // Distance calculation failed - continue with fallback pricing
+      // This is expected and does NOT block the booking
+      setDistanceError(true);
     }
+
+    // Calculate price (works with or without distance)
+    const priceResult = calculatePrice({
+      transportTier,
+      tripType: form.trip_type || 'one_way',
+      serviceType: form.service_type || 'custom',
+      behaviorLevel,
+      distanceMiles,
+    });
+
+    setPricing(priceResult);
+    
+    if (onPricingCalculated) {
+      onPricingCalculated({
+        ...priceResult,
+        distance_text: distanceText,
+        duration_text: durationText,
+      });
+    }
+
     setIsCalc(false);
   };
+
+  // Auto-recalculate when relevant form fields change (if we already have a price)
+  useEffect(() => {
+    if (pricing && canCalculate) {
+      const priceResult = calculatePrice({
+        transportTier,
+        tripType: form.trip_type || 'one_way',
+        serviceType: form.service_type || 'custom',
+        behaviorLevel,
+        distanceMiles: distanceInfo?.miles || null,
+      });
+      setPricing(priceResult);
+      if (onPricingCalculated) {
+        onPricingCalculated({
+          ...priceResult,
+          distance_text: distanceInfo?.distance_text,
+          duration_text: distanceInfo?.duration_text,
+        });
+      }
+    }
+  }, [form.trip_type, form.service_type, transportTier, behaviorLevel]);
+
+  const priceDisplay = formatPriceDisplay(pricing);
 
   return (
     <div className="space-y-6">
@@ -62,7 +151,42 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
           placeholder="(312) 555-1234"
           className="rounded-xl border-[#D8F3DC] h-12 bg-white"
         />
-        <p className="text-xs text-[#40916C] font-medium mt-2">📱 You'll get a text confirmation as soon as we receive your request.</p>
+        <p className="text-xs text-[#40916C] font-medium mt-2">You will get a text confirmation as soon as we receive your request.</p>
+      </div>
+
+      {/* Service Type */}
+      <div>
+        <Label className="text-[#1B4332] font-medium flex items-center gap-2 mb-2">
+          Service Type
+        </Label>
+        <Select value={form.service_type || ""} onValueChange={(v) => onChange("service_type", v)}>
+          <SelectTrigger className="rounded-xl border-[#D8F3DC] h-12">
+            <SelectValue placeholder="Select service type..." />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.values(SERVICE_TYPES).map((svc) => (
+              <SelectItem key={svc.id} value={svc.id}>
+                {svc.label} {svc.surcharge > 0 ? `(+$${svc.surcharge})` : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Trip Type */}
+      <div>
+        <Label className="text-[#1B4332] font-medium flex items-center gap-2 mb-2">
+          Trip Type
+        </Label>
+        <Select value={form.trip_type || "one_way"} onValueChange={(v) => onChange("trip_type", v)}>
+          <SelectTrigger className="rounded-xl border-[#D8F3DC] h-12">
+            <SelectValue placeholder="Select trip type..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="one_way">One-way</SelectItem>
+            <SelectItem value="round_trip">Round-trip (1.75x)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Pickup */}
@@ -119,7 +243,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
         {pets.length === 0 ? (
           <div className="bg-[#EDF7F0] rounded-2xl p-5 text-center border border-[#D8F3DC]">
             <PawPrint className="w-8 h-8 text-[#52B788]/50 mx-auto mb-2" />
-            <p className="text-sm text-[#6B5B4F] font-medium mb-3">You'll need to add a pet profile before booking your first ride.</p>
+            <p className="text-sm text-[#6B5B4F] font-medium mb-3">You will need to add a pet profile before booking your first ride.</p>
             <Button type="button" onClick={onAddPet} className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-sm">
               <PlusCircle className="w-4 h-4" /> Add a Pet
             </Button>
@@ -150,7 +274,15 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
               <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-xl">
                 <AlertTriangle className="w-4 h-4 text-purple-600 shrink-0" />
                 <p className="text-xs text-purple-700 font-medium">
-                  Behavioral profile flagged — a <strong>$50 Expert Handling surcharge</strong> will apply.
+                  Behavioral profile flagged — <strong>Behavior-Aware Transport</strong> recommended (+$15 base).
+                </p>
+              </div>
+            )}
+            {behaviorLevel === 'anxious' && !selectedPetNeedsExpert && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                <p className="text-xs text-amber-700 font-medium">
+                  Slightly anxious pet — a <strong>$15 handling surcharge</strong> will apply.
                 </p>
               </div>
             )}
@@ -172,57 +304,73 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
               disabled={isCalculating}
               className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-lg text-xs h-7 px-3"
             >
-              {isCalculating ? "Calculating…" : pricing ? "Recalculate" : "Calculate"}
+              {isCalculating ? "Calculating..." : pricing ? "Recalculate" : "Calculate"}
             </Button>
           </div>
 
-          {pricingError && (
-            <div className="px-4 py-4 bg-[#EDF7F0] border-t border-[#D8F3DC]">
-              <p className="text-sm font-medium text-[#1B4332]">We'll confirm pricing after booking</p>
-              <p className="text-xs text-[#6B5B4F] mt-1">You can continue with your booking — we'll reach out with the final price.</p>
-            </div>
-          )}
-
-          {pricing?.out_of_service_area && (
-            <div className="px-4 py-4 bg-amber-50 border-t border-amber-100">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">Out of standard service area</p>
-                  <p className="text-xs text-amber-700 mt-1">
-                    This pickup is {pricing.home_to_pickup_miles} miles from our service center (25-mile limit).
-                    Contact us for a custom long-distance quote.
-                  </p>
-                  <a href="tel:+17087735958" className="mt-2 inline-block text-xs font-semibold text-amber-800 underline">(708) 773-5958</a>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {pricing && !pricing.out_of_service_area && (
+          {/* Price Result */}
+          {pricing && (
             <div className="px-4 py-4 bg-white border-t border-[#EDF7F0] space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-[#1B4332]">Estimated</span>
                 <span className="text-lg font-bold text-[#1B4332]">
-                  ${Math.max(25, Math.floor(pricing.price * 0.9)).toFixed(0)}–${Math.ceil(pricing.price * 1.15).toFixed(0)}
+                  {priceDisplay?.priceRange}
                 </span>
               </div>
-              <p className="text-xs text-[#6B5B4F]">Depending on distance and traffic</p>
-              {(pricing.heavy_surcharge > 0 || pricing.expert_surcharge > 0) && (
-                <div className="pt-2 border-t border-[#EDF7F0] space-y-1">
-                  {pricing.heavy_surcharge > 0 && (
-                    <p className="text-xs text-amber-700">Includes large crate surcharge (+$15)</p>
-                  )}
-                  {pricing.expert_surcharge > 0 && (
-                    <p className="text-xs text-purple-700">Includes Expert Handling surcharge (+$50)</p>
-                  )}
+              <p className="text-xs text-[#6B5B4F]">{priceDisplay?.subtitle}</p>
+
+              {/* Breakdown */}
+              <div className="pt-2 border-t border-[#EDF7F0] space-y-1.5 text-xs text-[#6B5B4F]">
+                <div className="flex justify-between">
+                  <span>{pricing.tier.label} base fare</span>
+                  <span>${pricing.baseFare}</span>
+                </div>
+                {pricing.serviceSurcharge > 0 && (
+                  <div className="flex justify-between">
+                    <span>{pricing.service.label}</span>
+                    <span>+${pricing.serviceSurcharge}</span>
+                  </div>
+                )}
+                {pricing.behaviorSurcharge > 0 && (
+                  <div className="flex justify-between text-amber-700">
+                    <span>{pricing.behavior.label} handling</span>
+                    <span>+${pricing.behaviorSurcharge}</span>
+                  </div>
+                )}
+                {pricing.hasDistance && pricing.extraMiles > 0 && (
+                  <div className="flex justify-between">
+                    <span>{pricing.extraMiles.toFixed(1)} extra miles @ $3/mi</span>
+                    <span>+${pricing.distanceSurcharge.toFixed(0)}</span>
+                  </div>
+                )}
+                {pricing.tripMultiplier > 1 && (
+                  <div className="flex justify-between text-[#2D6A4F]">
+                    <span>Round-trip</span>
+                    <span>x{pricing.tripMultiplier}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Distance info if available */}
+              {distanceInfo && (
+                <p className="text-xs text-[#6B5B4F]/60 pt-1">
+                  {distanceInfo.distance_text} · {distanceInfo.duration_text}
+                </p>
+              )}
+
+              {/* Fallback message if distance failed */}
+              {distanceError && (
+                <div className="pt-2 border-t border-[#EDF7F0]">
+                  <p className="text-xs text-[#6B5B4F]">
+                    We will confirm pricing after booking
+                  </p>
                 </div>
               )}
-              <p className="text-xs text-[#6B5B4F]/60">{pricing.distance_text} · {pricing.duration_text}</p>
             </div>
           )}
 
-          {!pricing && !pricingError && !isCalculating && (
+          {/* Initial state - no price yet */}
+          {!pricing && !isCalculating && (
             <div className="px-4 py-3 bg-white border-t border-[#EDF7F0]">
               <p className="text-xs text-[#6B5B4F]/60">Click Calculate to see your ride price.</p>
             </div>
@@ -246,7 +394,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
       <div className="space-y-3 pt-2">
         <Button
           type="button"
-          disabled={!isValid || !!isBlocked}
+          disabled={!isValid}
           onClick={onContinue}
           className="w-full h-12 bg-[#1B4332] hover:bg-[#2D6A4F] active:bg-[#152E24] active:scale-[0.98] text-white rounded-2xl text-base font-semibold shadow-lg shadow-[#1B4332]/25 transition-all justify-between px-5"
         >
