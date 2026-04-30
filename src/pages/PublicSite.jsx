@@ -196,7 +196,7 @@ export default function PublicSite() {
                 <div className="text-2xl mb-2">🐕</div>
                 <h3 className="text-lg font-bold text-white">Behavior-Aware Transport</h3>
                 <p className="text-sm text-white/80 leading-relaxed mt-2 mb-2">
-                  Designed for anxious, reactive, or high-energy dogs that need extra care and attention.
+                  Built for dogs that need extra patience, calm handling, and a stress-reduced experience.
                 </p>
                 <p className="text-xs text-white/60 mb-4">
                   Best for dogs that get anxious, reactive, or need extra handling care
