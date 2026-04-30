@@ -15,6 +15,7 @@ const fade = (delay = 0) => ({
 
 export default function PublicSite() {
   const [highlightPremium, setHighlightPremium] = React.useState(false);
+  const [premiumSelected, setPremiumSelected] = React.useState(false);
   
   const scrollToEstimator = () => {
     document.getElementById("price-estimator")?.scrollIntoView({ behavior: "smooth" });
@@ -26,6 +27,7 @@ export default function PublicSite() {
     if (premiumCard) {
       premiumCard.scrollIntoView({ behavior: "smooth", block: "center" });
       setHighlightPremium(true);
+      setPremiumSelected(true);
       setTimeout(() => setHighlightPremium(false), 1500);
     }
   };
@@ -331,6 +333,11 @@ export default function PublicSite() {
                       Choose Behavior-Aware Transport
                     </Button>
                   </Link>
+                  {premiumSelected && !highlightPremium && (
+                    <p className="text-[11px] text-[#B7E4C7] text-center mt-2 font-medium">
+                      Recommended for your dog&apos;s needs
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
