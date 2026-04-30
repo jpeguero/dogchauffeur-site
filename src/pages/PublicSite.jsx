@@ -221,6 +221,9 @@ export default function PublicSite() {
                       Book Premium Care Ride
                     </Button>
                   </Link>
+                  <p className="text-xs text-white/50 text-center mt-3">
+                    Recommended for dogs that may feel stressed during transport
+                  </p>
                 </div>
               </div>
             </div>
