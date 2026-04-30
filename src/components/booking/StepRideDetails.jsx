@@ -178,7 +178,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
 
           {pricingError && (
             <div className="px-4 py-4 bg-[#EDF7F0] border-t border-[#D8F3DC]">
-              <p className="text-sm font-medium text-[#1B4332]">We'll confirm pricing shortly after booking</p>
+              <p className="text-sm font-medium text-[#1B4332]">Pricing confirmed after booking</p>
               <p className="text-xs text-[#6B5B4F] mt-1">You can continue with your booking — we'll reach out with the final price.</p>
             </div>
           )}
@@ -200,34 +200,25 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
           )}
 
           {pricing && !pricing.out_of_service_area && (
-            <div className="px-4 py-4 bg-white border-t border-[#EDF7F0] space-y-2">
-              <div className="flex justify-between text-sm text-[#6B5B4F]">
-                <span>Base fare (first 5 mi)</span>
-                <span>$25.00</span>
+            <div className="px-4 py-4 bg-white border-t border-[#EDF7F0] space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-[#1B4332]">Estimated</span>
+                <span className="text-lg font-bold text-[#1B4332]">
+                  ${Math.max(25, Math.floor(pricing.price * 0.9)).toFixed(0)}–${Math.ceil(pricing.price * 1.15).toFixed(0)}
+                </span>
               </div>
-              {pricing.extra_miles > 0 && (
-                <div className="flex justify-between text-sm text-[#6B5B4F]">
-                  <span>{pricing.extra_miles} extra mi × $2.50</span>
-                  <span>${pricing.per_mile_charge?.toFixed(2)}</span>
+              <p className="text-xs text-[#6B5B4F]">Depending on distance and traffic</p>
+              {(pricing.heavy_surcharge > 0 || pricing.expert_surcharge > 0) && (
+                <div className="pt-2 border-t border-[#EDF7F0] space-y-1">
+                  {pricing.heavy_surcharge > 0 && (
+                    <p className="text-xs text-amber-700">Includes large crate surcharge (+$15)</p>
+                  )}
+                  {pricing.expert_surcharge > 0 && (
+                    <p className="text-xs text-purple-700">Includes Expert Handling surcharge (+$50)</p>
+                  )}
                 </div>
               )}
-              {pricing.heavy_surcharge > 0 && (
-                <div className="flex justify-between text-sm text-amber-700">
-                  <span>Large crate surcharge</span>
-                  <span>+$15.00</span>
-                </div>
-              )}
-              {pricing.expert_surcharge > 0 && (
-                <div className="flex justify-between text-sm text-purple-700">
-                  <span>⚡ Expert Handling surcharge</span>
-                  <span>+${pricing.expert_surcharge?.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-bold text-[#1B4332] text-base pt-2 border-t border-[#EDF7F0]">
-                <span>Estimated Total</span>
-                <span>${pricing.price?.toFixed(2)}</span>
-              </div>
-              <p className="text-xs text-[#6B5B4F]/60 pt-1">{pricing.distance_text} · {pricing.duration_text}</p>
+              <p className="text-xs text-[#6B5B4F]/60">{pricing.distance_text} · {pricing.duration_text}</p>
             </div>
           )}
 
