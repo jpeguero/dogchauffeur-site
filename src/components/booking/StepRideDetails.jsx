@@ -178,7 +178,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
 
           {pricingError && (
             <div className="px-4 py-4 bg-[#EDF7F0] border-t border-[#D8F3DC]">
-              <p className="text-sm font-medium text-[#1B4332]">Pricing confirmed after booking</p>
+              <p className="text-sm font-medium text-[#1B4332]">We'll confirm pricing after booking</p>
               <p className="text-xs text-[#6B5B4F] mt-1">You can continue with your booking — we'll reach out with the final price.</p>
             </div>
           )}
