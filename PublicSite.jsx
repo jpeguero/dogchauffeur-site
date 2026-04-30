@@ -338,8 +338,11 @@ export default function PublicSite() {
                       Choose Behavior-Aware Transport
                     </Button>
                   </Link>
+                  <p className="text-[11px] text-[#B7E4C7]/80 text-center mt-2">
+                    You&apos;re choosing a calmer, lower-stress experience for your dog
+                  </p>
                   {premiumSelected && !highlightPremium && (
-                    <p className="text-[11px] text-[#B7E4C7] text-center mt-2 font-medium">
+                    <p className="text-[11px] text-[#B7E4C7] text-center mt-1 font-medium">
                       Recommended for your dog&apos;s needs
                     </p>
                   )}
