@@ -38,7 +38,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
       setPricing(data);
       if (!data.out_of_service_area && onPricingCalculated) onPricingCalculated(data);
     } catch {
-      setPricingErr("Could not calculate price. Please verify the addresses.");
+      setPricingErr("price_unavailable");
     }
     setIsCalc(false);
   };
@@ -177,8 +177,9 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
           </div>
 
           {pricingError && (
-            <div className="px-4 py-3 bg-red-50 border-t border-red-100">
-              <p className="text-xs text-red-600">{pricingError}</p>
+            <div className="px-4 py-4 bg-[#EDF7F0] border-t border-[#D8F3DC]">
+              <p className="text-sm font-medium text-[#1B4332]">We'll confirm pricing shortly after booking</p>
+              <p className="text-xs text-[#6B5B4F] mt-1">You can continue with your booking — we'll reach out with the final price.</p>
             </div>
           )}
 
