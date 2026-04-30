@@ -222,7 +222,7 @@ export default function PublicSite() {
                     <span className="text-amber-500">&#9888;</span>
                     Not recommended for:
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 mb-2.5">
                     <li className="flex items-center gap-2 text-xs text-amber-700">
                       <span className="text-amber-400">&#8226;</span>
                       Anxious or reactive dogs
@@ -232,6 +232,10 @@ export default function PublicSite() {
                       First-time riders
                     </li>
                   </ul>
+                  <p className="text-xs font-medium text-[#1B4332] flex items-center gap-1.5 pt-2 border-t border-amber-200/50">
+                    <span className="text-[#52B788]">&rarr;</span>
+                    For these cases, choose Behavior-Aware Transport
+                  </p>
                 </div>
               </div>
               
