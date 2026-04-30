@@ -217,15 +217,18 @@ export default function PublicSite() {
                     </li>
                   </ul>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-[#6B5B4F]/70 mb-1.5">Not recommended for:</p>
+                <div className="bg-amber-50/80 rounded-xl p-3 border border-amber-200/50">
+                  <p className="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1.5">
+                    <span className="text-amber-500">&#9888;</span>
+                    Not recommended for:
+                  </p>
                   <ul className="space-y-1">
-                    <li className="flex items-center gap-2 text-xs text-[#6B5B4F]/60">
-                      <span>•</span>
+                    <li className="flex items-center gap-2 text-xs text-amber-700">
+                      <span className="text-amber-400">&#8226;</span>
                       Anxious or reactive dogs
                     </li>
-                    <li className="flex items-center gap-2 text-xs text-[#6B5B4F]/60">
-                      <span>•</span>
+                    <li className="flex items-center gap-2 text-xs text-amber-700">
+                      <span className="text-amber-400">&#8226;</span>
                       First-time riders
                     </li>
                   </ul>
