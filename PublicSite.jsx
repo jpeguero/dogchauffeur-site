@@ -151,61 +151,120 @@ export default function PublicSite() {
           </div>
         </motion.div>
 
-        {/* Service Tiers */}
+        {/* Service Tiers - Decision-Guided Experience */}
         <motion.div {...fade(0.05)}>
-          <div className="text-center mb-6">
+          <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-[#1B4332] mb-2">Choose Your Service Level</h2>
             <p className="text-sm text-[#6B5B4F]/70">Every dog is different. We have you covered either way.</p>
           </div>
           
-          {/* Service Selection Guide */}
-          <div className="bg-[#EDF7F0] rounded-2xl p-5 mb-6">
-            <p className="text-sm font-semibold text-[#1B4332] mb-2">Not sure which option is right?</p>
-            <ul className="space-y-1.5 text-sm text-[#6B5B4F]">
-              <li>If your dog is calm and used to travel → <span className="font-medium text-[#1B4332]">Standard is perfect</span></li>
-              <li>If your dog gets anxious, reactive, or easily stressed → <span className="font-medium text-[#1B4332]">Premium is recommended</span></li>
-            </ul>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 gap-5">
-            <div className="bg-white rounded-3xl border border-[#EDF7F0] p-7 flex flex-col gap-3">
-              <div className="text-2xl">🐶</div>
-              <h3 className="text-lg font-bold text-[#1B4332]">Standard Transport</h3>
-              <p className="text-sm text-[#6B5B4F]/75 leading-relaxed">Best for calm, well-behaved dogs who travel easily and settle quickly in a new vehicle.</p>
-              <ul className="space-y-1.5 mt-1">
-                {["Door-to-door service", "Real-time status updates", "Secured, clean vehicle"].map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-[#6B5B4F]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#52B788] shrink-0" />{f}
-                  </li>
-                ))}
-              </ul>
+          {/* Decision Helper Section */}
+          <div className="bg-gradient-to-br from-[#EDF7F0] to-[#D8F3DC]/50 rounded-2xl p-6 mb-8 border border-[#B7E4C7]/30">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-[#1B4332] flex items-center justify-center">
+                <span className="text-white text-sm">?</span>
+              </div>
+              <h3 className="text-base font-bold text-[#1B4332]">Not sure which service is right?</h3>
             </div>
-            <div className="bg-[#1B4332] rounded-3xl p-7 flex flex-col gap-3 text-white relative overflow-hidden">
-              <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-[#2D6A4F]/50 pointer-events-none" />
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-1.5 bg-[#52B788]/30 rounded-full px-3 py-1 text-xs font-semibold text-[#B7E4C7] mb-2">
-                  ⭐ Premium
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 bg-white/60 rounded-xl p-4">
+                <span className="text-xl shrink-0">🐕</span>
+                <div>
+                  <p className="text-sm font-medium text-[#1B4332]">Calm, well-behaved dogs</p>
+                  <p className="text-xs text-[#6B5B4F]/70 mt-0.5">Standard Transport is perfect</p>
                 </div>
-                <div className="text-2xl mb-1">🐕</div>
-                <h3 className="text-lg font-bold text-white">Behavior-Aware Transport</h3>
-                <p className="text-sm text-white/75 leading-relaxed mt-2">Designed for dogs that need extra patience, calm handling, and a stress-reduced experience during transport.</p>
-                <p className="text-xs font-semibold text-[#B7E4C7] mt-2 bg-[#52B788]/20 rounded-lg px-3 py-1.5 inline-block">Recommended for anxious, reactive, or first-time riders</p>
-                <ul className="space-y-1.5 mt-3">
-                  {["Everything in Standard", "Certified behavior-aware handling", "Calm, low-stimulation loading & unloading", "Ideal for reactive or nervous dogs"].map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-white/85">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D] shrink-0" />{f}
-                    </li>
-                  ))}
-                </ul>
+              </div>
+              <div className="flex items-start gap-3 bg-[#1B4332]/10 rounded-xl p-4 ring-2 ring-[#1B4332]/20">
+                <span className="text-xl shrink-0">🐾</span>
+                <div>
+                  <p className="text-sm font-medium text-[#1B4332]">Anxious, reactive, or first-time riders</p>
+                  <p className="text-xs text-[#6B5B4F]/70 mt-0.5">Premium Behavior-Aware is recommended</p>
+                </div>
               </div>
             </div>
           </div>
-          <div className="text-center mt-6">
-            <Link to={createPageUrl("BookingRequest")}>
-              <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                Book Premium Care Ride
-              </Button>
-            </Link>
+          
+          {/* Pricing Cards */}
+          <div className="grid sm:grid-cols-2 gap-6 items-stretch">
+            {/* Standard Card */}
+            <div className="bg-white rounded-3xl border border-[#EDF7F0] p-7 flex flex-col">
+              <div className="text-2xl mb-3">🐶</div>
+              <h3 className="text-xl font-bold text-[#1B4332]">Standard Transport</h3>
+              <p className="text-sm text-[#6B5B4F]/75 leading-relaxed mt-2">Reliable, everyday transport for calm, well-behaved dogs who settle easily in new environments.</p>
+              <ul className="space-y-2 mt-4 flex-1">
+                {["Door-to-door service", "Real-time status updates", "Secured, clean vehicle", "Careful, professional handling"].map(f => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-[#6B5B4F]">
+                    <span className="w-5 h-5 rounded-full bg-[#EDF7F0] flex items-center justify-center shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 pt-4 border-t border-[#EDF7F0]">
+                <Link to={createPageUrl("BookingRequest")}>
+                  <Button className="w-full bg-white hover:bg-[#EDF7F0] text-[#1B4332] border-2 border-[#1B4332] rounded-xl font-semibold h-12">
+                    Book Standard Ride
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Premium Card - Highlighted */}
+            <div className="bg-[#1B4332] rounded-3xl p-7 flex flex-col text-white relative overflow-hidden ring-4 ring-[#52B788]/30 sm:scale-[1.02] sm:-my-2">
+              {/* Decorative elements */}
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#2D6A4F]/50 pointer-events-none" />
+              <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-[#2D6A4F]/30 pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Recommended Badge */}
+                <div className="inline-flex items-center gap-1.5 bg-[#52B788] rounded-full px-3 py-1 text-xs font-bold text-white mb-3 w-fit">
+                  Recommended
+                </div>
+                
+                <div className="text-2xl mb-3">🐕</div>
+                <h3 className="text-xl font-bold text-white">Behavior-Aware Transport</h3>
+                <p className="text-sm text-white/80 leading-relaxed mt-2">Designed for dogs that need extra patience, calm handling, and a low-stress transport experience.</p>
+                
+                {/* Strong recommendation line */}
+                <div className="bg-[#52B788]/20 rounded-xl px-4 py-2.5 mt-4 border border-[#52B788]/30">
+                  <p className="text-sm font-semibold text-[#B7E4C7]">Recommended for anxious, reactive, or first-time riders</p>
+                </div>
+                
+                <ul className="space-y-2 mt-4 flex-1">
+                  <li className="flex items-center gap-2.5 text-sm text-[#B7E4C7] font-medium">
+                    <span className="w-5 h-5 rounded-full bg-[#52B788]/30 flex items-center justify-center shrink-0">
+                      <span className="text-xs">✓</span>
+                    </span>
+                    Includes everything in Standard
+                  </li>
+                  {["Certified behavior-aware handling", "Calm, low-stimulation environment", "Extra patience for nervous dogs", "Specialized loading techniques"].map(f => (
+                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/85">
+                      <span className="w-5 h-5 rounded-full bg-[#2D6A4F] flex items-center justify-center shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D]" />
+                      </span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <Link to={createPageUrl("BookingRequest")}>
+                    <Button className="w-full bg-[#52B788] hover:bg-[#74C69D] text-[#1B4332] rounded-xl font-bold h-12">
+                      Choose Behavior-Aware Transport
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Trust Line */}
+          <div className="text-center mt-8">
+            <div className="inline-flex items-center gap-2 bg-[#EDF7F0] rounded-full px-5 py-2.5">
+              <Shield className="w-4 h-4 text-[#1B4332]" />
+              <p className="text-sm text-[#1B4332] font-medium">Every ride is handled with safety-first protocols and real-time updates.</p>
+            </div>
           </div>
         </motion.div>
 
