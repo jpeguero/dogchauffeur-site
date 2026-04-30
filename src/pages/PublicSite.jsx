@@ -195,8 +195,11 @@ export default function PublicSite() {
                 </div>
                 <div className="text-2xl mb-2">🐕</div>
                 <h3 className="text-lg font-bold text-white">Behavior-Aware Transport</h3>
-                <p className="text-sm text-white/80 leading-relaxed mt-2 mb-4">
+                <p className="text-sm text-white/80 leading-relaxed mt-2 mb-2">
                   Designed for anxious, reactive, or high-energy dogs that need extra care and attention.
+                </p>
+                <p className="text-xs text-white/60 mb-4">
+                  Best for dogs that get anxious, reactive, or need extra handling care
                 </p>
                 <ul className="space-y-2.5 flex-1">
                   {[
