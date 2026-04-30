@@ -191,7 +191,7 @@ export default function PublicSite() {
               <div className="text-2xl mb-3">🐶</div>
               <h3 className="text-xl font-bold text-[#1B4332]">Standard Transport</h3>
               <p className="text-sm text-[#6B5B4F]/75 leading-relaxed mt-2">Reliable, everyday transport for calm, well-behaved dogs who settle easily in new environments.</p>
-              <ul className="space-y-2 mt-4 flex-1">
+              <ul className="space-y-2 mt-4">
                 {["Door-to-door service", "Real-time status updates", "Secured, clean vehicle", "Careful, professional handling"].map(f => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-[#6B5B4F]">
                     <span className="w-5 h-5 rounded-full bg-[#EDF7F0] flex items-center justify-center shrink-0">
@@ -201,7 +201,38 @@ export default function PublicSite() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 pt-4 border-t border-[#EDF7F0]">
+              
+              {/* Best for / Not recommended */}
+              <div className="mt-4 pt-4 border-t border-[#EDF7F0] flex-1">
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-[#1B4332] mb-1.5">Best for:</p>
+                  <ul className="space-y-1">
+                    <li className="flex items-center gap-2 text-xs text-[#6B5B4F]">
+                      <span className="text-[#52B788]">•</span>
+                      Calm, well-socialized dogs
+                    </li>
+                    <li className="flex items-center gap-2 text-xs text-[#6B5B4F]">
+                      <span className="text-[#52B788]">•</span>
+                      Dogs comfortable with car rides
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#6B5B4F]/70 mb-1.5">Not recommended for:</p>
+                  <ul className="space-y-1">
+                    <li className="flex items-center gap-2 text-xs text-[#6B5B4F]/60">
+                      <span>•</span>
+                      Anxious or reactive dogs
+                    </li>
+                    <li className="flex items-center gap-2 text-xs text-[#6B5B4F]/60">
+                      <span>•</span>
+                      First-time riders
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-[#EDF7F0]">
                 <Link to={createPageUrl("BookingRequest")}>
                   <Button className="w-full bg-white hover:bg-[#EDF7F0] text-[#1B4332] border-2 border-[#1B4332] rounded-xl font-semibold h-12">
                     Book Standard Ride
