@@ -5,9 +5,14 @@ export default async function handler(req, res) {
   console.log("[book-ride] Method:", req.method);
 
   try {
-    if (req.method !== "POST") {
-      console.log("[book-ride] Invalid method");
+    if (req.method === "GET") {
+      return res.status(405).json({
+        success: false,
+        error: "Method not allowed",
+      });
+    }
 
+    if (req.method !== "POST") {
       return res.status(405).json({
         success: false,
         error: "Method not allowed",
