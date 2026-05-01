@@ -274,49 +274,64 @@ export default function BookingRequest() {
       ...(priceEstimate ? { estimated_price: priceEstimate.price, estimated_miles: priceEstimate.miles } : {}),
     };
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const booking = await base44.entities.Booking.create(payload);
-      
+    try {
+      console.log("[BookingRequest] Submitting booking...");
+
+      const response = await fetch("/api/book-ride", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
       clearTimeout(timeoutId);
 
-      setBookingId(booking.id);
+      console.log("[BookingRequest] /api/book-ride status:", response.status);
+
+      const result = await response.json();
+
+      console.log("[BookingRequest] /api/book-ride result:", result);
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Booking failed");
+      }
+
+      const confirmedBooking = {
+        ...payload,
+        bookingId: result.bookingId,
+      };
+
+      // Show confirmation immediately
+      setBookingId(result.bookingId);
       setSubmitted(true);
       toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
 
-      // Email notifications should NOT block confirmation
-      Promise.all([
-        // Send professional customer confirmation email
-        form.email && base44.integrations.Core.SendEmail({
-          to: form.email,
-          subject: `DogChauffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
-          body: generateCustomerEmail(form),
-        }),
-        // Send admin notification email
-        base44.integrations.Core.SendEmail({
-          to: ADMIN_EMAIL,
-          subject: `New DogChauffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
-          body: generateAdminEmail(form),
-        }),
-        // Send SMS notification if phone is provided
-        form.phone && base44.functions.invoke('sendSMS', {
-          phone: form.phone,
-          pet_name: form.pet_name || "your pet",
-          event_type: "ride_received"
-        }),
-      ].filter(Boolean)).catch((err) => {
-        console.error("Email/SMS notification failed:", err);
-      });
+      // Non-blocking email - do NOT await
+      fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(confirmedBooking),
+      })
+        .then(async (emailResponse) => {
+          const emailResult = await emailResponse.json();
+          console.log("[BookingRequest] Email result:", emailResult);
+        })
+        .catch((emailError) => {
+          console.error("[BookingRequest] Email failed but booking succeeded:", emailError);
+        });
 
     } catch (error) {
-      console.error("Booking submit error:", error);
-      setSubmitError(
-        error.name === "AbortError"
-          ? "The request timed out. Please try again."
-          : error.message || "Something went wrong. Please try again."
-      );
+      clearTimeout(timeoutId);
+      console.error("[BookingRequest] Booking error:", error);
+
+      if (error.name === "AbortError") {
+        setSubmitError("The booking request timed out. Please try again.");
+      } else {
+        setSubmitError(error.message || "Something went wrong while submitting the booking.");
+      }
     } finally {
       setSubmitting(false);
     }
