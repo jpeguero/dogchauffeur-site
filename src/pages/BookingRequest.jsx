@@ -223,6 +223,8 @@ export default function BookingRequest() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [bookingId, setBookingId] = useState(null);
   const [priceEstimate, setPriceEstimate] = useState(null); // { price, miles, distance_text, duration_text }
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [priceError, setPriceError] = useState(null);
@@ -264,48 +266,60 @@ export default function BookingRequest() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError("");
 
-    const data = {
+    const payload = {
       ...form,
       number_of_dogs: Number(form.number_of_dogs) || 1,
       ...(priceEstimate ? { estimated_price: priceEstimate.price, estimated_miles: priceEstimate.miles } : {}),
     };
-    await base44.entities.Booking.create(data);
 
     try {
-      // Send professional customer confirmation email
-      await base44.integrations.Core.SendEmail({
-        to: form.email,
-        subject: `DogChauffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
-        body: generateCustomerEmail(form),
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const booking = await base44.entities.Booking.create(payload);
+      
+      clearTimeout(timeoutId);
+
+      setBookingId(booking.id);
+      setSubmitted(true);
+      toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
+
+      // Email notifications should NOT block confirmation
+      Promise.all([
+        // Send professional customer confirmation email
+        form.email && base44.integrations.Core.SendEmail({
+          to: form.email,
+          subject: `DogChauffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
+          body: generateCustomerEmail(form),
+        }),
+        // Send admin notification email
+        base44.integrations.Core.SendEmail({
+          to: ADMIN_EMAIL,
+          subject: `New DogChauffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
+          body: generateAdminEmail(form),
+        }),
+        // Send SMS notification if phone is provided
+        form.phone && base44.functions.invoke('sendSMS', {
+          phone: form.phone,
+          pet_name: form.pet_name || "your pet",
+          event_type: "ride_received"
+        }),
+      ].filter(Boolean)).catch((err) => {
+        console.error("Email/SMS notification failed:", err);
       });
 
-      // Send admin notification email
-      await base44.integrations.Core.SendEmail({
-        to: ADMIN_EMAIL,
-        subject: `New DogChauffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
-        body: generateAdminEmail(form),
-      });
-
-      // Send SMS notification if phone is provided
-      if (form.phone) {
-        try {
-          await base44.functions.invoke('sendSMS', {
-            phone: form.phone,
-            pet_name: form.pet_name || "your pet",
-            event_type: "ride_received"
-          });
-        } catch (smsError) {
-          console.error("SMS notification error:", smsError);
-        }
-      }
-    } catch (e) {
-      console.error("Notification error:", e);
+    } catch (error) {
+      console.error("Booking submit error:", error);
+      setSubmitError(
+        error.name === "AbortError"
+          ? "The request timed out. Please try again."
+          : error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
     }
-
-    toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
-    setSubmitted(true);
-    setSubmitting(false);
   };
 
   if (submitted) {
@@ -362,6 +376,13 @@ export default function BookingRequest() {
           </div>
 
           <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8 space-y-5">
+
+            {/* Submit Error */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-sm text-red-700 font-medium">{submitError}</p>
+              </div>
+            )}
 
             {/* Partner Referral Banner */}
             {isPartnerRef && (
