@@ -223,6 +223,8 @@ export default function BookingRequest() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [bookingId, setBookingId] = useState(null);
   const [priceEstimate, setPriceEstimate] = useState(null); // { price, miles, distance_text, duration_text }
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [priceError, setPriceError] = useState(null);
@@ -264,48 +266,75 @@ export default function BookingRequest() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError("");
 
-    const data = {
+    const payload = {
       ...form,
       number_of_dogs: Number(form.number_of_dogs) || 1,
       ...(priceEstimate ? { estimated_price: priceEstimate.price, estimated_miles: priceEstimate.miles } : {}),
     };
-    await base44.entities.Booking.create(data);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-      // Send professional customer confirmation email
-      await base44.integrations.Core.SendEmail({
-        to: form.email,
-        subject: `DogChauffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
-        body: generateCustomerEmail(form),
+      console.log("[BookingRequest] Submitting booking...");
+
+      const response = await fetch("/api/book-ride", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
-      // Send admin notification email
-      await base44.integrations.Core.SendEmail({
-        to: ADMIN_EMAIL,
-        subject: `New DogChauffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
-        body: generateAdminEmail(form),
-      });
+      clearTimeout(timeoutId);
 
-      // Send SMS notification if phone is provided
-      if (form.phone) {
-        try {
-          await base44.functions.invoke('sendSMS', {
-            phone: form.phone,
-            pet_name: form.pet_name || "your pet",
-            event_type: "ride_received"
-          });
-        } catch (smsError) {
-          console.error("SMS notification error:", smsError);
-        }
+      console.log("[BookingRequest] /api/book-ride status:", response.status);
+
+      const result = await response.json();
+
+      console.log("[BookingRequest] /api/book-ride result:", result);
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Booking failed");
       }
-    } catch (e) {
-      console.error("Notification error:", e);
-    }
 
-    toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
-    setSubmitted(true);
-    setSubmitting(false);
+      const confirmedBooking = {
+        ...payload,
+        bookingId: result.bookingId,
+      };
+
+      // Show confirmation immediately
+      setBookingId(result.bookingId);
+      setSubmitted(true);
+      toast.success(`Thanks, ${form.full_name}! We got your request and will be in touch shortly.`);
+
+      // Non-blocking email - do NOT await
+      fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(confirmedBooking),
+      })
+        .then(async (emailResponse) => {
+          const emailResult = await emailResponse.json();
+          console.log("[BookingRequest] Email result:", emailResult);
+        })
+        .catch((emailError) => {
+          console.error("[BookingRequest] Email failed but booking succeeded:", emailError);
+        });
+
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error("[BookingRequest] Booking error:", error);
+
+      if (error.name === "AbortError") {
+        setSubmitError("The booking request timed out. Please try again.");
+      } else {
+        setSubmitError(error.message || "Something went wrong while submitting the booking.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -362,6 +391,13 @@ export default function BookingRequest() {
           </div>
 
           <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8 space-y-5">
+
+            {/* Submit Error */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-sm text-red-700 font-medium">{submitError}</p>
+              </div>
+            )}
 
             {/* Partner Referral Banner */}
             {isPartnerRef && (
