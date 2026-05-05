@@ -1,96 +1,127 @@
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
-import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import PageNotFound from './lib/PageNotFound';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import SafetyStandardsPage from './pages/SafetyStandards';
-import RevenueAnalyticsPage from './pages/RevenueAnalytics';
-import EmergencyProtocolsPage from './pages/EmergencyProtocols';
-import HealthLogsPage from './pages/HealthLogs';
-import ContractorDashboardPage from './pages/ContractorDashboard';
-import PrivacyPolicyPage from './pages/PrivacyPolicy';
-import TermsAndConditionsPage from './pages/TermsAndConditions';
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter } from "react-router-dom";
 
-const { Pages, Layout, mainPage } = pagesConfig;
-const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+// Hard pathname gate - MUST be checked before ANY Base44/analytics code runs
+const path = window.location.pathname;
+const isBookingRequestRoute = path === "/BookingRequest";
 
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
-
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
-
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
-  }
-
-  // Render the main app
+// Loading spinner component
+function LoadingSpinner() {
   return (
-    <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="/HealthLogs" element={<LayoutWrapper currentPageName="HealthLogs"><HealthLogsPage /></LayoutWrapper>} />
-      <Route path="/EmergencyProtocols" element={<LayoutWrapper currentPageName="EmergencyProtocols"><EmergencyProtocolsPage /></LayoutWrapper>} />
-      <Route path="/RevenueAnalytics" element={<LayoutWrapper currentPageName="RevenueAnalytics"><RevenueAnalyticsPage /></LayoutWrapper>} />
-      <Route path="/SafetyStandards" element={<LayoutWrapper currentPageName="SafetyStandards"><SafetyStandardsPage /></LayoutWrapper>} />
-      <Route path="/ContractorDashboard" element={<LayoutWrapper currentPageName="ContractorDashboard"><ContractorDashboardPage /></LayoutWrapper>} />
-      <Route path="/privacy" element={<PrivacyPolicyPage />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="/terms" element={<TermsAndConditionsPage />} />
-      <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <div style={{ 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      height: "100vh", 
+      background: "#F9F7F3" 
+    }}>
+      <div style={{
+        width: 32,
+        height: 32,
+        border: "4px solid #D8F3DC",
+        borderTopColor: "#1B4332",
+        borderRadius: "50%",
+        animation: "spin 1s linear infinite"
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
   );
-};
-
-
-function App() {
-
-  return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
-  )
 }
 
-export default App
+// Error boundary class
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("[App] ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 40, textAlign: "center", fontFamily: "sans-serif" }}>
+          <h1 style={{ color: "#1B4332" }}>Something went wrong</h1>
+          <p style={{ color: "#6B5B4F" }}>Please refresh the page or try again later.</p>
+          <details style={{ textAlign: "left", background: "#fee", padding: 16, borderRadius: 8, marginTop: 20 }} open>
+            <summary style={{ cursor: "pointer", fontWeight: "bold", color: "#c00" }}>Error Details</summary>
+            <pre style={{ whiteSpace: "pre-wrap", color: "#900", fontSize: 12 }}>{this.state.error?.toString()}</pre>
+          </details>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ marginTop: 20, padding: "10px 20px", background: "#1B4332", color: "white", border: "none", borderRadius: 8, cursor: "pointer" }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Lazy imports - only loaded when needed
+const BookingRequest = lazy(() => import("../BookingRequest"));
+const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
+
+// Dynamic imports for libraries only needed by the full app
+let QueryClientProvider, QueryClient, Toaster, queryClient;
+
+function App() {
+  const [ready, setReady] = React.useState(isBookingRequestRoute);
+  
+  React.useEffect(() => {
+    if (!isBookingRequestRoute && !ready) {
+      // Only load full app dependencies when NOT on BookingRequest
+      Promise.all([
+        import("@tanstack/react-query"),
+        import("sonner")
+      ]).then(([queryMod, sonnerMod]) => {
+        QueryClientProvider = queryMod.QueryClientProvider;
+        QueryClient = queryMod.QueryClient;
+        Toaster = sonnerMod.Toaster;
+        queryClient = new QueryClient({
+          defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } }
+        });
+        setReady(true);
+      });
+    }
+  }, [ready]);
+  
+  // /BookingRequest route - render standalone, no Base44, no analytics
+  if (isBookingRequestRoute) {
+    return (
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingSpinner />}>
+            <BookingRequest />
+          </Suspense>
+        </BrowserRouter>
+      </ErrorBoundary>
+    );
+  }
+  
+  // Other routes - wait for dependencies to load
+  if (!ready) {
+    return <LoadingSpinner />;
+  }
+  
+  // Full app with all providers
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingSpinner />}>
+            <AuthenticatedApp />
+          </Suspense>
+        </BrowserRouter>
+        <Toaster position="top-center" richColors />
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;
