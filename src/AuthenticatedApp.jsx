@@ -1,6 +1,11 @@
 import React from "react";
+import { BrowserRouter } from "react-router-dom";
 import PublicSite from "../PublicSite";
 
 export default function AuthenticatedApp() {
-  return <PublicSite />;
+  return (
+    <BrowserRouter>
+      <PublicSite />
+    </BrowserRouter>
+  );
 }
