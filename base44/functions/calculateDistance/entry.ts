@@ -1,17 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { calculatePrice, serviceAreaCheck, BASE_FEE } from './pricing.js';
 
-// ── Pricing config ────────────────────────────────────────────────────────────
-const BASE_FEE         = 25;    // flat fee covers first 5 miles
-const BASE_MILES       = 5;     // miles included in base fee
-const PER_MILE_AFTER   = 2.50;  // per mile beyond first 5
-const MINIMUM_FARE     = 25;
-const HEAVY_SURCHARGE  = 15;    // extra for dogs > 75 lbs (large crate)
-const HEAVY_THRESHOLD  = 75;    // lbs
-
-// ── Service area ─────────────────────────────────────────────────────────────
-// Update HOME_BASE to your actual home ZIP / address
-const HOME_BASE           = "60628, Chicago, IL";
-const SERVICE_RADIUS_MILES = 25;
+const HOME_BASE = "60628, Chicago, IL";
 
 Deno.serve(async (req) => {
   try {
@@ -46,27 +36,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Could not calculate distance. Please check addresses.' }, { status: 422 });
     }
 
-    // ── Trip pricing ──────────────────────────────────────────────────────────
-    const miles      = tripElement.distance.value / 1609.344;
-    const extraMiles = Math.max(0, miles - BASE_MILES);
-    const baseFare   = BASE_FEE + extraMiles * PER_MILE_AFTER;
-    const heavySurcharge = (pet_weight && Number(pet_weight) > HEAVY_THRESHOLD) ? HEAVY_SURCHARGE : 0;
-    const price      = Math.max(MINIMUM_FARE, Math.round((baseFare + heavySurcharge) * 100) / 100);
+    const { miles, price, heavySurcharge, extraMiles, perMileCharge } = calculatePrice(
+      tripElement.distance.value,
+      pet_weight
+    );
 
-    // ── Service area check ────────────────────────────────────────────────────
     let out_of_service_area  = false;
     let home_to_pickup_miles = null;
     if (homeElement?.status === 'OK') {
-      home_to_pickup_miles = Math.round(homeElement.distance.value / 1609.344 * 10) / 10;
-      out_of_service_area  = home_to_pickup_miles > SERVICE_RADIUS_MILES;
+      ({ home_to_pickup_miles, out_of_service_area } = serviceAreaCheck(homeElement.distance.value));
     }
 
     return Response.json({
-      miles:             Math.round(miles * 10) / 10,
+      miles,
       price,
       base_fee:          BASE_FEE,
-      extra_miles:       Math.round(extraMiles * 10) / 10,
-      per_mile_charge:   Math.round(extraMiles * PER_MILE_AFTER * 100) / 100,
+      extra_miles:       extraMiles,
+      per_mile_charge:   perMileCharge,
       heavy_surcharge:   heavySurcharge,
       distance_text:     tripElement.distance.text,
       duration_text:     tripElement.duration.text,
