@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const inputStyle = {
   width: "100%",
@@ -36,10 +36,28 @@ const initialForm = {
 };
 
 export default function BookingRequest() {
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(() => ({ ...initialForm }));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [confirmation, setConfirmation] = useState(null);
+
+  const resetToBlankForm = () => {
+    setForm({ ...initialForm });
+    setSubmitting(false);
+    setError("");
+    setConfirmation(null);
+  };
+
+  useEffect(() => {
+    const resetRestoredConfirmation = (event) => {
+      if (event.persisted) {
+        resetToBlankForm();
+      }
+    };
+
+    window.addEventListener("pageshow", resetRestoredConfirmation);
+    return () => window.removeEventListener("pageshow", resetRestoredConfirmation);
+  }, []);
 
   const set = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -110,9 +128,18 @@ export default function BookingRequest() {
             <div style={{ color: "#6B5B4F", fontSize: 13 }}>Booking ID</div>
             <div style={{ color: "#1B4332", fontWeight: 800, fontSize: 20 }}>{confirmation.bookingId || confirmation.booking?.bookingId || "DC-PENDING"}</div>
           </div>
-          <a href="/" style={{ display: "inline-block", background: "#1B4332", color: "#fff", borderRadius: 12, padding: "12px 20px", textDecoration: "none", fontWeight: 700 }}>
-            Back to Home
-          </a>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <button
+              type="button"
+              onClick={resetToBlankForm}
+              style={{ background: "#1B4332", color: "#fff", border: 0, borderRadius: 12, padding: "12px 20px", fontWeight: 700, cursor: "pointer" }}
+            >
+              Submit Another Request
+            </button>
+            <a href="/" style={{ display: "inline-block", background: "#EDF7F0", color: "#1B4332", borderRadius: 12, padding: "12px 20px", textDecoration: "none", fontWeight: 700 }}>
+              Back to Home
+            </a>
+          </div>
         </section>
       </main>
     );
