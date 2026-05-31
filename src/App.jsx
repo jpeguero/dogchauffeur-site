@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 const BookingRequest = lazy(() => import("../BookingRequest"));
 const SafetyStandards = lazy(() => import("./pages/SafetyStandards"));
@@ -32,31 +32,13 @@ function LoadingSpinner() {
 }
 
 export default function App() {
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
-
-  if (pathname === "/BookingRequest") {
-    return (
-      <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
-          <BookingRequest />
-        </Suspense>
-      </BrowserRouter>
-    );
-  }
-
-  if (pathname === "/SafetyStandards") {
-    return (
-      <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
-          <SafetyStandards />
-        </Suspense>
-      </BrowserRouter>
-    );
-  }
-
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <AuthenticatedApp />
+      <Routes>
+        <Route path="/BookingRequest" element={<BookingRequest />} />
+        <Route path="/SafetyStandards" element={<SafetyStandards />} />
+        <Route path="*" element={<AuthenticatedApp />} />
+      </Routes>
     </Suspense>
   );
 }
