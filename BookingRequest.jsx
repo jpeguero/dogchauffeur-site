@@ -229,6 +229,10 @@ export default function BookingRequest() {
           <p style={{ textAlign: "center", color: "#6B5B4F", fontSize: 12, marginTop: 16 }}>
             We'll review your request and reach out to confirm pricing and timing.
           </p>
+
+          <p style={{ textAlign: "center", color: "#6B5B4F", fontSize: 10, marginTop: 12, lineHeight: 1.5 }}>
+            By submitting, you consent to receive booking updates and SMS alerts from DogChauffeur at the number provided. Message & data rates may apply. Msg frequency varies. Reply STOP to opt out. View our <a href="/privacy-policy" style={{ color: "#1B4332", textDecoration: "underline" }}>Privacy Policy</a> and <a href="/terms-and-conditions" style={{ color: "#1B4332", textDecoration: "underline" }}>Terms & Conditions</a>.
+          </p>
         </form>
       </section>
     </main>

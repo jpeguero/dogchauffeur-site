@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 
 const BookingRequest = lazy(() => import("../BookingRequest"));
 const SafetyStandards = lazy(() => import("./pages/SafetyStandards"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
 
 function LoadingSpinner() {
@@ -37,6 +39,8 @@ export default function App() {
       <Routes>
         <Route path="/BookingRequest" element={<BookingRequest />} />
         <Route path="/SafetyStandards" element={<SafetyStandards />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="*" element={<AuthenticatedApp />} />
       </Routes>
     </Suspense>
