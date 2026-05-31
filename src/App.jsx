@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter } from "react-router-dom";
 
 const BookingRequest = lazy(() => import("../BookingRequest"));
+const SafetyStandards = lazy(() => import("./pages/SafetyStandards"));
 const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
 
 function LoadingSpinner() {
@@ -38,6 +39,16 @@ export default function App() {
       <BrowserRouter>
         <Suspense fallback={<LoadingSpinner />}>
           <BookingRequest />
+        </Suspense>
+      </BrowserRouter>
+    );
+  }
+
+  if (pathname === "/SafetyStandards") {
+    return (
+      <BrowserRouter>
+        <Suspense fallback={<LoadingSpinner />}>
+          <SafetyStandards />
         </Suspense>
       </BrowserRouter>
     );
