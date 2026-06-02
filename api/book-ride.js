@@ -39,6 +39,25 @@ export default async function handler(req, res) {
       console.log("[book-ride] GOOGLE_SHEETS_WEBAPP_URL is not set. Skipping sheet sync.");
     }
 
+    // Server-side email alerts dispatch
+    try {
+      const protocol = req.headers["x-forwarded-proto"] || "https";
+      const host = req.headers.host;
+      const emailEndpoint = `${protocol}://${host}/api/send-email`;
+      console.log("[book-ride] Dispatching email alerts server-side:", emailEndpoint);
+      
+      // Await the fetch on the high-speed serverless network so it is guaranteed to execute
+      const emailResponse = await fetch(emailEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking, form: req.body }),
+      });
+      const emailData = await emailResponse.json().catch(() => ({}));
+      console.log("[book-ride] Server-side email dispatch result:", emailResponse.status, emailData);
+    } catch (emailErr) {
+      console.error("[book-ride] Server-side email dispatch failed:", emailErr);
+    }
+
     return res.status(200).json({
       success: true,
       bookingId,

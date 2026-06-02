@@ -75,15 +75,6 @@ export default function BookingRequest() {
       }
 
       setConfirmation(data);
-
-      // Fire-and-forget notification hook. This must never block confirmation.
-      fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ booking: data.booking || data, form }),
-      }).catch((emailError) => {
-        console.warn("[BookingRequest] Background email failed", emailError);
-      });
     } catch (err) {
       console.error("[BookingRequest] Submit failed", err);
       setError(
