@@ -42,7 +42,9 @@ export default async function handler(req, res) {
     // 2. Direct Server-Side Email Alerts (Resend API)
     const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.BOOKING_ALERT_FROM;
-    const toEmail = process.env.BOOKING_ALERT_TO || "jpeguero@gmail.com";
+    
+    // E-Myth routing: Send alerts to both Owner (monitoring) and Alexander (Technician)
+    const toEmail = process.env.BOOKING_ALERT_TO || "apeguero45@gmail.com, jpeguero@gmail.com";
 
     const name = req.body.full_name || "N/A";
     const phone = req.body.phone || "N/A";
@@ -199,7 +201,7 @@ ${notes}
           },
           body: JSON.stringify({
             from: fromEmail,
-            to: [toEmail],
+            to: toEmail.split(",").map(item => item.trim()),
             subject: `New Ride Request: ${name} 🐕 [${bookingId}]`,
             text: adminEmailText,
           }),
@@ -255,7 +257,7 @@ ${notes}
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioToken = process.env.TWILIO_AUTH_TOKEN;
     const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
-    const adminSmsPhone = process.env.ADMIN_PHONE_NUMBER; // Optional: To text you when a booking comes in!
+    const adminSmsPhone = process.env.ADMIN_PHONE_NUMBER || "7734504720"; // Defaults to Alexander (Technician)
 
     if (twilioSid && twilioToken && twilioFrom) {
       console.log("[book-ride] Initializing Twilio SMS dispatches...");
