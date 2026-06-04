@@ -5,6 +5,7 @@ const BookingRequest = lazy(() => import("../BookingRequest"));
 const SafetyStandards = lazy(() => import("./pages/SafetyStandards"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
 
 function LoadingSpinner() {
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<AuthenticatedApp />} />
       </Routes>
     </Suspense>
