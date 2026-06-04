@@ -40,6 +40,7 @@ export default function BookingRequest() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [confirmation, setConfirmation] = useState(null);
+  const [smsConsent, setSmsConsent] = useState(false);
 
   const set = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -209,6 +210,20 @@ export default function BookingRequest() {
             <p style={{ marginBottom: 0, fontSize: 13 }}>Questions before booking? <a href="tel:3126209297" style={{ color: "#1B4332", fontWeight: 700 }}>Call or text (312) 620-9297</a></p>
           </div>
 
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 20 }}>
+            <input 
+              type="checkbox" 
+              id="sms-opt-in"
+              required 
+              checked={smsConsent} 
+              onChange={(e) => setSmsConsent(e.target.checked)} 
+              style={{ marginTop: 4, cursor: "pointer" }}
+            />
+            <label htmlFor="sms-opt-in" style={{ color: "#6B5B4F", fontSize: 11, lineHeight: 1.5, cursor: "pointer" }}>
+              I agree to receive booking updates and SMS alerts from DogChauffeur at the number provided. Message & data rates may apply. Msg frequency varies. Reply STOP to opt out. View our <a href="/privacy-policy" style={{ color: "#1B4332", textDecoration: "underline" }}>Privacy Policy</a> and <a href="/terms-and-conditions" style={{ color: "#1B4332", textDecoration: "underline" }}>Terms & Conditions</a>.
+            </label>
+          </div>
+
           <button
             type="submit"
             disabled={submitting}
@@ -217,12 +232,8 @@ export default function BookingRequest() {
             {submitting ? "Sending..." : "Request Ride"}
           </button>
 
-          <p style={{ textAlign: "center", color: "#6B5B4F", fontSize: 12, marginTop: 16 }}>
+          <p style={{ textAlign: "center", color: "#6B5B4F", fontSize: 12, marginTop: 16, marginBottom: 0 }}>
             We'll review your request and reach out to confirm pricing and timing.
-          </p>
-
-          <p style={{ textAlign: "center", color: "#6B5B4F", fontSize: 10, marginTop: 12, lineHeight: 1.5 }}>
-            By submitting, you consent to receive booking updates and SMS alerts from DogChauffeur at the number provided. Message & data rates may apply. Msg frequency varies. Reply STOP to opt out. View our <a href="/privacy-policy" style={{ color: "#1B4332", textDecoration: "underline" }}>Privacy Policy</a> and <a href="/terms-and-conditions" style={{ color: "#1B4332", textDecoration: "underline" }}>Terms & Conditions</a>.
           </p>
         </form>
       </section>

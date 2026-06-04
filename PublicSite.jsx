@@ -390,6 +390,8 @@ export default function PublicSite() {
              <Link to={createPageUrl("PublicSite")} className="hover:text-white transition">Pet Owners</Link>
              <Link to={createPageUrl("VetPartners")} className="hover:text-white transition">Vet Clinics &amp; Partners</Link>
              <Link to={createPageUrl("BookingRequest")} className="hover:text-white transition">Book a Ride</Link>
+             <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
+             <Link to="/terms-and-conditions" className="hover:text-white transition">Terms &amp; Conditions</Link>
            </div>
            <div className="border-t border-white/10 pt-6">
              <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
