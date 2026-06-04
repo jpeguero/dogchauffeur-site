@@ -14,7 +14,17 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.BOOKING_ALERT_FROM;
-    const toEmail = process.env.BOOKING_ALERT_TO || "jpeguero@gmail.com";
+    
+    // E-Myth routing: Always send alerts to both Owner (monitoring) and Alexander (Technician)
+    let adminEmails = ["apeguero45@gmail.com", "jpeguero@gmail.com"];
+    if (process.env.BOOKING_ALERT_TO) {
+      const extraEmails = process.env.BOOKING_ALERT_TO.split(",").map(e => e.trim());
+      extraEmails.forEach(e => {
+        if (e && !adminEmails.includes(e)) {
+          adminEmails.push(e);
+        }
+      });
+    }
 
     // Requirements validation
     if (!apiKey) {
@@ -177,7 +187,7 @@ ${notes}
     const emailPromises = [];
 
     // Promise 1: Send Admin Notification (Plain-text)
-    console.log(`[send-email] Sending admin alert to: ${toEmail}`);
+    console.log(`[send-email] Sending admin alert to: ${adminEmails}`);
     emailPromises.push(
       fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -187,7 +197,7 @@ ${notes}
         },
         body: JSON.stringify({
           from: fromEmail,
-          to: [toEmail],
+          to: adminEmails,
           subject: `New Ride Request: ${name} 🐕 [${bookingId}]`,
           text: adminEmailText,
         }),
