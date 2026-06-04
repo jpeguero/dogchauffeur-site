@@ -44,20 +44,20 @@ export default async function handler(req, res) {
     const fromEmail = process.env.BOOKING_ALERT_FROM;
     const toEmail = process.env.BOOKING_ALERT_TO || "jpeguero@gmail.com";
 
-    if (apiKey && fromEmail) {
-      const name = req.body.full_name || "N/A";
-      const phone = req.body.phone || "N/A";
-      const email = req.body.email || "";
-      const rideType = req.body.ride_type || "N/A";
-      const pickup = req.body.pickup_address || "N/A";
-      const dropoff = req.body.dropoff_address || "N/A";
-      const date = req.body.preferred_date || "N/A";
-      const timeWindow = req.body.preferred_time_window || "N/A";
-      const numDogs = req.body.number_of_dogs || "1";
-      const sizes = req.body.dog_sizes || "N/A";
-      const notes = req.body.notes || "None";
-      const isUrgent = req.body.is_urgent ? "YES" : "No";
+    const name = req.body.full_name || "N/A";
+    const phone = req.body.phone || "N/A";
+    const email = req.body.email || "";
+    const rideType = req.body.ride_type || "N/A";
+    const pickup = req.body.pickup_address || "N/A";
+    const dropoff = req.body.dropoff_address || "N/A";
+    const date = req.body.preferred_date || "N/A";
+    const timeWindow = req.body.preferred_time_window || "N/A";
+    const numDogs = req.body.number_of_dogs || "1";
+    const sizes = req.body.dog_sizes || "N/A";
+    const notes = req.body.notes || "None";
+    const isUrgent = req.body.is_urgent ? "YES" : "No";
 
+    if (apiKey && fromEmail) {
       // A. Admin Plain-Text Email Body
       const adminEmailText = `New DogChauffeur Booking Request
 
@@ -249,6 +249,99 @@ ${notes}
       }
     } else {
       console.log("[book-ride] RESEND_API_KEY or BOOKING_ALERT_FROM is missing. Skipping email alerts.");
+    }
+
+    // 3. Direct Server-Side SMS Alerts (Twilio API via Native Fetch)
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+    const adminSmsPhone = process.env.ADMIN_PHONE_NUMBER; // Optional: To text you when a booking comes in!
+
+    if (twilioSid && twilioToken && twilioFrom) {
+      console.log("[book-ride] Initializing Twilio SMS dispatches...");
+      const smsPromises = [];
+
+      // Helper function to format phone number to E.164 (e.g. +17735624240)
+      const formatToE164 = (phoneStr) => {
+        if (!phoneStr) return null;
+        const digits = phoneStr.replace(/\D/g, "");
+        if (digits.length === 10) return `+1${digits}`;
+        if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+        if (digits.startsWith("+")) return digits;
+        return `+${digits}`;
+      };
+
+      const customerSmsTo = formatToE164(phone);
+      const cleanTwilioFrom = formatToE164(twilioFrom);
+
+      // A. Send SMS confirmation to Customer
+      if (customerSmsTo) {
+        const customerSmsBody = `Thanks for choosing DogChauffeur! We received your request (${bookingId}) for a ${rideType} on ${date}. We will review the details and contact you shortly to confirm the final rate.`;
+        console.log(`[book-ride] Dispatching SMS confirmation to customer: ${customerSmsTo}`);
+        
+        const params = new URLSearchParams();
+        params.append("From", cleanTwilioFrom);
+        params.append("To", customerSmsTo);
+        params.append("Body", customerSmsBody);
+
+        smsPromises.push(
+          fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+            method: "POST",
+            headers: {
+              "Authorization": "Basic " + Buffer.from(`${twilioSid}:${twilioToken}`).toString("base64"),
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: params.toString()
+          }).then(async r => {
+            const rData = await r.json().catch(() => ({}));
+            console.log("[book-ride] Customer SMS response:", r.status, rData);
+            return { type: "customer_sms", ok: r.ok, status: r.status, data: rData };
+          }).catch(err => {
+            console.error("[book-ride] Customer SMS fetch error:", err);
+            return { type: "customer_sms", ok: false, error: err.message };
+          })
+        );
+      }
+
+      // B. Send SMS alert to Admin (if ADMIN_PHONE_NUMBER is configured)
+      const adminSmsTo = formatToE164(adminSmsPhone);
+      if (adminSmsTo) {
+        const adminSmsBody = `New Booking Request! ID: ${bookingId}\nCustomer: ${name}\nPhone: ${phone}\nType: ${rideType}\nDate: ${date}\nUrgent: ${isUrgent}\nCheck Google Sheet & Calendar!`;
+        console.log(`[book-ride] Dispatching SMS alert to admin: ${adminSmsTo}`);
+        
+        const adminParams = new URLSearchParams();
+        adminParams.append("From", cleanTwilioFrom);
+        adminParams.append("To", adminSmsTo);
+        adminParams.append("Body", adminSmsBody);
+
+        smsPromises.push(
+          fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+            method: "POST",
+            headers: {
+              "Authorization": "Basic " + Buffer.from(`${twilioSid}:${twilioToken}`).toString("base64"),
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: adminParams.toString()
+          }).then(async r => {
+            const rData = await r.json().catch(() => ({}));
+            console.log("[book-ride] Admin SMS response:", r.status, rData);
+            return { type: "admin_sms", ok: r.ok, status: r.status, data: rData };
+          }).catch(err => {
+            console.error("[book-ride] Admin SMS fetch error:", err);
+            return { type: "admin_sms", ok: false, error: err.message };
+          })
+        );
+      }
+
+      // Execute all SMS dispatches
+      try {
+        const smsResults = await Promise.all(smsPromises);
+        console.log("[book-ride] Direct SMS execution results completed:", smsResults);
+      } catch (err) {
+        console.error("[book-ride] Server-side SMS execution failed:", err);
+      }
+    } else {
+      console.log("[book-ride] Twilio variables are incomplete. Skipping SMS alerts.");
     }
 
     return res.status(200).json({
