@@ -170,7 +170,10 @@ export default function AdminDashboard() {
 
   // Calculate status counters
   const totalCount = bookings.length;
-  const pendingCount = bookings.filter(b => (b.status || "").toLowerCase().includes("pending")).length;
+  const pendingCount = bookings.filter(b => {
+    const s = (b.status || "Pending Review").toLowerCase();
+    return s.includes("pending") || s.includes("review");
+  }).length;
   const confirmedCount = bookings.filter(b => (b.status || "").toLowerCase() === "confirmed").length;
   const completedCount = bookings.filter(b => (b.status || "").toLowerCase() === "completed").length;
 
