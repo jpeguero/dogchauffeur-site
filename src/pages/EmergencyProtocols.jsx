@@ -68,7 +68,7 @@ export default function EmergencyProtocols() {
         phone: trip.owner_phone,
         pet_name: trip.pet_name || "your pet",
         event_type: "custom",
-        custom_message: `Urgent: There has been a minor delay in transport. Your pet is safe and secure. I will provide a full update in 5 minutes. — DogChauffeur`,
+        custom_message: `Urgent: There has been a minor delay in transport. Your pet is safe and secure. I will provide a full update in 5 minutes. — Pawffeur`,
       });
       setSentTrips(prev => new Set([...prev, trip.id]));
       toast.success("Delay alert sent to owner!");

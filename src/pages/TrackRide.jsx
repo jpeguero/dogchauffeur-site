@@ -244,7 +244,7 @@ export default function TrackRide() {
           <div className="w-12 h-12 rounded-2xl forest-gradient flex items-center justify-center mx-auto mb-3 animate-pulse">
             <PawPrint className="w-6 h-6 text-white" />
           </div>
-          <p className="text-[#6B5B4F] font-semibold">Contacting DogChauffeur Satellite...</p>
+          <p className="text-[#6B5B4F] font-semibold">Contacting Pawffeur Satellite...</p>
         </div>
       </div>
     );
@@ -295,7 +295,7 @@ export default function TrackRide() {
             <PawPrint className="w-4 h-4 text-amber-500" />
           </div>
           <div>
-            <span className="font-bold text-[#FAF6F0] tracking-tight">DogChauffeur</span>
+            <span className="font-bold text-[#FAF6F0] tracking-tight">Pawffeur</span>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">Live Voyage Tracking</span>

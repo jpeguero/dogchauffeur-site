@@ -7,7 +7,7 @@ const REVIEWS = [
     name: "Sarah M.",
     pet: "Max (Golden Retriever)",
     rating: 5,
-    text: "DogChauffeur is absolutely amazing! Max used to get super anxious going to the vet, but the driver was so calm and professional. He arrived happy and relaxed. I won't use anyone else!",
+    text: "Pawffeur is absolutely amazing! Max used to get super anxious going to the vet, but the driver was so calm and professional. He arrived happy and relaxed. I won't use anyone else!",
     location: "Lincoln Park",
   },
   {

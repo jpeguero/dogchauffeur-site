@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     const isUrgent = form?.is_urgent ? "YES" : "No";
 
     // 1. Admin Plain-Text Email Body
-    const adminEmailText = `New DogChauffeur Booking Request
+    const adminEmailText = `New Pawffeur Booking Request
 
 Booking ID: ${bookingId}
 Customer Name: ${name}
@@ -91,7 +91,7 @@ ${notes}
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DogChauffeur Booking Received</title>
+  <title>Pawffeur Booking Received</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F9F7F3; color: #2D2D2D; margin: 0; padding: 0; }
     .wrapper { width: 100%; background-color: #F9F7F3; padding: 24px 0; -webkit-text-size-adjust: 100%; }
@@ -121,7 +121,7 @@ ${notes}
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <h1>DogChauffeur™</h1>
+        <h1>Pawffeur™</h1>
         <p>Safe, Reliable Pet Transportation</p>
       </div>
       <div class="content">
@@ -175,8 +175,8 @@ ${notes}
         </div>
       </div>
       <div class="footer">
-        <p><strong>DogChauffeur™</strong> &middot; Safe Pet Transportation</p>
-        <p>📞 <a href="tel:+13126209297">(312) 620-9297</a> &middot; ✉ <a href="mailto:support@dogchauffeur.com">support@dogchauffeur.com</a></p>
+        <p><strong>Pawffeur™</strong> &middot; Safe Pet Transportation</p>
+        <p>📞 <a href="tel:+13126209297">(312) 620-9297</a> &middot; ✉ <a href="mailto:support@pawffeur.com">support@pawffeur.com</a></p>
         <p style="margin-top: 16px; font-size: 10px; opacity: 0.6;">A service of TirisiWay, Inc. &copy; ${currentYear} TirisiWay, Inc. All rights reserved.</p>
       </div>
     </div>
@@ -217,7 +217,7 @@ ${notes}
           body: JSON.stringify({
             from: fromEmail,
             to: [email.trim()],
-            subject: `DogChauffeur Booking Received! 🐕 [${bookingId}]`,
+            subject: `Pawffeur Booking Received! 🐕 [${bookingId}]`,
             html: customerHtml,
           }),
         })

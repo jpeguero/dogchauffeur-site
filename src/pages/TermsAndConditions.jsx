@@ -12,7 +12,7 @@ export default function TermsAndConditions() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <PawPrint className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332] text-lg">DogChauffeur</span>
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
           </Link>
         </div>
       </nav>
@@ -27,7 +27,7 @@ export default function TermsAndConditions() {
 
           <section className="space-y-2">
             <h2 className="text-base font-bold text-[#1B4332]">SMS Program</h2>
-            <p>By requesting service from DogChauffeur, you agree to receive SMS notifications related to your pet transportation service. These messages may include booking confirmations, reminders, driver updates, and service notifications.</p>
+            <p>By requesting service from Pawffeur, you agree to receive SMS notifications related to your pet transportation service. These messages may include booking confirmations, reminders, driver updates, and service notifications.</p>
           </section>
 
           <section className="space-y-2">
@@ -47,12 +47,12 @@ export default function TermsAndConditions() {
 
           <section className="space-y-2">
             <h2 className="text-base font-bold text-[#1B4332]">Help & Support</h2>
-            <p>For assistance, reply <strong>HELP</strong> to any message or contact us at <a href="mailto:support@dogchauffeur.com" className="text-[#2D6A4F] underline">support@dogchauffeur.com</a></p>
+            <p>For assistance, reply <strong>HELP</strong> to any message or contact us at <a href="mailto:support@pawffeur.com" className="text-[#2D6A4F] underline">support@pawffeur.com</a></p>
           </section>
 
         </div>
 
-        <p className="text-center text-xs text-[#6B5B4F]/50">© {new Date().getFullYear()} TirisiWay, Inc. · DogChauffeur™</p>
+        <p className="text-center text-xs text-[#6B5B4F]/50">© {new Date().getFullYear()} TirisiWay, Inc. · Pawffeur™</p>
       </div>
     </div>
   );

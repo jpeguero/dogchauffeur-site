@@ -240,7 +240,7 @@ export default function DriverPortal() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1B4332]">My Rides</h1>
-          <p className="text-sm text-[#6B5B4F]/60 mt-0.5">{user?.full_name || "Driver"} · DogChauffeur</p>
+          <p className="text-sm text-[#6B5B4F]/60 mt-0.5">{user?.full_name || "Driver"} · Pawffeur</p>
         </div>
         <div className="flex items-center gap-3">
           {user && <DriverAvailabilityToggle user={user} onStatusChange={handleStatusChange} />}

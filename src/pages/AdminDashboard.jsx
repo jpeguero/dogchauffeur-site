@@ -673,7 +673,7 @@ export default function AdminDashboard() {
               <Lock className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">Control Tower 🗼</h1>
-            <p className="text-white/80 text-sm mt-1">DogChauffeur Fleet Operations</p>
+            <p className="text-white/80 text-sm mt-1">Pawffeur Fleet Operations</p>
           </div>
           
           <CardContent className="p-8">
@@ -723,7 +723,7 @@ export default function AdminDashboard() {
             <Dog className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-base tracking-tight leading-tight">DogChauffeur</h1>
+            <h1 className="font-bold text-base tracking-tight leading-tight">Pawffeur</h1>
             <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Control Tower</p>
           </div>
         </div>
@@ -795,7 +795,7 @@ export default function AdminDashboard() {
         <header className="md:hidden bg-[#1B4332] text-white px-6 py-4 flex items-center justify-between border-b border-[#2D6A4F]/30">
           <div className="flex items-center gap-3">
             <Dog className="w-5 h-5" />
-            <span className="font-bold text-base">DogChauffeur</span>
+            <span className="font-bold text-base">Pawffeur</span>
           </div>
           <div className="flex items-center gap-2">
             <Button

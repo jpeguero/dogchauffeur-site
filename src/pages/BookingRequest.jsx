@@ -38,7 +38,7 @@ const generateCustomerEmail = (form) => `
 <body>
   <div class="container">
     <div class="header">
-      <p class="brand">DogChauffeur™</p>
+      <p class="brand">Pawffeur™</p>
       <p class="tagline">Safe Pet Transportation</p>
     </div>
 
@@ -73,10 +73,10 @@ const generateCustomerEmail = (form) => `
     </div>
 
     <p style="font-size: 14px; color: #6B5B4F;">If you need to make a change, please contact us as soon as possible.</p>
-    <p style="font-size: 14px; color: #6B5B4F;">Thank you for choosing DogChauffeur™.</p>
+    <p style="font-size: 14px; color: #6B5B4F;">Thank you for choosing Pawffeur™.</p>
 
     <div class="footer">
-      <p class="footer-brand">DogChauffeur™</p>
+      <p class="footer-brand">Pawffeur™</p>
       <p>Safe Pet Transportation</p>
       <p>© 2026 TirisiWay, Inc.</p>
     </div>
@@ -92,7 +92,7 @@ const generateAdminEmail = (form) => `
 <body>
   <div class="container">
     <div class="header">
-      <p class="brand">DogChauffeur™</p>
+      <p class="brand">Pawffeur™</p>
       <p class="tagline">Admin Notification</p>
     </div>
 
@@ -147,7 +147,7 @@ const generateAdminEmail = (form) => `
     </div>
 
     <div class="footer">
-      <p class="footer-brand">DogChauffeur™</p>
+      <p class="footer-brand">Pawffeur™</p>
       <p>Safe Pet Transportation</p>
     </div>
   </div>
@@ -276,14 +276,14 @@ export default function BookingRequest() {
       // Send professional customer confirmation email
       await base44.integrations.Core.SendEmail({
         to: form.email,
-        subject: `DogChauffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
+        subject: `Pawffeur™ Ride Request Received – ${form.pet_name || "Your Pet"}`,
         body: generateCustomerEmail(form),
       });
 
       // Send admin notification email
       await base44.integrations.Core.SendEmail({
         to: ADMIN_EMAIL,
-        subject: `New DogChauffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
+        subject: `New Pawffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
         body: generateAdminEmail(form),
       });
 
@@ -349,7 +349,7 @@ export default function BookingRequest() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <Dog className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332] text-lg">DogChauffeur</span>
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
           </Link>
         </div>
       </nav>

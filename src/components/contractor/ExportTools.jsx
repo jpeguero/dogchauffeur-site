@@ -62,7 +62,7 @@ export default function ExportTools({ mileageLogs, expenses }) {
 Create a clean monthly income & expense summary report for a self-employed pet transportation contractor.
 
 Month: ${monthLabel}
-Company: DogChauffeur
+Company: Pawffeur
 
 INCOME:
 - Total Earnings: $${totalEarned.toFixed(2)}

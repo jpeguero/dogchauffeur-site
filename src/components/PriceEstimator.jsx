@@ -104,7 +104,7 @@ export default function PriceEstimator() {
   const ready = !!estimate;
 
   const shareUrl = `${window.location.origin}${createPageUrl("PublicSite")}?ref=referral_share`;
-  const shareMsg = encodeURIComponent(`Hey! Check out DogChauffeur — Chicago's pet transportation service. Get an instant price estimate here: ${shareUrl}`);
+  const shareMsg = encodeURIComponent(`Hey! Check out Pawffeur — Chicago's pet transportation service. Get an instant price estimate here: ${shareUrl}`);
 
   function handleCopyLink() {
     navigator.clipboard.writeText(shareUrl);
@@ -338,7 +338,7 @@ export default function PriceEstimator() {
                     <span className="text-base leading-none">💬</span> WhatsApp
                   </a>
                   <a
-                    href={`mailto:?subject=Check%20out%20DogChauffeur&body=${shareMsg}`}
+                    href={`mailto:?subject=Check%20out%20Pawffeur&body=${shareMsg}`}
                     className="flex items-center justify-center gap-2 bg-white border border-[#D8F3DC] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1B4332] hover:bg-[#EDF7F0] transition"
                   >
                     <Mail className="w-3.5 h-3.5 text-[#52B788]" /> Email

@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   
   // 1. Password Authorization Check
   const authHeader = req.headers.authorization;
-  const adminPassword = process.env.ADMIN_PASSWORD || "DogChauffeur2026!";
+  const adminPassword = process.env.ADMIN_PASSWORD || "Pawffeur2026!";
   
   if (!authHeader || authHeader !== adminPassword) {
     console.warn("[admin-bookings] Unauthorized access attempt");
@@ -137,7 +137,7 @@ async function dispatchConfirmations(booking) {
   const customerPhone = formatToE164(phone);
   
   if (twilioSid && twilioToken && twilioFrom && customerPhone) {
-    const smsBody = `Your DogChauffeur ride (${bookingId}) on ${date} has been CONFIRMED! 🟢\nDriver: ${driver !== "Unassigned" ? driver : "Assigned"}\nPickup: ${pickup}\nWe'll text when we're on the way!`;
+    const smsBody = `Your Pawffeur ride (${bookingId}) on ${date} has been CONFIRMED! 🟢\nDriver: ${driver !== "Unassigned" ? driver : "Assigned"}\nPickup: ${pickup}\nWe'll text when we're on the way!`;
     console.log(`[dispatchConfirmations] Sending Twilio confirmation to ${customerPhone}`);
     
     const cleanTwilioFrom = formatToE164(twilioFrom);
@@ -177,7 +177,7 @@ async function dispatchConfirmations(booking) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DogChauffeur Booking Confirmed! 🐕</title>
+  <title>Pawffeur Booking Confirmed! 🐕</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F9F7F3; color: #2D2D2D; margin: 0; padding: 0; }
     .wrapper { width: 100%; background-color: #F9F7F3; padding: 24px 0; -webkit-text-size-adjust: 100%; }
@@ -207,7 +207,7 @@ async function dispatchConfirmations(booking) {
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <h1>DogChauffeur™</h1>
+        <h1>Pawffeur™</h1>
         <p>Your Ride is Confirmed!</p>
       </div>
       <div class="content">
@@ -253,8 +253,8 @@ async function dispatchConfirmations(booking) {
         </div>
       </div>
       <div class="footer">
-        <p><strong>DogChauffeur™</strong> &middot; Safe Pet Transportation</p>
-        <p>📞 <a href="tel:+13126209297">(312) 620-9297</a> &middot; ✉ <a href="mailto:support@dogchauffeur.com">support@dogchauffeur.com</a></p>
+        <p><strong>Pawffeur™</strong> &middot; Safe Pet Transportation</p>
+        <p>📞 <a href="tel:+13126209297">(312) 620-9297</a> &middot; ✉ <a href="mailto:support@pawffeur.com">support@pawffeur.com</a></p>
         <p style="margin-top: 16px; font-size: 10px; opacity: 0.6;">A service of TirisiWay, Inc. &copy; ${currentYear} TirisiWay, Inc. All rights reserved.</p>
       </div>
     </div>
@@ -272,7 +272,7 @@ async function dispatchConfirmations(booking) {
         body: JSON.stringify({
           from: fromEmail,
           to: [email.trim()],
-          subject: `DogChauffeur Booking Confirmed! 🐕 [${bookingId}]`,
+          subject: `Pawffeur Booking Confirmed! 🐕 [${bookingId}]`,
           html: customerConfirmedHtml
         })
       }).then(async r => {

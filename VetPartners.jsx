@@ -49,7 +49,7 @@ export default function VetPartners() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <PawPrint className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332]">DogChauffeur</span>
+            <span className="font-bold text-[#1B4332]">Pawffeur</span>
           </Link>
           <a href="tel:+13126209297" className="flex items-center gap-2 text-sm text-[#2D6A4F] font-medium">
             <Phone className="w-4 h-4" />
@@ -75,7 +75,7 @@ export default function VetPartners() {
               Transportation for Veterinary Clinics<br />and Pet Care Partners
             </h1>
             <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
-              DogChauffeur helps clinics, groomers, and boarding facilities reduce missed appointments by providing safe pet transportation.
+              Pawffeur helps clinics, groomers, and boarding facilities reduce missed appointments by providing safe pet transportation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -116,7 +116,7 @@ export default function VetPartners() {
       <section className="bg-[#EDF7F0] py-16 px-6">
         <div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-2xl font-bold text-[#1B4332] text-center mb-3">Why Partner with DogChauffeur</h2>
+            <h2 className="text-2xl font-bold text-[#1B4332] text-center mb-3">Why Partner with Pawffeur</h2>
             <p className="text-[#6B5B4F] text-center mb-10">Give your clients one less reason to miss an appointment.</p>
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#D8F3DC] space-y-4">
               {BENEFITS.map((b) => (
@@ -191,14 +191,14 @@ export default function VetPartners() {
           <div className="w-6 h-6 rounded-lg forest-gradient flex items-center justify-center">
             <PawPrint className="w-3 h-3 text-white" />
           </div>
-          <span className="font-semibold text-[#1B4332]">DogChauffeur</span>
+          <span className="font-semibold text-[#1B4332]">Pawffeur</span>
         </div>
         <div className="flex justify-center gap-6 mb-3 flex-wrap">
           <Link to={createPageUrl("PublicSite")} className="hover:text-[#1B4332]">Pet Owners</Link>
           <Link to={createPageUrl("VetPartners")} className="hover:text-[#1B4332] font-medium text-[#2D6A4F]">Vet Clinics</Link>
           <a href="tel:+13126209297" className="hover:text-[#1B4332]">Contact</a>
         </div>
-        <p>© {new Date().getFullYear()} DogChauffeur · Chicago, IL</p>
+        <p>© {new Date().getFullYear()} Pawffeur · Chicago, IL</p>
       </footer>
     </div>
   );

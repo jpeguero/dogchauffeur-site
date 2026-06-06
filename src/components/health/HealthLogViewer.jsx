@@ -70,7 +70,7 @@ export default function HealthLogViewer({ tripId }) {
       </div>
 
       <div className="mt-4 bg-[#EDF7F0] rounded-xl p-3 text-xs text-[#2D6A4F] font-medium text-center">
-        🐾 This care report was logged by your DogChauffeur driver during transport.
+        🐾 This care report was logged by your Pawffeur driver during transport.
       </div>
     </div>
   );

@@ -103,7 +103,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <PawPrint className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-[#1B4332] text-lg">DogChauffeur</span>
+            <span className="font-semibold text-[#1B4332] text-lg">Pawffeur</span>
           </div>
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)} className="text-[#1B4332]">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -130,7 +130,7 @@ export default function Layout({ children, currentPageName }) {
                 <PawPrint className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-[#1B4332] text-lg tracking-tight">DogChauffeur</h1>
+                <h1 className="font-bold text-[#1B4332] text-lg tracking-tight">Pawffeur</h1>
                 <p className="text-xs text-[#6B5B4F]/70 capitalize">
                   {effectiveRole === "admin" ? "Operations" : effectiveRole === "driver" ? "Driver Portal" : "Pet Transport"}
                 </p>

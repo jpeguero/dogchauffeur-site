@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <PawPrint className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332] text-lg">DogChauffeur</span>
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
           </Link>
         </div>
       </nav>
@@ -52,12 +52,12 @@ export default function PrivacyPolicy() {
 
           <section className="space-y-2">
             <h2 className="text-base font-bold text-[#1B4332]">Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:support@dogchauffeur.com" className="text-[#2D6A4F] underline">support@dogchauffeur.com</a></p>
+            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:support@pawffeur.com" className="text-[#2D6A4F] underline">support@pawffeur.com</a></p>
           </section>
 
         </div>
 
-        <p className="text-center text-xs text-[#6B5B4F]/50">&copy; {new Date().getFullYear()} TirisiWay, Inc. &middot; DogChauffeur&trade;</p>
+        <p className="text-center text-xs text-[#6B5B4F]/50">&copy; {new Date().getFullYear()} TirisiWay, Inc. &middot; Pawffeur&trade;</p>
       </div>
     </div>
   );

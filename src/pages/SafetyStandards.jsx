@@ -66,7 +66,7 @@ export default function SafetyStandards() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <Dog className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332] text-lg">DogChauffeur</span>
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link to={createPageUrl("BookingRequest")}>
@@ -87,7 +87,7 @@ export default function SafetyStandards() {
             <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-5">
               <Shield className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-3">The DogChauffeur Safety Standard</h1>
+            <h1 className="text-3xl font-extrabold text-white mb-3">The Pawffeur Safety Standard</h1>
             <p className="text-[#B7E4C7] text-base max-w-xl mx-auto leading-relaxed">
               Your pet's safety is not a checkbox — it's our entire operating system.
               Every ride is engineered around four non-negotiable pillars.
@@ -176,12 +176,12 @@ export default function SafetyStandards() {
       <footer className="bg-[#1B4332] text-white/70 text-center py-12 mt-12">
         <div className="max-w-6xl mx-auto px-4 space-y-6">
           <div>
-            <h3 className="text-xl font-bold text-white mb-2">DogChauffeur™</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Pawffeur™</h3>
             <p className="text-sm text-white/80 font-medium mb-4">Safe Pet Transportation in Chicago</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-white/80">
               <a href="tel:+13126209297" className="hover:text-white transition">📞 (312) 620-9297</a>
               <span className="hidden sm:inline text-white/40">•</span>
-              <a href="mailto:support@dogchauffeur.com" className="hover:text-white transition">✉ support@dogchauffeur.com</a>
+              <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
             </div>
           </div>
           <div className="flex justify-center gap-6 text-sm flex-wrap">
