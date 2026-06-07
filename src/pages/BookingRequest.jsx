@@ -345,11 +345,8 @@ export default function BookingRequest() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-[#D8F3DC]/60">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to={createPageUrl("PublicSite")} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
-              <Dog className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
+          <Link to={createPageUrl("PublicSite")} className="flex items-center">
+            <img src="/assets/pawffeur-logo-primary.svg" alt="Pawffeur" className="h-9 w-auto" />
           </Link>
         </div>
       </nav>

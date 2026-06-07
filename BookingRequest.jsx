@@ -113,7 +113,9 @@ export default function BookingRequest() {
   return (
     <main style={{ minHeight: "100vh", background: "#F9F7F3" }}>
       <nav style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.92)", borderBottom: "1px solid #D8F3DC" }}>
-        <a href="/" style={{ color: "#1B4332", fontWeight: 800, textDecoration: "none", fontSize: 20 }}>Pawffeur™</a>
+        <a href="/" style={{ display: "flex", alignItems: "center" }}>
+          <img src="/assets/pawffeur-logo-primary.svg" alt="Pawffeur" style={{ height: 36, width: "auto" }} />
+        </a>
       </nav>
 
       <section style={{ maxWidth: 720, margin: "0 auto", padding: "42px 18px" }}>

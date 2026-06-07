@@ -719,9 +719,7 @@ export default function AdminDashboard() {
       <aside className="w-full md:w-64 bg-[#1B4332] text-white flex flex-col border-r border-[#2D6A4F]/20 md:min-h-screen shrink-0">
         {/* Brand */}
         <div className="px-6 py-6 border-b border-[#2D6A4F]/30 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-            <Dog className="w-4 h-4 text-white" />
-          </div>
+          <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-8 h-8" />
           <div>
             <h1 className="font-bold text-base tracking-tight leading-tight">Pawffeur</h1>
             <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Control Tower</p>
@@ -794,7 +792,7 @@ export default function AdminDashboard() {
         {/* Mobile Nav Header */}
         <header className="md:hidden bg-[#1B4332] text-white px-6 py-4 flex items-center justify-between border-b border-[#2D6A4F]/30">
           <div className="flex items-center gap-3">
-            <Dog className="w-5 h-5" />
+            <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-6 h-6" />
             <span className="font-bold text-base">Pawffeur</span>
           </div>
           <div className="flex items-center gap-2">

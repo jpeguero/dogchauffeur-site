@@ -45,11 +45,22 @@ export default function VetPartners() {
       {/* Nav */}
       <nav className="bg-white/90 backdrop-blur-lg border-b border-[#D8F3DC]/60 sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to={createPageUrl("PublicSite")} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
-              <PawPrint className="w-4 h-4 text-white" />
+          <Link to={createPageUrl("PublicSite")} className="flex items-center">
+            {/* Desktop: Primary lockup */}
+            <img 
+              src="/assets/pawffeur-logo-primary.svg" 
+              alt="Pawffeur" 
+              className="h-9 w-auto hidden sm:block"
+            />
+            {/* Mobile: Icon + Text */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <img 
+                src="/assets/pawffeur-logo-icon.svg" 
+                alt="Pawffeur" 
+                className="h-8 w-8"
+              />
+              <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
             </div>
-            <span className="font-bold text-[#1B4332]">Pawffeur</span>
           </Link>
           <a href="tel:+13126209297" className="flex items-center gap-2 text-sm text-[#2D6A4F] font-medium">
             <Phone className="w-4 h-4" />
@@ -188,9 +199,7 @@ export default function VetPartners() {
       {/* Footer */}
       <footer className="border-t border-[#D8F3DC] bg-white py-8 px-6 text-center text-sm text-[#6B5B4F]">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-lg forest-gradient flex items-center justify-center">
-            <PawPrint className="w-3 h-3 text-white" />
-          </div>
+          <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-6 h-6" />
           <span className="font-semibold text-[#1B4332]">Pawffeur</span>
         </div>
         <div className="flex justify-center gap-6 mb-3 flex-wrap">

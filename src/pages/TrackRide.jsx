@@ -294,9 +294,7 @@ export default function TrackRide() {
       {/* 1. Header / Trip Summary */}
       <header className="sticky top-0 z-40 bg-[#0E1015]/80 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#1B4332]/20 border border-[#2D6A4F]/30 flex items-center justify-center">
-            <PawPrint className="w-4 h-4 text-[#52B788]" />
-          </div>
+          <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-9 h-9" />
           <div>
             <h1 className="font-bold text-[#FAF6F0] text-base tracking-tight">Pawffeur™ Live Voyage</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
