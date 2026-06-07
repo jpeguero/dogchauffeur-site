@@ -23,7 +23,8 @@ Deno.serve(async (req) => {
 
     let message = "";
 
-    const trackingLink = trip_id ? `\nTrack: https://app.base44.com/apps/67c8952edaa6ee3ba12ddc8f/TrackRide?id=${trip_id}` : "";
+    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://pawffeur.com";
+    const trackingLink = trip_id ? `\nTrack: ${siteUrl}/TrackRide?id=${trip_id}` : "";
 
     if (event_type === "ride_received") {
       message = `Pawffeur™: We received your ride request for ${pet_name}. We'll confirm shortly.${trackingLink}`;
