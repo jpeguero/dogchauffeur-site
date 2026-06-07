@@ -37,10 +37,10 @@ This document marks the final release checkpoint for **Pawffeur™** MVP Staging
 
 ## 4. Remaining Launch Checks
 
-- [ ] Confirm `RESEND_API_KEY` is configured in Vercel.
-- [ ] Confirm admin notification email sends to the correct inbox (`apeguero45@gmail.com` and `jpeguero@gmail.com`).
-- [ ] Confirm customer confirmation email sends to the customer.
-- [ ] Confirm Twilio credentials (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`) are configured if SMS is enabled.
+- [x] Confirm `RESEND_API_KEY` is configured in Vercel. (Verified working!)
+- [x] Confirm admin notification email sends to the correct inbox (`apeguero45@gmail.com` and `jpeguero@gmail.com`). (Verified working!)
+- [x] Confirm customer confirmation email sends to the customer. (Verified working!)
+- [/] Confirm Twilio credentials (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`) are configured if SMS is enabled. (Pending Twilio brand approval).
 - [ ] Confirm production domain decision (`pawffeur.com` vs `dogchauffeur-site.vercel.app`).
 - [ ] Confirm final Road-Paw logo asset is integrated.
 - [ ] Confirm app-store / social icon package is ready.
