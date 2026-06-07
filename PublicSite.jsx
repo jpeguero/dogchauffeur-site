@@ -28,7 +28,7 @@ export default function PublicSite() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <Dog className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to={createPageUrl("BookingRequest")}>
@@ -298,7 +298,7 @@ export default function PublicSite() {
             <div className="space-y-5">
               {[
                 { q: "Do you transport cats?", a: "Yes. We transport dogs, cats, and other small household pets." },
-                { q: "Can I ride with my pet?", a: "No. Pawffeur is designed for pet-only transportation so we can keep the service focused, safe, and consistent." },
+                { q: "Can I ride with my pet?", a: "No. Pawffeur™ is designed for pet-only transportation so we can keep the service focused, safe, and consistent." },
                 { q: "How far in advance should I book?", a: "We recommend at least 24 hours notice when possible." },
               ].map((item, i) => (
                 <div key={i} className="border-b border-[#EDF7F0] last:border-0 pb-5 last:pb-0">
@@ -325,7 +325,7 @@ export default function PublicSite() {
         <motion.div {...fade(0.05)}>
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-3">What Pet Owners Are Saying</h2>
-            <p className="text-lg text-[#6B5B4F]/70">Real feedback from Pawffeur customers across Chicago.</p>
+            <p className="text-lg text-[#6B5B4F]/70">Real feedback from Pawffeur™ customers across Chicago.</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
             {[
@@ -333,7 +333,7 @@ export default function PublicSite() {
                 name: "Jessica M.",
                 location: "Lincoln Park",
                 pet: "Benny, Golden Retriever",
-                quote: "Pawffeur made getting Benny to his vet appointments so easy. The driver was calm, professional, and sent updates throughout. I'll never scramble for a ride again.",
+                quote: "Pawffeur™ made getting Benny to his vet appointments so easy. The driver was calm, professional, and sent updates throughout. I'll never scramble for a ride again.",
               },
               {
                 name: "Carlos R.",

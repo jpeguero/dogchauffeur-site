@@ -283,7 +283,7 @@ export default function BookingRequest() {
       // Send admin notification email
       await base44.integrations.Core.SendEmail({
         to: ADMIN_EMAIL,
-        subject: `New Pawffeur Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
+        subject: `New Pawffeur™ Ride Request – ${form.pet_name || "New Booking"}${form.is_urgent ? " 🚨 URGENT" : ""}`,
         body: generateAdminEmail(form),
       });
 
@@ -349,7 +349,7 @@ export default function BookingRequest() {
             <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
               <Dog className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
           </Link>
         </div>
       </nav>

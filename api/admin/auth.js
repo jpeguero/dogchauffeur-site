@@ -10,7 +10,15 @@ export default async function handler(req, res) {
 
   try {
     const { password } = req.body || {};
-    const adminPassword = process.env.ADMIN_PASSWORD || "Pawffeur2026!";
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      console.error("[admin-auth] Configuration error: ADMIN_PASSWORD environment variable is missing.");
+      return res.status(500).json({
+        success: false,
+        error: "Authentication server configuration error"
+      });
+    }
 
     if (password === adminPassword) {
       console.log("[admin-auth] Password validated successfully");

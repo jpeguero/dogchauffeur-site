@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ── Config — update with your real Google Business review link ────────────────
 const GOOGLE_REVIEW_URL = "https://g.page/r/YOUR_PLACE_ID/review";
-const BUSINESS_NAME     = "Pawffeur";
+const BUSINESS_NAME     = "Pawffeur™";
 const BUSINESS_PHONE    = "(708) 773-5958";
 
 Deno.serve(async (req) => {

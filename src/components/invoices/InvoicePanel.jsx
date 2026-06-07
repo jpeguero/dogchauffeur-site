@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Mail, Plus, Trash2, Loader2, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 
+const brandName = import.meta.env.VITE_PUBLIC_BRAND_NAME || "Pawffeur";
+const siteUrl = import.meta.env.VITE_PUBLIC_SITE_URL || "https://pawffeur.com";
+const displayUrl = siteUrl.replace("https://", "");
+
 const BASE_RATES = {
   "Vet / Daycare / Grooming (One-way)": 40,
   "Vet / Daycare / Grooming (Round-trip)": 70,
@@ -34,11 +38,11 @@ function generatePDF(trip, lineItems, invoiceNumber) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text("DogShoufer", 14, 20);
+  doc.text(`${brandName}™`, 14, 20);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("Chicago's Dog Chauffeur Service", 14, 30);
-  doc.text("dogshoufer.com  ·  Chicago, IL", 14, 38);
+  doc.text(`Chicago's ${brandName}™ Service`, 14, 30);
+  doc.text(`${displayUrl}  ·  Chicago, IL`, 14, 38);
 
   // Invoice label top-right
   doc.setFontSize(22);
@@ -130,11 +134,11 @@ function generatePDF(trip, lineItems, invoiceNumber) {
   doc.setTextColor(...green);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Thank you for choosing DogShoufer!", 105, 283, { align: "center" });
+  doc.text(`Thank you for choosing ${brandName}™!`, 105, 283, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...gray);
-  doc.text("Questions? Reach out at dogshoufer.com  ·  Chicago, IL", 105, 291, { align: "center" });
+  doc.text(`Questions? Reach out at ${displayUrl}  ·  Chicago, IL`, 105, 291, { align: "center" });
 
   return doc;
 }
@@ -159,7 +163,7 @@ export default function InvoicePanel({ trip }) {
 
   const handleDownload = () => {
     const doc = generatePDF(trip, lineItems, invoiceNumber);
-    doc.save(`DogShoufer-${invoiceNumber}.pdf`);
+    doc.save(`${brandName}-${invoiceNumber}.pdf`);
   };
 
   const handleEmailInvoice = async () => {
@@ -174,9 +178,9 @@ export default function InvoicePanel({ trip }) {
 
     await base44.integrations.Core.SendEmail({
       to: trip.owner_email,
-      from_name: "DogShoufer",
-      subject: `Your DogShoufer Invoice – ${invoiceNumber}`,
-      body: `Hi there,\n\nThank you for using DogShoufer! Here is a summary of your trip invoice:\n\nInvoice: ${invoiceNumber}\nPet: ${trip.pet_name || "—"}\nDate: ${trip.scheduled_date || "—"}\n\n${linesSummary}\n\nTOTAL: $${total.toFixed(2)}\nPayment Status: ${(trip.payment_status || "unpaid").toUpperCase()}\n\nPlease find your PDF invoice attached or download it from your trip page.\n\nThank you for choosing DogShoufer!\nAlex\nDogShoufer – Chicago's Dog Chauffeur`,
+      from_name: `${brandName}™`,
+      subject: `Your ${brandName}™ Invoice – ${invoiceNumber}`,
+      body: `Hi there,\n\nThank you for using ${brandName}™! Here is a summary of your trip invoice:\n\nInvoice: ${invoiceNumber}\nPet: ${trip.pet_name || "—"}\nDate: ${trip.scheduled_date || "—"}\n\n${linesSummary}\n\nTOTAL: $${total.toFixed(2)}\nPayment Status: ${(trip.payment_status || "unpaid").toUpperCase()}\n\nPlease find your PDF invoice attached or download it from your trip page.\n\nThank you for choosing ${brandName}™!\nAlex\n${brandName}™ – Chicago's Premium Pet Transportation`,
     });
 
     setSent(true);

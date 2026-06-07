@@ -113,7 +113,7 @@ export default function BookingRequest() {
   return (
     <main style={{ minHeight: "100vh", background: "#F9F7F3" }}>
       <nav style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.92)", borderBottom: "1px solid #D8F3DC" }}>
-        <a href="/" style={{ color: "#1B4332", fontWeight: 800, textDecoration: "none", fontSize: 20 }}>Pawffeur</a>
+        <a href="/" style={{ color: "#1B4332", fontWeight: 800, textDecoration: "none", fontSize: 20 }}>Pawffeur™</a>
       </nav>
 
       <section style={{ maxWidth: 720, margin: "0 auto", padding: "42px 18px" }}>
@@ -220,7 +220,7 @@ export default function BookingRequest() {
               style={{ marginTop: 4, cursor: "pointer" }}
             />
             <label htmlFor="sms-opt-in" style={{ color: "#6B5B4F", fontSize: 11, lineHeight: 1.5, cursor: "pointer" }}>
-              I agree to receive booking updates and SMS alerts from Pawffeur at the number provided. Message & data rates may apply. Msg frequency varies. Reply STOP to opt out. View our <a href="/privacy-policy" style={{ color: "#1B4332", textDecoration: "underline" }}>Privacy Policy</a> and <a href="/terms-and-conditions" style={{ color: "#1B4332", textDecoration: "underline" }}>Terms & Conditions</a>.
+              I agree to receive booking updates and SMS alerts from Pawffeur™ at the number provided. Message & data rates may apply. Msg frequency varies. Reply STOP to opt out. View our <a href="/privacy-policy" style={{ color: "#1B4332", textDecoration: "underline" }}>Privacy Policy</a> and <a href="/terms-and-conditions" style={{ color: "#1B4332", textDecoration: "underline" }}>Terms & Conditions</a>.
             </label>
           </div>
 
