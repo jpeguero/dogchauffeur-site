@@ -26,15 +26,15 @@ Deno.serve(async (req) => {
     const trackingLink = trip_id ? `\nTrack: https://app.base44.com/apps/67c8952edaa6ee3ba12ddc8f/TrackRide?id=${trip_id}` : "";
 
     if (event_type === "ride_received") {
-      message = `DogChauffeur: We received your ride request for ${pet_name}. We'll confirm shortly.${trackingLink}`;
+      message = `Pawffeur: We received your ride request for ${pet_name}. We'll confirm shortly.${trackingLink}`;
     } else if (event_type === "ride_confirmed") {
-      message = `DogChauffeur: Your ride for ${pet_name} is confirmed! Driver: ${driver_name}.${trackingLink}`;
+      message = `Pawffeur: Your ride for ${pet_name} is confirmed! Driver: ${driver_name}.${trackingLink}`;
     } else if (event_type === "en_route") {
-      message = `DogChauffeur: Your driver is on the way to pick up ${pet_name}!${trackingLink}`;
+      message = `Pawffeur: Your driver is on the way to pick up ${pet_name}!${trackingLink}`;
     } else if (event_type === "pet_picked_up") {
-      message = `DogChauffeur: ${pet_name} has been picked up and is on the way!${trackingLink}`;
+      message = `Pawffeur: ${pet_name} has been picked up and is on the way!${trackingLink}`;
     } else if (event_type === "pet_delivered") {
-      message = `DogChauffeur: ${pet_name} has arrived safely at ${dropoff_address}. Thank you for using DogChauffeur!`;
+      message = `Pawffeur: ${pet_name} has arrived safely at ${dropoff_address}. Thank you for using Pawffeur!`;
     }
 
     // Format phone: remove non-digits and ensure +1 prefix

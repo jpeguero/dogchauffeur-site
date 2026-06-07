@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   try {
     const { password } = req.body || {};
-    const adminPassword = process.env.ADMIN_PASSWORD || "DogChauffeur2026!";
+    const adminPassword = process.env.ADMIN_PASSWORD || "Pawffeur2026!";
 
     if (password === adminPassword) {
       console.log("[admin-auth] Password validated successfully");
