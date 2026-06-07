@@ -1,39 +1,51 @@
-**Welcome to your Base44 project** 
+# Pawffeur™ - Premium Pet Transportation
 
-**About**
+**Pawffeur™** is a premium pet transportation service providing concierge-level visibility, secure handlers, and real-time voyage confidence for pet owners.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+This repository hosts the front-end web application and serverless APIs for the Pawffeur™ platform. It has been fully rebranded, security-hardened, and decoupled from the Base44 backend services to run as a self-contained local experience.
 
-This project contains everything you need to run your app locally.
+---
 
-**Edit the code in your local development environment**
+## ✨ Features
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+- **Premium Live Voyage Dashboard**: A simulated real-time tracking experience for pet owners (`TrackRide.jsx`) with dynamic route progress, passenger comfort checks, and concierge contact integrations.
+- **Booking Flow**: Secure booking request process with integrated route pricing estimation.
+- **Hardened Admin Auth**: Protected administrative portals utilizing environment-secured credentials.
+- **Serverless API Support**: Fully-contained local and serverless endpoint handlers for booking requests and email alerts.
 
-**Prerequisites:** 
+---
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
+## 🛠️ Setup & Local Development
 
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm
+
+### Installation
+1. Clone the repository and navigate to the project directory:
+   ```bash
+   cd pawffeur
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the root directory using the template in `.env.example`:
+   ```bash
+   copy .env.example .env
+   ```
+4. Define your `ADMIN_PASSWORD` and other API keys in the `.env` file.
+
+### Running the App
+Start the Vite development server:
+```bash
+npm run dev
 ```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
 
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
-```
+---
 
-Run the app: `npm run dev`
+## 🔒 Security & Decoupling
 
-**Publish your changes**
+- **No Base44 Dependency**: This application is fully decoupled from the Base44 BaaS. The `@base44/sdk` library has been removed, and all client-side data services utilize the local stub client in [base44Client.js](file:///src/api/base44Client.js) to resolve states.
+- **Environment Authentication**: Administrative endpoints strictly require and validate `ADMIN_PASSWORD` from system environment variables. Default fallbacks are disabled.
 
-Open [Base44.com](http://Base44.com) and click on Publish.
-
-**Docs & Support**
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
