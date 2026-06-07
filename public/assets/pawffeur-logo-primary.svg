@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&amp;display=swap');
+      .text-brand {
+        font-family: 'Outfit', -apple-system, sans-serif;
+        font-weight: 800;
+        fill: #1B4332;
+      }
+      .text-tm {
+        font-family: 'Outfit', -apple-system, sans-serif;
+        font-weight: 700;
+        fill: #1B4332;
+      }
+      .pad-road {
+        fill: #14241E;
+      }
+      .road-marking-border {
+        fill: none;
+        stroke: #FFFFFF;
+        stroke-width: 16;
+        stroke-linecap: round;
+        opacity: 0.95;
+      }
+      .road-marking-center {
+        fill: none;
+        stroke: #FFFFFF;
+        stroke-width: 12;
+        stroke-linecap: round;
+        stroke-dasharray: 28 22;
+        opacity: 0.95;
+      }
+      .toe-bean {
+        fill: #FF6B35;
+      }
+    </style>
+  </defs>
+
+  <!-- Icon Group scaled and placed -->
+  <g transform="translate(40, 25)">
+    <g transform="scale(0.39)">
+      <defs>
+        <clipPath id="primary-pad-clip">
+          <path d="M 256 235 C 295 235, 365 265, 375 330 C 380 365, 355 405, 315 405 C 288 405, 273 392, 256 392 C 239 392, 224 405, 197 405 C 157 405, 132 365, 137 330 C 147 265, 217 235, 256 235 Z" />
+        </clipPath>
+      </defs>
+      
+      <!-- Toes -->
+      <ellipse cx="150" cy="195" rx="28" ry="38" class="toe-bean" transform="rotate(-35, 150, 195)" />
+      <ellipse cx="216" cy="142" rx="26" ry="42" class="toe-bean" transform="rotate(-12, 216, 142)" />
+      <ellipse cx="296" cy="142" rx="26" ry="42" class="toe-bean" transform="rotate(12, 296, 142)" />
+      <ellipse cx="362" cy="195" rx="28" ry="38" class="toe-bean" transform="rotate(35, 362, 195)" />
+      
+      <!-- Central Pad -->
+      <path d="M 256 235 C 295 235, 365 265, 375 330 C 380 365, 355 405, 315 405 C 288 405, 273 392, 256 392 C 239 392, 224 405, 197 405 C 157 405, 132 365, 137 330 C 147 265, 217 235, 256 235 Z" class="pad-road" />
+      <g clip-path="url(#primary-pad-clip)">
+        <path d="M 216 420 C 190 350, 242 300, 216 220" class="road-marking-border" />
+        <path d="M 256 420 C 230 350, 282 300, 256 220" class="road-marking-center" />
+        <path d="M 296 420 C 270 350, 322 300, 296 220" class="road-marking-border" />
+      </g>
+    </g>
+  </g>
+
+  <!-- Brand Text -->
+  <text x="280" y="155" font-size="110" class="text-brand">Pawffeur</text>
+  <text x="735" y="90" font-size="40" class="text-tm">™</text>
+</svg>

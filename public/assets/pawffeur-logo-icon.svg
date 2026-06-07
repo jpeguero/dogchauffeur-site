@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <style>
+      .pad-road {
+        fill: #14241E;
+      }
+      .road-marking-border {
+        fill: none;
+        stroke: #FFFFFF;
+        stroke-width: 16;
+        stroke-linecap: round;
+        opacity: 0.95;
+      }
+      .road-marking-center {
+        fill: none;
+        stroke: #FFFFFF;
+        stroke-width: 12;
+        stroke-linecap: round;
+        stroke-dasharray: 28 22;
+        opacity: 0.95;
+      }
+      .toe-bean {
+        fill: #FF6B35;
+      }
+    </style>
+    <!-- Clip path to restrict the road lines inside the central pad -->
+    <clipPath id="pad-clip">
+      <path d="M 256 235 C 295 235, 365 265, 375 330 C 380 365, 355 405, 315 405 C 288 405, 273 392, 256 392 C 239 392, 224 405, 197 405 C 157 405, 132 365, 137 330 C 147 265, 217 235, 256 235 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- 4 Warm Orange Toe Beans -->
+  <!-- Toe 1 (Leftmost) -->
+  <ellipse cx="150" cy="195" rx="28" ry="38" class="toe-bean" transform="rotate(-35, 150, 195)" />
+  <!-- Toe 2 (Center-Left) -->
+  <ellipse cx="216" cy="142" rx="26" ry="42" class="toe-bean" transform="rotate(-12, 216, 142)" />
+  <!-- Toe 3 (Center-Right) -->
+  <ellipse cx="296" cy="142" rx="26" ry="42" class="toe-bean" transform="rotate(12, 296, 142)" />
+  <!-- Toe 4 (Rightmost) -->
+  <ellipse cx="362" cy="195" rx="28" ry="38" class="toe-bean" transform="rotate(35, 362, 195)" />
+
+  <!-- Central Pad - Dark Two-Lane Road -->
+  <!-- Background Shape -->
+  <path d="M 256 235 C 295 235, 365 265, 375 330 C 380 365, 355 405, 315 405 C 288 405, 273 392, 256 392 C 239 392, 224 405, 197 405 C 157 405, 132 365, 137 330 C 147 265, 217 235, 256 235 Z" class="pad-road" />
+
+  <!-- Overlay Road Markings (Clipped to Pad Shape) -->
+  <g clip-path="url(#pad-clip)">
+    <!-- Left Lane Border -->
+    <path d="M 216 420 C 190 350, 242 300, 216 220" class="road-marking-border" />
+    <!-- Center Lane Divider (Dashed) -->
+    <path d="M 256 420 C 230 350, 282 300, 256 220" class="road-marking-center" />
+    <!-- Right Lane Border -->
+    <path d="M 296 420 C 270 350, 322 300, 296 220" class="road-marking-border" />
+  </g>
+</svg>
