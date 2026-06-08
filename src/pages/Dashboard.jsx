@@ -100,7 +100,7 @@ function OwnerDashboard({ user }) {
             Welcome back, {user.full_name?.split(" ")[0] || "there"} 👋
           </h1>
           <p className="text-[#6B5B4F]/80 mt-1 font-medium">
-            {trips.length === 0 ? "Book your pet's next ride." : "Here's what's happening with your rides."}
+            {trips.length === 0 ? "Book a ride for your pet." : "Here's what's happening with your rides."}
           </p>
         </div>
         <Link to={createPageUrl("BookTrip")} className="hidden md:block">

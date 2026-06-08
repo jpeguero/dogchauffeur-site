@@ -128,7 +128,7 @@ export default function PublicSite() {
           <div className="text-center">
             <Link to={createPageUrl("BookingRequest")}>
               <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                Book Your Pet's Ride
+                Book a Ride for Your Pet
               </Button>
             </Link>
           </div>
