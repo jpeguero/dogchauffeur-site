@@ -48,7 +48,7 @@ This document records the official domain setup milestone for **Pawffeur™** (`
 * **Brand & Creative Assets**:
   * Finalize the professional Road-Paw logo vector refinement.
 * **Twilio/SMS A2P Registration**:
-  * Align the Twilio 10DLC (A2P) brand registration details to reflect the new **Pawffeur™** legal entity once the Illinois Secretary of State name correction processes.
+  * Align the Twilio 10DLC (A2P) brand registration details to reflect the new **Pawffeur™** legal entity. Support Ticket #27391298 ("A2P 10DLC brand/campaign update after business rebrand") is open to determine if Twilio can update the existing DogChauffeur Brand/Campaign registration to Pawffeur™ or if a new one is required. SMS remains pending Pawffeur™ rebrand alignment and must not be marked production-ready until Twilio responds.
 * **Redirection Settings**:
   * Finalize a decision on redirection logic for traffic landing on `dogchauffeur.com` (redirect apex/wildcards to `pawffeur.com`).
 * **Final Visual and Mobile QA**:

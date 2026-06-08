@@ -40,7 +40,7 @@ This document marks the final release checkpoint for **Pawffeur™** MVP Staging
 - [x] Confirm `RESEND_API_KEY` is configured in Vercel. (Verified working!)
 - [x] Confirm admin notification email sends to the correct inbox (`apeguero45@gmail.com` and `jpeguero@gmail.com`). (Verified working!)
 - [x] Confirm customer confirmation email sends to the customer. (Verified working!)
-- [/] Confirm Twilio credentials (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`) are configured if SMS is enabled. SMS/A2P registration was requested under the pre-rebrand **DogChauffeur** brand. **Pawffeur™** has not yet been submitted to or aligned with Twilio. SMS remains pending Pawffeur™ rebrand alignment. If DogChauffeur approval is granted, we need to decide whether to: 1) temporarily operate SMS under DogChauffeur during transition, or 2) update/resubmit Twilio brand/campaign information for Pawffeur™ before public launch.
+- [/] Confirm Twilio credentials (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`) are configured if SMS is enabled. Twilio Support Ticket #27391298 ("A2P 10DLC brand/campaign update after business rebrand") is open to determine if Twilio can update the existing DogChauffeur Brand/Campaign registration to Pawffeur™ or if a new one is required. SMS remains pending Pawffeur™ rebrand alignment and must not be marked production-ready until Twilio responds.
 - [ ] Confirm production domain decision (`pawffeur.com` vs `dogchauffeur-site.vercel.app`).
 - [ ] Confirm final Road-Paw logo asset is integrated.
 - [ ] Confirm app-store / social icon package is ready.
