@@ -8,6 +8,8 @@ const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
 
+const PawffeurEstimator = lazy(() => import("./components/PawffeurEstimator"));
+
 function LoadingSpinner() {
   return (
     <div
@@ -40,6 +42,11 @@ export default function App() {
       <Routes>
         <Route path="/BookingRequest" element={<BookingRequest />} />
         <Route path="/SafetyStandards" element={<SafetyStandards />} />
+        <Route path="/estimate-preview" element={
+          <div className="min-h-screen bg-[#F9F7F3] py-12 px-4">
+            <PawffeurEstimator />
+          </div>
+        } />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/terms" element={<TermsAndConditions />} />
