@@ -41,6 +41,7 @@ export default function App() {
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         <Route path="/BookingRequest" element={<BookingRequest />} />
+        <Route path="/bookingrequest" element={<BookingRequest />} />
         <Route path="/SafetyStandards" element={<SafetyStandards />} />
         <Route path="/estimate-preview" element={
           <div className="min-h-screen bg-[#F9F7F3] py-12 px-4">
