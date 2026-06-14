@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { PawPrint } from "lucide-react";
+import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 
 export default function TermsAndConditions() {
   return (
@@ -9,10 +8,8 @@ export default function TermsAndConditions() {
       <nav className="bg-white/90 backdrop-blur border-b border-[#D8F3DC]/60 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to={createPageUrl("PublicSite")} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl forest-gradient flex items-center justify-center">
-              <PawPrint className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
+            <img src="/assets/pawffeur-icon.svg" alt="Pawffeur" className="w-8 h-8" />
+            <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
           </Link>
         </div>
       </nav>
@@ -52,7 +49,11 @@ export default function TermsAndConditions() {
 
         </div>
 
-        <p className="text-center text-xs text-[#6B5B4F]/50">© {new Date().getFullYear()} TirisiWay, Inc. · Pawffeur™</p>
+        {IS_LLC_ACTIVE ? (
+          <p className="text-center text-xs text-[#6B5B4F]/50">Pawffeur™ is operated by Pawffeur, LLC. &copy; {new Date().getFullYear()} Pawffeur, LLC. All rights reserved.</p>
+        ) : (
+          <p className="text-center text-xs text-[#6B5B4F]/50">&copy; {new Date().getFullYear()} TirisiWay, Inc. &middot; Pawffeur&trade;</p>
+        )}
       </div>
     </div>
   );

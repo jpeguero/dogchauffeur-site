@@ -1,3 +1,5 @@
+const IS_LLC_ACTIVE = false; // Set to true once the LLC is officially filed/approved
+
 export default async function handler(req, res) {
   console.log(`[admin-bookings] Request hit: ${req.method}`);
   
@@ -255,7 +257,9 @@ async function dispatchConfirmations(booking) {
       <div class="footer">
         <p><strong>Pawffeur™</strong> &middot; Safe Pet Transportation</p>
         <p>📞 <a href="tel:+13126209297">(312) 620-9297</a> &middot; ✉ <a href="mailto:support@pawffeur.com">support@pawffeur.com</a></p>
-        <p style="margin-top: 16px; font-size: 10px; opacity: 0.6;">A service of TirisiWay, Inc. &copy; ${currentYear} TirisiWay, Inc. All rights reserved.</p>
+        <p style="margin-top: 16px; font-size: 10px; opacity: 0.6;">
+          ${IS_LLC_ACTIVE ? "Pawffeur™ is operated by Pawffeur, LLC. &copy; " + currentYear + " Pawffeur, LLC. All rights reserved." : "A service of TirisiWay, Inc. &copy; " + currentYear + " TirisiWay, Inc. All rights reserved."}
+        </p>
       </div>
     </div>
   </div>

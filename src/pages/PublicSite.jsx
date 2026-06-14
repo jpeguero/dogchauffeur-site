@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Car, Plane, Zap, Route, Heart, Dog, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 import { Link } from "react-router-dom";
 import PriceEstimator from "@/components/PriceEstimator";
 
@@ -35,7 +35,7 @@ export default function PublicSite() {
               {/* Mobile: Icon + Text */}
               <div className="flex items-center gap-2 sm:hidden">
                 <img 
-                  src="/assets/pawffeur-logo-icon.svg" 
+                  src="/assets/pawffeur-icon.svg" 
                   alt="Pawffeur" 
                   className="h-8 w-8"
                 />
@@ -391,10 +391,9 @@ export default function PublicSite() {
       <footer className="bg-[#1B4332] text-white/70 text-center py-12">
         <div className="max-w-6xl mx-auto px-4 space-y-6">
           <div>
-            <h3 className="text-xl font-bold text-white mb-2">Pawffeur™</h3>
-            <p className="text-sm text-white/80 font-medium mb-4">Safe Pet Transportation in Chicago</p>
+            <img src="/assets/pawffeur-logo-tagline.svg" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-white/80">
-              <a href="tel:+17087735958" className="hover:text-white transition">📞 (708) 773-5958</a>
+              <a href="tel:+13126209297" className="hover:text-white transition">📞 (312) 620-9297</a>
               <span className="hidden sm:inline text-white/40">•</span>
               <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
             </div>
@@ -409,7 +408,11 @@ export default function PublicSite() {
             <Link to="/terms-and-conditions" className="hover:text-white transition">Terms &amp; Conditions</Link>
           </div>
           <div className="border-t border-white/10 pt-6">
-            <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
+            {IS_LLC_ACTIVE ? (
+              <p className="text-xs text-white/50">Pawffeur™ is operated by Pawffeur, LLC. © {new Date().getFullYear()} Pawffeur, LLC. All rights reserved.</p>
+            ) : (
+              <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
+            )}
           </div>
         </div>
       </footer>

@@ -100,7 +100,7 @@ export default function Layout({ children, currentPageName }) {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-[#D8F3DC]/60">
         <div className="flex items-center justify-between px-4 h-16">
           <div className="flex items-center gap-2">
-            <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-8 h-8" />
+            <img src="/assets/pawffeur-icon.svg" alt="Pawffeur" className="w-8 h-8" />
             <span className="font-semibold text-[#1B4332] text-lg">Pawffeur™</span>
           </div>
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)} className="text-[#1B4332]">
@@ -124,7 +124,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Logo */}
           <div className="px-6 py-7 border-b border-[#EDF7F0]">
             <div className="flex items-center gap-3">
-              <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-10 h-10" />
+              <img src="/assets/pawffeur-icon.svg" alt="Pawffeur" className="w-10 h-10" />
               <div>
                 <h1 className="font-bold text-[#1B4332] text-lg tracking-tight">Pawffeur™</h1>
                 <p className="text-xs text-[#6B5B4F]/70 capitalize">

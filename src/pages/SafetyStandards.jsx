@@ -2,7 +2,7 @@ import React from "react";
 import { Shield, Thermometer, Sparkles, Award, CheckCircle2, Dog } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 
 const PILLARS = [
   {
@@ -176,8 +176,7 @@ export default function SafetyStandards() {
       <footer className="bg-[#1B4332] text-white/70 text-center py-12 mt-12">
         <div className="max-w-6xl mx-auto px-4 space-y-6">
           <div>
-            <h3 className="text-xl font-bold text-white mb-2">Pawffeur™</h3>
-            <p className="text-sm text-white/80 font-medium mb-4">Safe Pet Transportation in Chicago</p>
+            <img src="/assets/pawffeur-logo-tagline.svg" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-white/80">
               <a href="tel:+13126209297" className="hover:text-white transition">📞 (312) 620-9297</a>
               <span className="hidden sm:inline text-white/40">•</span>
@@ -190,7 +189,11 @@ export default function SafetyStandards() {
             <Link to={createPageUrl("BookingRequest")} className="hover:text-white transition">Book a Ride</Link>
           </div>
           <div className="border-t border-white/10 pt-6">
-            <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
+            {IS_LLC_ACTIVE ? (
+              <p className="text-xs text-white/50">Pawffeur™ is operated by Pawffeur, LLC. &copy; {new Date().getFullYear()} Pawffeur, LLC. All rights reserved.</p>
+            ) : (
+              <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
+            )}
           </div>
         </div>
       </footer>

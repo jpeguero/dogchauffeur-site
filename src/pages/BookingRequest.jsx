@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle2, Dog, Plus, Calculator, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 
 const ADMIN_EMAIL = "jpeguero@gmail.com";
 
@@ -78,7 +78,7 @@ const generateCustomerEmail = (form) => `
     <div class="footer">
       <p class="footer-brand">Pawffeur™</p>
       <p>Safe Pet Transportation</p>
-      <p>© 2026 TirisiWay, Inc.</p>
+      <p>${IS_LLC_ACTIVE ? "Pawffeur™ is operated by Pawffeur, LLC. &copy; 2026 Pawffeur, LLC. All rights reserved." : "&copy; 2026 TirisiWay, Inc."}</p>
     </div>
   </div>
 </body>
