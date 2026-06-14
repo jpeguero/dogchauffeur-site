@@ -119,7 +119,7 @@ export default async function handler(req, res) {
     let baseValue = 50; // default for other / unknown
 
     const emilyEmail = process.env.LEAD_NOTIFY_EMILY || "emilymarie.peguero@gmail.com";
-    const alexanderEmail = process.env.LEAD_NOTIFY_ALEXANDER || "apeguero45@gmail.com";
+    const alexanderEmail = process.env.LEAD_NOTIFY_ALEXANDER || "alexander-email-needed";
     const ownerEmail = process.env.LEAD_NOTIFY_OWNER || "jpeguero@gmail.com";
 
     // Clean normalized strings for comparison
