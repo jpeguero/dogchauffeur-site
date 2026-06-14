@@ -192,7 +192,7 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
                     This pickup is {pricing.home_to_pickup_miles} miles from our service center (25-mile limit).
                     Contact us for a custom long-distance quote.
                   </p>
-                  <a href="tel:+13126209297" className="mt-2 inline-block text-xs font-semibold text-amber-800 underline">(312) 620-9297</a>
+                  <a href="mailto:support@pawffeur.com" className="mt-2 inline-block text-xs font-semibold text-amber-800 underline">support@pawffeur.com</a>
                 </div>
               </div>
             </div>

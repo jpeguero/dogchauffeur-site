@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 import {
   PawPrint, Phone, CheckCircle2, Calendar, Heart,
   Building2, Clock, Shield, ArrowRight, Star
@@ -50,21 +50,20 @@ export default function VetPartners() {
             <img 
               src="/assets/pawffeur-logo-primary.svg" 
               alt="Pawffeur" 
-              className="h-9 w-auto hidden sm:block"
+              className="h-11 w-auto hidden sm:block"
             />
             {/* Mobile: Icon + Text */}
             <div className="flex items-center gap-2 sm:hidden">
               <img 
-                src="/assets/pawffeur-logo-icon.svg" 
+                src="/assets/pawffeur-icon.svg" 
                 alt="Pawffeur" 
                 className="h-8 w-8"
               />
-              <span className="font-bold text-[#1B4332] text-lg">Pawffeur</span>
+              <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
             </div>
           </Link>
-          <a href="tel:+13126209297" className="flex items-center gap-2 text-sm text-[#2D6A4F] font-medium">
-            <Phone className="w-4 h-4" />
-            (312) 620-9297
+          <a href="mailto:support@pawffeur.com" className="flex items-center gap-2 text-sm text-[#2D6A4F] font-medium">
+            support@pawffeur.com
           </a>
         </div>
       </nav>
@@ -95,9 +94,9 @@ export default function VetPartners() {
               >
                 Refer a Client Ride <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
-              <a href="tel:+13125550100">
+              <a href="mailto:support@pawffeur.com">
                 <Button variant="outline" className="border-white/40 text-white bg-white/10 hover:bg-white/20 px-8 py-6 text-base rounded-xl h-auto w-full sm:w-auto">
-                  <Phone className="w-4 h-4 mr-2" /> Call or Text to Schedule
+                  Email to Schedule
                 </Button>
               </a>
             </div>
@@ -185,29 +184,32 @@ export default function VetPartners() {
       <section className="py-20 px-6 text-center max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="text-3xl font-bold text-[#1B4332] mb-4">Ready to refer a client?</h2>
-          <p className="text-[#6B5B4F] mb-8">Submit a ride request on their behalf, or share our number directly.</p>
+          <p className="text-[#6B5B4F] mb-8">Submit a ride request on their behalf, or share our email link.</p>
           <Button
             onClick={handleReferral}
             className="forest-gradient text-white font-semibold px-10 py-6 text-base rounded-xl h-auto shadow-lg"
           >
             Refer a Client Ride <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
-          <p className="mt-4 text-sm text-[#6B5B4F]">Or call/text: <a href="tel:+13126209297" className="text-[#2D6A4F] font-medium">(312) 620-9297</a></p>
+          <p className="mt-4 text-sm text-[#6B5B4F]">Or email: <a href="mailto:support@pawffeur.com" className="text-[#2D6A4F] font-medium">support@pawffeur.com</a></p>
         </motion.div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-[#D8F3DC] bg-white py-8 px-6 text-center text-sm text-[#6B5B4F]">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-6 h-6" />
-          <span className="font-semibold text-[#1B4332]">Pawffeur</span>
+          <img src="/assets/pawffeur-icon.svg" alt="Pawffeur" className="w-6 h-6" />
+          <span className="font-semibold text-[#1B4332]">Pawffeur™</span>
         </div>
         <div className="flex justify-center gap-6 mb-3 flex-wrap">
           <Link to={createPageUrl("PublicSite")} className="hover:text-[#1B4332]">Pet Owners</Link>
           <Link to={createPageUrl("VetPartners")} className="hover:text-[#1B4332] font-medium text-[#2D6A4F]">Vet Clinics</Link>
-          <a href="tel:+13126209297" className="hover:text-[#1B4332]">Contact</a>
+          <a href="mailto:support@pawffeur.com" className="hover:text-[#1B4332]">Contact</a>
         </div>
-        <p>© {new Date().getFullYear()} Pawffeur · Chicago, IL</p>
+        {IS_LLC_ACTIVE ? (
+          <p>Pawffeur™ is operated by Pawffeur, LLC. &copy; 2026 Pawffeur, LLC. All rights reserved.</p>
+        ) : (
+          <p>&copy; 2026 Pawffeur™. All rights reserved.</p>
+        )}
       </footer>
     </div>
   );

@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Car, Plane, Zap, Route, Heart, Dog, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 import { Link } from "react-router-dom";
 import PriceEstimator from "@/components/PriceEstimator";
 
@@ -30,12 +30,12 @@ export default function PublicSite() {
               <img 
                 src="/assets/pawffeur-logo-primary.svg" 
                 alt="Pawffeur" 
-                className="h-9 w-auto hidden sm:block"
+                className="h-11 w-auto hidden sm:block"
               />
               {/* Mobile: Icon + Text */}
               <div className="flex items-center gap-2 sm:hidden">
                 <img 
-                  src="/assets/pawffeur-logo-icon.svg" 
+                  src="/assets/pawffeur-icon.svg" 
                   alt="Pawffeur" 
                   className="h-8 w-8"
                 />
@@ -79,7 +79,7 @@ export default function PublicSite() {
               <motion.div {...fade(0.3)} className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={scrollToEstimator}
-                  className="bg-white text-[#1B4332] hover:bg-[#E8F5E9] rounded-xl font-bold px-10 py-5 text-lg shadow-2xl transition"
+                  className="bg-[#52B788] text-[#1B4332] hover:bg-[#74C69D] rounded-xl font-bold px-10 py-5 text-lg shadow-2xl transition"
                 >
                   💰 Estimate a Ride Price
                 </button>
@@ -90,8 +90,8 @@ export default function PublicSite() {
                 </Link>
               </motion.div>
               <motion.div {...fade(0.4)} className="mt-8">
-                <a href="tel:+13126209297" className="text-sm text-white/70 hover:text-white/90 transition">
-                  📞 Questions before booking? Call or text our office at (312) 620-9297
+                <a href="mailto:support@pawffeur.com" className="text-sm text-white/70 hover:text-white/90 transition">
+                  ✉ Questions before booking? Email us at support@pawffeur.com
                 </a>
               </motion.div>
             </motion.div>
@@ -128,7 +128,7 @@ export default function PublicSite() {
           <div className="text-center">
             <Link to={createPageUrl("BookingRequest")}>
               <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                Book Your Pet's Ride
+                Book a Ride for Your Pet
               </Button>
             </Link>
           </div>
@@ -375,12 +375,12 @@ export default function PublicSite() {
       </div>
 
       {/* Final CTA */}
-      <section className="forest-gradient text-white">
+      <section className="bg-[#FEFAE0]/80 border-t border-[#D8F3DC]/40 text-[#1B4332]">
         <div className="max-w-6xl mx-auto px-4 py-20 text-center">
           <motion.div {...fade(0)}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Book a Ride for Your Pet?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#1B4332]">Ready to Book a Ride for Your Pet?</h2>
             <Link to={createPageUrl("BookingRequest")}>
-              <Button size="lg" className="bg-white text-[#1B4332] hover:bg-[#EDF7F0] rounded-xl font-semibold px-10">
+              <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
                 🟢 Request a Ride Now
               </Button>
             </Link>
@@ -389,28 +389,31 @@ export default function PublicSite() {
       </section>
 
       <footer className="bg-[#1B4332] text-white/70 text-center py-12">
-         <div className="max-w-6xl mx-auto px-4 space-y-6">
-           <div>
-             <h3 className="text-xl font-bold text-white mb-2">Pawffeur™</h3>
-             <p className="text-sm text-white/80 font-medium mb-4">Safe Pet Transportation in Chicago</p>
-             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-white/80">
-               <a href="tel:+17087735958" className="hover:text-white transition">📞 (708) 773-5958</a>
-               <span className="hidden sm:inline text-white/40">•</span>
-               <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
-             </div>
-           </div>
-           <div className="flex justify-center gap-6 text-sm flex-wrap">
-             <Link to={createPageUrl("PublicSite")} className="hover:text-white transition">Pet Owners</Link>
-             <Link to={createPageUrl("VetPartners")} className="hover:text-white transition">Vet Clinics &amp; Partners</Link>
-             <Link to={createPageUrl("BookingRequest")} className="hover:text-white transition">Book a Ride</Link>
-             <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
-             <Link to="/terms-and-conditions" className="hover:text-white transition">Terms &amp; Conditions</Link>
-           </div>
-           <div className="border-t border-white/10 pt-6">
-             <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
-           </div>
-         </div>
-       </footer>
+        <div className="max-w-6xl mx-auto px-4 space-y-6">
+          <div>
+            <img src="/assets/pawffeur-logo-tagline.svg" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
+            <div className="flex justify-center items-center text-sm text-white/80">
+              <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
+            </div>
+          </div>
+          <div className="flex justify-center gap-6 text-sm flex-wrap">
+            <Link to={createPageUrl("PublicSite")} className="hover:text-white transition">Pet Owners</Link>
+            <Link to={createPageUrl("VetPartners")} className="hover:text-white transition">Vet Clinics &amp; Partners</Link>
+            <Link to={createPageUrl("BookingRequest")} className="hover:text-white transition">Book a Ride</Link>
+            <span className="text-white/40">•</span>
+            <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
+            <span className="text-white/40">•</span>
+            <Link to="/terms-and-conditions" className="hover:text-white transition">Terms &amp; Conditions</Link>
+          </div>
+          <div className="border-t border-white/10 pt-6">
+            {IS_LLC_ACTIVE ? (
+              <p className="text-xs text-white/50">Pawffeur™ is operated by Pawffeur, LLC. © 2026 Pawffeur, LLC. All rights reserved.</p>
+            ) : (
+              <p className="text-xs text-white/50">© 2026 Pawffeur™. All rights reserved.</p>
+            )}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

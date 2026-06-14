@@ -184,14 +184,14 @@ ${notes}
 
         <div class="next-steps">
           <h4>What happens next?</h4>
-          <p>We are reviewing your trip details right now. You will receive a text message or phone call from us shortly to finalize scheduling and confirm the final rate. Questions before then? Reply to this email or call/text our office at (312) 620-9297.</p>
+          <p>We are reviewing your trip details right now. You will receive an email update or reach out shortly to finalize scheduling and confirm the final rate. Questions before then? Reply to this email or contact our office at support@pawffeur.com.</p>
         </div>
       </div>
       <div class="footer">
         <p><strong>Pawffeur™</strong> &middot; Safe Pet Transportation</p>
-        <p>📞 <a href="tel:+13126209297">(312) 620-9297</a> &middot; ✉ <a href="mailto:support@pawffeur.com">support@pawffeur.com</a></p>
+        <p>✉ <a href="mailto:support@pawffeur.com">support@pawffeur.com</a></p>
         <p style="margin-top: 16px; font-size: 10px; opacity: 0.6;">
-          ${IS_LLC_ACTIVE ? "Pawffeur™ is operated by Pawffeur, LLC. &copy; " + currentYear + " Pawffeur, LLC. All rights reserved." : "A service of TirisiWay, Inc. &copy; " + currentYear + " TirisiWay, Inc. All rights reserved."}
+          ${IS_LLC_ACTIVE ? "Pawffeur™ is operated by Pawffeur, LLC. &copy; " + currentYear + " Pawffeur, LLC. All rights reserved." : "&copy; 2026 Pawffeur™. All rights reserved."}
         </p>
       </div>
     </div>

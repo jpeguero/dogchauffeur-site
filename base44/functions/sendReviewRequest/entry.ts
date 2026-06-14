@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
   <div style="background: #F9F7F3; padding: 20px 32px; text-align: center; border-top: 1px solid #EDF7F0;">
     <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
-      ${BUSINESS_NAME} · Chicago, IL · <a href="tel:+17087735958" style="color: #40916C;">${BUSINESS_PHONE}</a>
+      ${BUSINESS_NAME} · Chicago, IL · <a href="tel:+13126209297" style="color: #40916C;">${BUSINESS_PHONE}</a>
     </p>
   </div>
 </div>

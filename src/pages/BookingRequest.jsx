@@ -78,7 +78,7 @@ const generateCustomerEmail = (form) => `
     <div class="footer">
       <p class="footer-brand">Pawffeur™</p>
       <p>Safe Pet Transportation</p>
-      <p>${IS_LLC_ACTIVE ? "Pawffeur™ is operated by Pawffeur, LLC. &copy; 2026 Pawffeur, LLC. All rights reserved." : "&copy; 2026 TirisiWay, Inc."}</p>
+      <p>${IS_LLC_ACTIVE ? "Pawffeur™ is operated by Pawffeur, LLC. &copy; 2026 Pawffeur, LLC. All rights reserved." : "&copy; 2026 Pawffeur™. All rights reserved."}</p>
     </div>
   </div>
 </body>
@@ -594,7 +594,7 @@ export default function BookingRequest() {
               </ul>
               <p className="text-xs text-[#6B5B4F]/70 pt-1">
                 Questions before booking?{" "}
-                <a href="tel:3126209297" className="text-[#1B4332] font-medium hover:underline">Call or text (312) 620-9297</a>
+                <a href="mailto:support@pawffeur.com" className="text-[#1B4332] font-medium hover:underline">Email us at support@pawffeur.com</a>
               </p>
             </div>
 

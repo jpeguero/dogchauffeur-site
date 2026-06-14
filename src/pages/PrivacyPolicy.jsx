@@ -55,9 +55,9 @@ export default function PrivacyPolicy() {
         </div>
 
         {IS_LLC_ACTIVE ? (
-          <p className="text-center text-xs text-[#6B5B4F]/50">Pawffeur™ is operated by Pawffeur, LLC. &copy; {new Date().getFullYear()} Pawffeur, LLC. All rights reserved.</p>
+          <p className="text-center text-xs text-[#6B5B4F]/50">Pawffeur™ is operated by Pawffeur, LLC. &copy; 2026 Pawffeur, LLC. All rights reserved.</p>
         ) : (
-          <p className="text-center text-xs text-[#6B5B4F]/50">&copy; {new Date().getFullYear()} TirisiWay, Inc. &middot; Pawffeur&trade;</p>
+          <p className="text-center text-xs text-[#6B5B4F]/50">&copy; 2026 Pawffeur™. All rights reserved.</p>
         )}
       </div>
     </div>

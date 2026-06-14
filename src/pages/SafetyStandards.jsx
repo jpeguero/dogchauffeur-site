@@ -177,9 +177,7 @@ export default function SafetyStandards() {
         <div className="max-w-6xl mx-auto px-4 space-y-6">
           <div>
             <img src="/assets/pawffeur-logo-tagline.svg" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-white/80">
-              <a href="tel:+13126209297" className="hover:text-white transition">📞 (312) 620-9297</a>
-              <span className="hidden sm:inline text-white/40">•</span>
+            <div className="flex justify-center items-center text-sm text-white/80">
               <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
             </div>
           </div>
@@ -190,9 +188,9 @@ export default function SafetyStandards() {
           </div>
           <div className="border-t border-white/10 pt-6">
             {IS_LLC_ACTIVE ? (
-              <p className="text-xs text-white/50">Pawffeur™ is operated by Pawffeur, LLC. &copy; {new Date().getFullYear()} Pawffeur, LLC. All rights reserved.</p>
+              <p className="text-xs text-white/50">Pawffeur™ is operated by Pawffeur, LLC. &copy; 2026 Pawffeur, LLC. All rights reserved.</p>
             ) : (
-              <p className="text-xs text-white/50">A service of TirisiWay, Inc. © {new Date().getFullYear()} TirisiWay, Inc.</p>
+              <p className="text-xs text-white/50">© 2026 Pawffeur™. All rights reserved.</p>
             )}
           </div>
         </div>
