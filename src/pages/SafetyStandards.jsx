@@ -81,14 +81,14 @@ export default function SafetyStandards() {
       {/* Main Content */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-12 space-y-10">
         {/* Hero */}
-        <div className="relative rounded-3xl overflow-hidden forest-gradient px-8 py-12 text-center">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 70% 20%, white 0%, transparent 60%)" }} />
+        <div className="relative rounded-3xl overflow-hidden bg-[#EDF7F0] border border-[#D8F3DC] px-8 py-12 text-center">
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 70% 20%, #1B4332 0%, transparent 60%)" }} />
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-5">
-              <Shield className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-[#1B4332]/10 flex items-center justify-center mx-auto mb-5">
+              <Shield className="w-8 h-8 text-[#1B4332]" />
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-3">The Pawffeur Safety Standard</h1>
-            <p className="text-[#B7E4C7] text-base max-w-xl mx-auto leading-relaxed">
+            <h1 className="text-3xl font-extrabold text-[#1B4332] mb-3">The Pawffeur Safety Standard</h1>
+            <p className="text-[#2D6A4F] text-base max-w-xl mx-auto leading-relaxed">
               Your pet's safety is not a checkbox — it's our entire operating system.
               Every ride is engineered around four non-negotiable pillars.
             </p>
