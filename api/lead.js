@@ -67,8 +67,21 @@ export default async function handler(req, res) {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let supabaseUrl = (process.env.SUPABASE_URL || "").trim();
+    if (supabaseUrl.startsWith('"') && supabaseUrl.endsWith('"')) {
+      supabaseUrl = supabaseUrl.slice(1, -1).trim();
+    }
+    if (supabaseUrl.startsWith("'") && supabaseUrl.endsWith("'")) {
+      supabaseUrl = supabaseUrl.slice(1, -1).trim();
+    }
+
+    let supabaseServiceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+    if (supabaseServiceRoleKey.startsWith('"') && supabaseServiceRoleKey.endsWith('"')) {
+      supabaseServiceRoleKey = supabaseServiceRoleKey.slice(1, -1).trim();
+    }
+    if (supabaseServiceRoleKey.startsWith("'") && supabaseServiceRoleKey.endsWith("'")) {
+      supabaseServiceRoleKey = supabaseServiceRoleKey.slice(1, -1).trim();
+    }
 
     if (!supabaseUrl || !supabaseServiceRoleKey) {
       console.error("[api/lead] Supabase configuration variables are missing.");
