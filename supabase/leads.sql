@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS public.leads (
     
     -- Duplicates
     possible_duplicate BOOLEAN DEFAULT FALSE NOT NULL,
+    normalized_phone TEXT,
+    normalized_email TEXT,
     
     -- Notification
     notification_status VARCHAR(50) DEFAULT 'pending' NOT NULL,
@@ -61,6 +63,8 @@ CREATE INDEX IF NOT EXISTS idx_leads_follow_up_due ON public.leads(follow_up_due
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON public.leads(created_at);
 CREATE INDEX IF NOT EXISTS idx_leads_phone ON public.leads(phone);
 CREATE INDEX IF NOT EXISTS idx_leads_email ON public.leads(email);
+CREATE INDEX IF NOT EXISTS idx_leads_normalized_phone ON public.leads(normalized_phone);
+CREATE INDEX IF NOT EXISTS idx_leads_normalized_email ON public.leads(normalized_email);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;

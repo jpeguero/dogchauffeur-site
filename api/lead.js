@@ -66,6 +66,9 @@ export default async function handler(req, res) {
       });
     }
 
+    const normalizedPhone = String(phone).replace(/\D/g, "");
+    const normalizedEmail = String(email).trim().toLowerCase();
+
     // Initialize Supabase client
     let supabaseUrl = (process.env.SUPABASE_URL || "").trim();
     if (supabaseUrl.startsWith('"') && supabaseUrl.endsWith('"')) {
@@ -106,13 +109,13 @@ export default async function handler(req, res) {
       const { data: emailMatch, error: emailErr } = await supabase
         .from("leads")
         .select("id")
-        .eq("email", email.trim().toLowerCase())
+        .eq("normalized_email", normalizedEmail)
         .gte("created_at", seventyTwoHoursAgo);
 
       const { data: phoneMatch, error: phoneErr } = await supabase
         .from("leads")
         .select("id")
-        .eq("phone", phone.trim())
+        .eq("normalized_phone", normalizedPhone)
         .gte("created_at", seventyTwoHoursAgo);
 
       if (emailErr || phoneErr) {
@@ -211,6 +214,8 @@ export default async function handler(req, res) {
       consent_at: consentAt,
       consent_text,
       possible_duplicate: possibleDuplicate,
+      normalized_phone: normalizedPhone,
+      normalized_email: normalizedEmail,
       notification_status: "pending"
     };
 
