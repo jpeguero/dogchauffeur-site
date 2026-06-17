@@ -34,6 +34,7 @@ WHERE status = 'active' AND normalized_email IS NOT NULL;
 ALTER TABLE public.pet_care_notes ENABLE ROW LEVEL SECURITY;
 
 -- Block public operations
+DROP POLICY IF EXISTS "Block public access" ON public.pet_care_notes;
 CREATE POLICY "Block public access" ON public.pet_care_notes
     FOR ALL
     USING (false)
