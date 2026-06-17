@@ -21,10 +21,18 @@ export default async function handler(req, res) {
     }
 
     if (password === adminPassword) {
+      const apiToken = process.env.ADMIN_API_TOKEN;
+      if (!apiToken) {
+        console.error("[admin-auth] Configuration error: ADMIN_API_TOKEN environment variable is missing.");
+        return res.status(500).json({
+          success: false,
+          error: "Authentication server configuration error"
+        });
+      }
       console.log("[admin-auth] Password validated successfully");
       return res.status(200).json({
         success: true,
-        token: process.env.ADMIN_API_TOKEN || password
+        token: apiToken
       });
     } else {
       console.log("[admin-auth] Invalid password attempt");

@@ -115,8 +115,11 @@ export default function PetCareNoteManager({ booking }) {
       setSaving(true);
       const token = sessionStorage.getItem("dc_admin_token");
       
+      const isUUID = (str) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+      const uuidLeadId = isUUID(booking.lead_id) ? booking.lead_id : (isUUID(booking.id) ? booking.id : null);
+
       const payload = {
-        lead_id: booking.bookingId && booking.bookingId.startsWith("PAW-") ? booking.bookingId : null,
+        lead_id: uuidLeadId,
         phone: booking.phone,
         email: booking.email || null,
         pet_name: tempPetName.trim(),
