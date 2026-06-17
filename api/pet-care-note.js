@@ -4,10 +4,30 @@ export default async function handler(req, res) {
   console.log("[api/pet-care-note] Route hit");
 
   try {
-    if (req.method !== "POST" && req.method !== "GET") {
+    if (req.method !== "POST" && req.method !== "GET" && req.method !== "PATCH") {
       return res.status(405).json({
         success: false,
         error: "Method not allowed",
+      });
+    }
+
+    // Verify Bearer Token authorization for GET, POST, and PATCH
+    const authHeader = req.headers.authorization;
+    const apiToken = process.env.ADMIN_API_TOKEN;
+
+    if (!apiToken) {
+      console.error("[api/pet-care-note] Server configuration error: ADMIN_API_TOKEN is not set.");
+      return res.status(500).json({
+        success: false,
+        error: "Database or security configuration error"
+      });
+    }
+
+    if (!authHeader || !authHeader.startsWith("Bearer ") || authHeader.slice(7) !== apiToken) {
+      console.warn("[api/pet-care-note] Unauthorized request attempt");
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized: Invalid or missing API token"
       });
     }
 
@@ -250,6 +270,71 @@ export default async function handler(req, res) {
           success: true,
           noteId: inserted.id,
           replaced: false
+        });
+      }
+    }
+
+    // PATCH METHOD
+    if (req.method === "PATCH") {
+      const { id, action, created_by } = req.body || {};
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          error: "note id is required",
+        });
+      }
+
+      if (action !== "confirm" && action !== "archive") {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid action. Supported actions: 'confirm', 'archive'",
+        });
+      }
+
+      if (action === "confirm") {
+        const { error } = await supabase
+          .from("pet_care_notes")
+          .update({
+            last_confirmed_at: new Date().toISOString(),
+            created_by: created_by || "system"
+          })
+          .eq("id", id);
+
+        if (error) {
+          console.error("[api/pet-care-note] Failed to confirm care note:", error);
+          return res.status(500).json({
+            success: false,
+            error: "Failed to confirm care note",
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Care note confirmed successfully"
+        });
+      }
+
+      if (action === "archive") {
+        const { error } = await supabase
+          .from("pet_care_notes")
+          .update({
+            status: "archived",
+            created_by: created_by || "system"
+          })
+          .eq("id", id);
+
+        if (error) {
+          console.error("[api/pet-care-note] Failed to archive care note:", error);
+          return res.status(500).json({
+            success: false,
+            error: "Failed to archive care note",
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Care note archived successfully"
         });
       }
     }

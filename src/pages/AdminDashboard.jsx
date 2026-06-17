@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import PetCareNoteManager from "@/components/admin/PetCareNoteManager";
 
 // ─── Pre-loaded B2B Partners Template Data ──────────────────────────────────
 const initialPartners = [
@@ -945,6 +946,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
+
+              <PetCareNoteManager booking={selectedBooking} />
 
               <div className="space-y-3">
                 <h4 className="text-xs uppercase tracking-wider text-[#1B4332] font-bold border-b border-[#EDF7F0] pb-1">

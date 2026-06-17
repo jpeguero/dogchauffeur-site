@@ -6,12 +6,14 @@ export default async function handler(req, res) {
   // 1. Password Authorization Check
   const authHeader = req.headers.authorization;
   const adminPassword = process.env.ADMIN_PASSWORD || "Pawffeur2026!";
+  const apiToken = process.env.ADMIN_API_TOKEN;
   
-  if (!authHeader || authHeader !== adminPassword) {
+  const isAuthorized = authHeader && (authHeader === adminPassword || (apiToken && authHeader === apiToken));
+  if (!isAuthorized) {
     console.warn("[admin-bookings] Unauthorized access attempt");
     return res.status(401).json({
       success: false,
-      error: "Unauthorized: Invalid admin password"
+      error: "Unauthorized: Invalid admin credentials"
     });
   }
 
