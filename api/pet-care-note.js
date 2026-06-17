@@ -57,20 +57,21 @@ export default async function handler(req, res) {
       if (lead_id) {
         query = query.eq("lead_id", lead_id);
       } else {
-        if (phone && email) {
-          const normalizedPhone = String(phone).replace(/\D/g, "");
-          const normalizedEmail = String(email).trim().toLowerCase();
-          query = query.or(`normalized_phone.eq.${normalizedPhone},normalized_email.eq.${normalizedEmail}`);
-        } else if (phone) {
-          const normalizedPhone = String(phone).replace(/\D/g, "");
+        const normalizedPhone = phone ? String(phone).replace(/\D/g, "") : null;
+        const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
+
+        if (normalizedPhone && normalizedEmail) {
+          query = query.or(
+            `normalized_phone.eq.${normalizedPhone},normalized_email.eq.${normalizedEmail}`
+          );
+        } else if (normalizedPhone) {
           query = query.eq("normalized_phone", normalizedPhone);
-        } else if (email) {
-          const normalizedEmail = String(email).trim().toLowerCase();
+        } else if (normalizedEmail) {
           query = query.eq("normalized_email", normalizedEmail);
         }
 
         if (pet_name) {
-          query = query.eq("pet_name", pet_name);
+          query = query.ilike("pet_name", String(pet_name).trim());
         }
       }
 
