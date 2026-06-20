@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Calendar, Clock, PawPrint, ChevronRight, PlusCircle, Phone, Calculator, AlertTriangle } from "lucide-react";
+import { MapPin, Calendar, Clock, PawPrint, ChevronRight, PlusCircle, Phone, Calculator, AlertTriangle, Activity } from "lucide-react";
 
 export default function StepRideDetails({ form, onChange, pets, onContinue, onAddPet, onPricingCalculated, selectedPetNeedsExpert }) {
   const [pricing, setPricing]         = useState(null);
@@ -156,6 +156,24 @@ export default function StepRideDetails({ form, onChange, pets, onContinue, onAd
             )}
           </div>
         )}
+      </div>
+
+      {/* Trip Intent */}
+      <div className="space-y-2">
+        <Label className="text-[#1B4332] font-medium flex items-center gap-2 mb-2">
+          <Activity className="w-4 h-4 text-[#52B788]" /> Trip Intent *
+        </Label>
+        <Select value={form.trip_intent || "standard"} onValueChange={(val) => onChange("trip_intent", val)}>
+          <SelectTrigger className="rounded-xl border-[#D8F3DC] h-12 bg-white">
+            <SelectValue placeholder="Select intent..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="standard">Standard Transport</SelectItem>
+            <SelectItem value="vaccine_appointment">Vaccine Appointment</SelectItem>
+            <SelectItem value="vet_visit">Vet Visit</SelectItem>
+            <SelectItem value="grooming_social">Grooming & Socialization</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Price Estimator */}

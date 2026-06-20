@@ -32,6 +32,7 @@ const STATUS_COLORS = {
 
 function DriverTripCard({ trip, onUpdated }) {
   const [loading, setLoading] = useState(false);
+  const [refusalLoading, setRefusalLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(trip.driver_action_status || trip.status);
   const [notesOpen, setNotesOpen] = useState(false);
   const [showMileagePrompt, setShowMileagePrompt] = useState(false);
@@ -108,6 +109,40 @@ function DriverTripCard({ trip, onUpdated }) {
     setLoading(false);
   }
 
+  async function handleRefusal() {
+    const confirmed = window.confirm(
+      "Are you sure you want to refuse this ride due to an active pet medical emergency? This will cancel the trip and log a safety refusal."
+    );
+    if (!confirmed) return;
+
+    setRefusalLoading(true);
+    try {
+      const res = await fetch("/api/chauffeur-refusal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ride_id: trip.id,
+          driver_email: driverEmail
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to refuse ride");
+      }
+
+      await base44.auth.updateMe({ availability_status: "available" });
+
+      setLocalStatus("cancelled");
+      toast.success("Ride refused successfully. Safety log recorded.");
+      onUpdated?.();
+    } catch (e) {
+      toast.error("Refusal failed: " + e.message);
+    } finally {
+      setRefusalLoading(false);
+    }
+  }
+
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
     localStatus === "confirmed" ? trip.pickup_location : trip.dropoff_location
   )}`;
@@ -132,8 +167,8 @@ function DriverTripCard({ trip, onUpdated }) {
               </span>
             </div>
           </div>
-          <Badge className={STATUS_COLORS[trip.status] || "bg-gray-100 text-gray-700"}>
-            {trip.status?.replace(/_/g, " ")}
+          <Badge className={STATUS_COLORS[localStatus] || "bg-gray-100 text-gray-700"}>
+            {localStatus?.replace(/_/g, " ")}
           </Badge>
         </div>
 
@@ -261,6 +296,16 @@ function DriverTripCard({ trip, onUpdated }) {
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <step.icon className="w-5 h-5 mr-2" />}
               {loading ? "Updating…" : step.label}
             </Button>
+            {["confirmed", "in_progress"].includes(localStatus) && (
+              <Button
+                onClick={handleRefusal}
+                disabled={loading || refusalLoading}
+                variant="destructive"
+                className="w-full font-bold rounded-xl h-12 text-sm bg-red-600 hover:bg-red-700 text-white mt-2"
+              >
+                {refusalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2 shrink-0" /> : "⚠️ Refuse Ride: Active Medical Emergency"}
+              </Button>
+            )}
             {trip.passenger_profile_id && (verification?.pre_clearance_status === "blocked" || verification?.pre_clearance_status === "Admin Override Eligible") ? (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-800 text-xs shadow-sm">
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
@@ -288,6 +333,16 @@ function DriverTripCard({ trip, onUpdated }) {
                 </div>
               </div>
             ) : null}
+          </div>
+        ) : localStatus === "cancelled" ? (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-800 text-xs shadow-sm">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-bold">Ride Refused / Cancelled</p>
+              <p className="text-[11px] text-red-700 leading-normal">
+                This ride has been cancelled at curbside due to a medical safety refusal.
+              </p>
+            </div>
           </div>
         ) : null}
 
