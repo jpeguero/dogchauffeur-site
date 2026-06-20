@@ -1,5 +1,40 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const getDocumentStatus = (doc) => {
+  if (!doc) return { status: "missing", daysRemaining: null };
+  if (doc.status === "rejected") {
+    return { status: "rejected", reason: doc.rejection_reason || "Rejected by office dispatch" };
+  }
+  if (doc.status === "pending_review") {
+    return { status: "pending_review" };
+  }
+  if (doc.status !== "approved_active" && doc.status !== "expired") {
+    return { status: doc.status };
+  }
+  
+  const expiryStr = doc.calculated_expiry_at || doc.vaccine_expiration_date;
+  if (!expiryStr) return { status: "missing" };
+  
+  const calculatedExpiry = new Date(expiryStr);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  calculatedExpiry.setHours(0,0,0,0);
+  
+  if (calculatedExpiry < today) {
+    return { status: "expired", expiryDate: expiryStr.split("T")[0] };
+  }
+  
+  const diffTime = calculatedExpiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 30) {
+    return { status: "expiring_soon", daysRemaining: diffDays, expiryDate: expiryStr.split("T")[0] };
+  }
+  
+  return { status: "valid", daysRemaining: diffDays, expiryDate: expiryStr.split("T")[0] };
+};
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,6 +95,13 @@ export default function Pets() {
   const [reviewProfile, setReviewProfile] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
 
+  // Health clearances / document upload states
+  const [documentUrls, setDocumentUrls] = useState({ rabies_certificate: "", usda_health_certificate: "" });
+  const [pdfIntegrityChecked, setPdfIntegrityChecked] = useState({ rabies_certificate: false, usda_health_certificate: false });
+  const [showUploadForm, setShowUploadForm] = useState({ rabies_certificate: false, usda_health_certificate: false });
+  const [uploadingDocType, setUploadingDocType] = useState("");
+  const [uploadError, setUploadError] = useState("");
+
   const userEmail = effectiveUser?.email;
 
   // 1. Fetch Passenger Profiles
@@ -73,6 +115,9 @@ export default function Pets() {
     },
     enabled: !!userEmail,
   });
+
+  const editingProfile = editingId ? profiles.find(p => p.id === editingId) : null;
+  const editingClearances = editingProfile?.clearances || [];
 
   // Filter out archived profiles
   const activeProfiles = profiles.filter(p => p.lifecycle_state !== "Archived");
@@ -221,6 +266,38 @@ export default function Pets() {
       queryClient.invalidateQueries({ queryKey: ["my-pets"] });
       setReviewOpen(false);
       setReviewProfile(null);
+    }
+  });
+
+  const uploadClearanceMutation = useMutation({
+    mutationFn: async ({ document_type, document_url }) => {
+      const payload = {
+        passenger_profile_id: editingId,
+        document_type,
+        document_url,
+        status: "pending_review",
+        pdf_checksum: "checksum-" + Math.random().toString(36).substring(7)
+      };
+      const res = await fetch("/api/admin-document-clearance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to upload certificate");
+      return result.data;
+    },
+    onSuccess: () => {
+      toast.success("Certificate submitted successfully for office review!");
+      queryClient.invalidateQueries({ queryKey: ["my-pets"] });
+      // Reset form states
+      setDocumentUrls(prev => ({ ...prev, [uploadingDocType]: "" }));
+      setPdfIntegrityChecked(prev => ({ ...prev, [uploadingDocType]: false }));
+      setShowUploadForm(prev => ({ ...prev, [uploadingDocType]: false }));
+      setUploadingDocType("");
+    },
+    onError: (err) => {
+      setUploadError(err.message);
     }
   });
 
@@ -909,6 +986,166 @@ export default function Pets() {
                     ) : (
                       <p className="text-[11px] text-[#6B5B4F]/60 italic">No driver observations logged for this pet yet.</p>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Health Clearances / Travel Certificates remediation section */}
+              {editingId && (
+                <div className="border-t border-[#EDF7F0] pt-5 space-y-4 text-left">
+                  <Label className="text-[#1B4332] font-bold text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                    🩺 Veterinary Health Certificates
+                  </Label>
+                  <p className="text-[11px] text-[#6B5B4F]/85 leading-relaxed">
+                    Veterinary certificates must be pre-cleared by the dispatch office. You can upload replacement documents here if credentials are expired, rejected, or missing.
+                  </p>
+                  
+                  {uploadError && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-red-600 text-xs font-semibold">
+                      <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    {["rabies_certificate", "usda_health_certificate"].map((docType) => {
+                      const doc = editingClearances.find(c => c.document_type === docType);
+                      const docStatus = getDocumentStatus(doc);
+                      const isRabies = docType === "rabies_certificate";
+                      const docTitle = isRabies ? "Rabies Certificate" : "USDA Interstate Health Certificate";
+                      
+                      const showForm = showUploadForm[docType] || docStatus.status === "missing" || docStatus.status === "expired" || docStatus.status === "rejected";
+
+                      return (
+                        <div key={docType} className="border border-[#EDE8D9] rounded-2xl p-4 bg-white space-y-3.5 shadow-sm">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="text-xs font-bold text-[#1B4332]">{docTitle}</h4>
+                              <p className="text-[10px] text-gray-400 mt-0.5">Required for pet pre-clearance</p>
+                            </div>
+                            <Badge className={
+                              docStatus.status === "valid" ? "bg-green-100 text-green-800 border-green-200" :
+                              docStatus.status === "pending_review" ? "bg-amber-100 text-amber-800 border-amber-200" :
+                              docStatus.status === "expiring_soon" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                              "bg-red-100 text-red-800 border-red-200"
+                            }>
+                              {docStatus.status === "missing" ? "❌ Missing" :
+                               docStatus.status === "pending_review" ? "⏳ Under Review" :
+                               docStatus.status === "rejected" ? "❌ Rejected" :
+                               docStatus.status === "expired" ? "❌ Expired" :
+                               docStatus.status === "expiring_soon" ? `⚠️ Expiring (${docStatus.daysRemaining}d)` :
+                               "✓ Active / Valid"}
+                            </Badge>
+                          </div>
+
+                          {/* Existing document info */}
+                          {doc && docStatus.status !== "missing" && (
+                            <div className="bg-[#F9F7F3]/70 border border-[#EDE8D9]/50 rounded-xl p-3 text-[11px] text-[#6B5B4F] space-y-1.5">
+                              <div className="flex justify-between">
+                                <span className="font-semibold text-gray-400">Document PDF:</span>
+                                <a href={doc.document_url} target="_blank" rel="noreferrer" className="text-[#2D6A4F] hover:underline font-bold">
+                                  View Uploaded File
+                                </a>
+                              </div>
+                              {doc.issue_date && (
+                                <div className="flex justify-between">
+                                  <span className="font-semibold text-gray-400">Issue Date:</span>
+                                  <span className="font-bold text-[#1B4332]">{doc.issue_date}</span>
+                                </div>
+                              )}
+                              {docStatus.expiryDate && (
+                                <div className="flex justify-between">
+                                  <span className="font-semibold text-gray-400">Calculated Expiry:</span>
+                                  <span className="font-bold text-[#1B4332]">{docStatus.expiryDate}</span>
+                                </div>
+                              )}
+                              {doc.vet_signing_name && (
+                                <div className="flex justify-between">
+                                  <span className="font-semibold text-gray-400">Signing Vet:</span>
+                                  <span className="font-bold text-[#1B4332]">{doc.vet_signing_name}</span>
+                                </div>
+                              )}
+                              {docStatus.status === "rejected" && doc.rejection_reason && (
+                                <div className="pt-1.5 border-t border-[#EDE8D9] text-red-700">
+                                  <strong>Rejection Reason:</strong> {doc.rejection_reason}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Toggle form button for valid/pending review docs */}
+                          {(docStatus.status === "valid" || docStatus.status === "pending_review" || docStatus.status === "expiring_soon") && (
+                            <div className="flex justify-end">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowUploadForm(prev => ({ ...prev, [docType]: !prev[docType] }))}
+                                className="text-xs font-bold text-[#2D6A4F] hover:text-[#1B4332] hover:bg-[#EDF7F0]/40 p-0 h-6"
+                              >
+                                {showUploadForm[docType] ? "Cancel Update" : "🔄 Upload Updated Certificate"}
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Upload form */}
+                          {showForm && (
+                            <div className="border-t border-dashed border-[#EDE8D9] pt-3.5 space-y-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-[#1B4332] font-semibold text-[11px]">Certificate Document URL *</Label>
+                                <Input
+                                  value={documentUrls[docType]}
+                                  onChange={(e) => setDocumentUrls(prev => ({ ...prev, [docType]: e.target.value }))}
+                                  placeholder="https://example.com/my-pet-cert.pdf"
+                                  className="rounded-xl border-[#D8F3DC] text-xs h-9 bg-white"
+                                />
+                              </div>
+
+                              <div className="flex items-start gap-2 pt-1">
+                                <Checkbox
+                                  id={`integrity_${docType}`}
+                                  checked={pdfIntegrityChecked[docType]}
+                                  onCheckedChange={(checked) => setPdfIntegrityChecked(prev => ({ ...prev, [docType]: !!checked }))}
+                                  className="border-[#D8F3DC] text-[#1B4332] focus:ring-[#52B788] mt-0.5"
+                                />
+                                <Label htmlFor={`integrity_${docType}`} className="text-[10px] text-[#6B5B4F] cursor-pointer font-medium leading-tight">
+                                  I confirm this document matches the official veterinary medical record and has not been altered or tampered with.
+                                </Label>
+                              </div>
+
+                              <Button
+                                type="button"
+                                onClick={() => {
+                                  setUploadError("");
+                                  if (!documentUrls[docType].trim()) {
+                                    setUploadError("Please provide a certificate document URL.");
+                                    return;
+                                  }
+                                  if (!pdfIntegrityChecked[docType]) {
+                                    setUploadError("You must check the PDF Integrity verification checkbox to upload.");
+                                    return;
+                                  }
+                                  setUploadingDocType(docType);
+                                  uploadClearanceMutation.mutate({
+                                    document_type: docType,
+                                    document_url: documentUrls[docType]
+                                  });
+                                }}
+                                disabled={uploadClearanceMutation.isPending && uploadingDocType === docType}
+                                className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-xl py-2 px-3 w-full transition flex items-center justify-center gap-1.5 h-9 shadow-sm"
+                              >
+                                {uploadClearanceMutation.isPending && uploadingDocType === docType ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Send className="w-3.5 h-3.5" />
+                                )}
+                                Submit Document for Review
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

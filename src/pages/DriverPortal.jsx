@@ -255,19 +255,25 @@ function DriverTripCard({ trip, onUpdated }) {
           <div className="space-y-2.5">
             <Button
               onClick={handleAction}
-              disabled={loading || (!!trip.passenger_profile_id && (verification?.pre_clearance_status === "blocked" || !verification?.record || verification.record.transport_decision !== "pass_visual_match"))}
+              disabled={loading || (!!trip.passenger_profile_id && (verification?.pre_clearance_status === "blocked" || verification?.pre_clearance_status === "Admin Override Eligible" || !verification?.record || verification.record.transport_decision !== "pass_visual_match"))}
               className={`w-full text-white font-bold rounded-xl h-14 text-base ${step.color}`}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <step.icon className="w-5 h-5 mr-2" />}
               {loading ? "Updating…" : step.label}
             </Button>
-            {trip.passenger_profile_id && verification?.pre_clearance_status === "blocked" ? (
+            {trip.passenger_profile_id && (verification?.pre_clearance_status === "blocked" || verification?.pre_clearance_status === "Admin Override Eligible") ? (
               <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 flex items-start gap-2.5 text-red-800 text-xs shadow-sm">
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                 <div className="space-y-0.5">
-                  <p className="font-bold">Document Pre-Clearance Pending</p>
+                  <p className="font-bold">
+                    {verification?.pre_clearance_status === "Admin Override Eligible"
+                      ? "Vaccine Appointment Override Required"
+                      : "Document Pre-Clearance Pending"}
+                  </p>
                   <p className="text-[11px] text-red-700 leading-normal">
-                    Document Pre-Clearance Pending. Please contact Admin Dispatch to resolve.
+                    {verification?.pre_clearance_status === "Admin Override Eligible"
+                      ? "This ride requires a super-admin override approval signature to proceed."
+                      : "Document Pre-Clearance Pending. Please contact Admin Dispatch to resolve."}
                   </p>
                 </div>
               </div>

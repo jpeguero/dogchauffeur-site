@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { getPolicyNumber } from "../lib/policies.js";
+import { getPolicyNumber, evaluatePreClearanceStatus } from "../lib/policies.js";
 
 export default async function handler(req, res) {
   console.log(`[api/chauffeur-health-record-verification] Route hit: ${req.method}`);
@@ -89,9 +89,6 @@ export default async function handler(req, res) {
 
         const now = new Date();
         const nowTime = now.getTime();
-        
-        let hasRabiesCert = false;
-        let hasExpiredDoc = false;
 
         for (const doc of (clearances || [])) {
           let maxAgeDays = doc.document_type === "rabies_certificate" ? rabiesMaxAge : usdaMaxAge;
@@ -112,14 +109,8 @@ export default async function handler(req, res) {
             calculatedExpiry = doc.calculated_expiry_at ? new Date(doc.calculated_expiry_at) : new Date(doc.vaccine_expiration_date);
           }
 
-          if (doc.document_type === "rabies_certificate") {
-            hasRabiesCert = true;
-          }
-
           // Check if expired
-          if (calculatedExpiry < now) {
-            hasExpiredDoc = true;
-          } else {
+          if (calculatedExpiry >= now) {
             // Check if expiring soon
             const diffTime = calculatedExpiry.getTime() - nowTime;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -133,26 +124,9 @@ export default async function handler(req, res) {
           }
         }
 
-        if (!hasRabiesCert || hasExpiredDoc) {
-          // If no active rabies cert or any approved document is expired, check for active overrides
-          const { data: overrides, error: ovError } = await supabase
-            .from("admin_override_logs")
-            .select("*")
-            .eq("trip_id", trip_id)
-            .eq("passenger_profile_id", trip.passenger_profile_id);
-
-          if (ovError) {
-            console.error("[api/chauffeur-health-record-verification] Fetch overrides error:", ovError);
-          }
-
-          const nowStr = new Date().toISOString();
-          const hasActiveOverride = (overrides || []).some(o => o.bypass_expires_at > nowStr);
-
-          if (!hasActiveOverride) {
-            pre_clearance_status = "blocked";
-          }
-        }
+        pre_clearance_status = await evaluatePreClearanceStatus(supabase, trip.passenger_profile_id, trip);
       }
+
 
       // Fetch visual safety verification record
       const { data: record, error: getError } = await supabase

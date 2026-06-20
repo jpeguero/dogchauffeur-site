@@ -104,6 +104,16 @@ export default async function handler(req, res) {
           }
         }
 
+        const { data: clearances, error: clError } = await supabase
+          .from("passenger_document_clearances")
+          .select("*")
+          .eq("passenger_profile_id", id);
+
+        if (clError) {
+          console.error("[api/passenger-profile] Fetch clearances error:", clError);
+        }
+        profile.clearances = clearances || [];
+
         const { data: observations, error: obsError } = await supabase
           .from("chauffeur_logs")
           .select("id, trip_id, chauffeur_id, behavior_summary, handling_outcomes, incident_severity, recommend_profile_review, recommend_risk_reassessment, notes, created_at")
@@ -190,6 +200,30 @@ export default async function handler(req, res) {
             success: false,
             error: "Failed to fetch passenger profiles",
           });
+        }
+
+        // Fetch document clearances for all profiles in the list
+        if (profiles && profiles.length > 0) {
+          const profileIds = profiles.map(p => p.id);
+          const { data: allClearances, error: clearancesErr } = await supabase
+            .from("passenger_document_clearances")
+            .select("*")
+            .in("passenger_profile_id", profileIds);
+
+          if (clearancesErr) {
+            console.error("[api/passenger-profile] Fetch clearances list error:", clearancesErr);
+          } else {
+            const clearancesMap = {};
+            (allClearances || []).forEach(cl => {
+              if (!clearancesMap[cl.passenger_profile_id]) {
+                clearancesMap[cl.passenger_profile_id] = [];
+              }
+              clearancesMap[cl.passenger_profile_id].push(cl);
+            });
+            profiles.forEach(p => {
+              p.clearances = clearancesMap[p.id] || [];
+            });
+          }
         }
 
         return res.status(200).json({

@@ -22,6 +22,59 @@ const stateColors = {
   Draft: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
+const getDocumentStatus = (doc) => {
+  if (!doc) return { status: "missing", daysRemaining: null };
+  if (doc.status === "rejected") {
+    return { status: "rejected", reason: doc.rejection_reason || "Rejected by office dispatch" };
+  }
+  if (doc.status === "pending_review") {
+    return { status: "pending_review" };
+  }
+  if (doc.status !== "approved_active" && doc.status !== "expired") {
+    return { status: doc.status };
+  }
+  
+  const expiryStr = doc.calculated_expiry_at || doc.vaccine_expiration_date;
+  if (!expiryStr) return { status: "missing" };
+  
+  const calculatedExpiry = new Date(expiryStr);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  calculatedExpiry.setHours(0,0,0,0);
+  
+  if (calculatedExpiry < today) {
+    return { status: "expired", expiryDate: expiryStr.split("T")[0] };
+  }
+  
+  const diffTime = calculatedExpiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 30) {
+    return { status: "expiring_soon", daysRemaining: diffDays, expiryDate: expiryStr.split("T")[0] };
+  }
+  
+  return { status: "valid", daysRemaining: diffDays, expiryDate: expiryStr.split("T")[0] };
+};
+
+const renderStatusText = (docStatus) => {
+  switch (docStatus.status) {
+    case "missing":
+      return <span className="text-red-500 font-bold">❌ Missing</span>;
+    case "pending_review":
+      return <span className="text-amber-600 font-bold">⏳ Under Review</span>;
+    case "rejected":
+      return <span className="text-red-700 font-bold" title={docStatus.reason}>❌ Rejected</span>;
+    case "expired":
+      return <span className="text-red-700 font-bold" title={`Expired on ${docStatus.expiryDate}`}>❌ Expired</span>;
+    case "expiring_soon":
+      return <span className="text-amber-700 font-bold">⚠️ Expiring ({docStatus.daysRemaining}d)</span>;
+    case "valid":
+      return <span className="text-green-700 font-bold">✓ Valid</span>;
+    default:
+      return <span className="text-gray-500 capitalize">{docStatus.status}</span>;
+  }
+};
+
 export default function PetCard({ pet, delay = 0 }) {
   const { effectiveUser } = useAuth();
   
@@ -39,6 +92,17 @@ export default function PetCard({ pet, delay = 0 }) {
   // Resolve co-ownership and suggestions
   const isCoOwned = pet.owner_email && effectiveUser?.email && pet.owner_email !== effectiveUser.email;
   const hasPendingSuggestions = pet.suggested_changes && Object.keys(pet.suggested_changes).length > 0;
+
+  // Resolve document statuses
+  const rabiesDoc = (pet.clearances || []).find(c => c.document_type === "rabies_certificate");
+  const usdaDoc = (pet.clearances || []).find(c => c.document_type === "usda_health_certificate");
+
+  const rabiesStatus = getDocumentStatus(rabiesDoc);
+  const usdaStatus = getDocumentStatus(usdaDoc);
+
+  const hasIncompleteClearance = 
+    rabiesStatus.status === "missing" || rabiesStatus.status === "expired" || rabiesStatus.status === "rejected" ||
+    usdaStatus.status === "expired" || usdaStatus.status === "rejected";
 
   return (
     <motion.div
@@ -140,18 +204,42 @@ export default function PetCard({ pet, delay = 0 }) {
               <p className="text-xs text-[#6B5B4F] leading-relaxed line-clamp-3">{notes}</p>
             </div>
           )}
+
+          {/* Health Clearances Status Grid */}
+          <div className="border-t border-[#EDF7F0] pt-3.5 space-y-2">
+            <h4 className="text-[10px] uppercase font-bold text-[#1B4332] tracking-wider text-left">Health Clearances</h4>
+            <div className="grid grid-cols-2 gap-2 text-left">
+              {/* Rabies */}
+              <div className="flex flex-col p-2 bg-[#F9F7F3] border border-[#EDE8D9] rounded-xl space-y-0.5">
+                <span className="font-bold text-[#6B5B4F] text-[9px] uppercase tracking-wider">Rabies Certificate</span>
+                <span className="text-[10px] font-semibold">{renderStatusText(rabiesStatus)}</span>
+              </div>
+              {/* USDA */}
+              <div className="flex flex-col p-2 bg-[#F9F7F3] border border-[#EDE8D9] rounded-xl space-y-0.5">
+                <span className="font-bold text-[#6B5B4F] text-[9px] uppercase tracking-wider">USDA Health Cert</span>
+                <span className="text-[10px] font-semibold">{renderStatusText(usdaStatus)}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Suggestion Queue Warning Banner */}
-      {hasPendingSuggestions && (
+      {/* Suggestion & Clearance Warning Banners */}
+      {hasPendingSuggestions ? (
         <div className="bg-amber-50 border-t border-amber-100 px-5 py-2.5 flex items-center justify-between text-xs text-amber-800 font-semibold rounded-b-2xl">
           <span className="flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
             {isCoOwned ? "Pending primary owner review" : "Suggestion pending approval"}
           </span>
         </div>
-      )}
+      ) : hasIncompleteClearance ? (
+        <div className="bg-red-50 border-t border-red-100 px-5 py-2.5 flex items-center justify-between text-xs text-red-800 font-semibold rounded-b-2xl">
+          <span className="flex items-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0 animate-pulse" />
+            Clearance Action Required: Update certificates
+          </span>
+        </div>
+      ) : null}
     </motion.div>
   );
-}
+}

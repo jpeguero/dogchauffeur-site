@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.chauffeur_logs (
     trip_id VARCHAR(255) NOT NULL,
     passenger_profile_id UUID REFERENCES public.passenger_profiles(id) ON DELETE CASCADE,
     chauffeur_id VARCHAR(255) NOT NULL, -- chauffeur email
-    event_type VARCHAR(50) DEFAULT 'post_trip_observation' NOT NULL CHECK (event_type = 'post_trip_observation'),
+    event_type VARCHAR(50) DEFAULT 'post_trip_observation' NOT NULL CHECK (event_type IN ('post_trip_observation', 'vaccine_override_exception')),
     behavior_summary VARCHAR(50) NOT NULL CHECK (behavior_summary IN ('calm', 'anxious', 'vocal', 'resistant', 'aggressive', 'other')),
     handling_outcomes JSONB DEFAULT '[]'::jsonb NOT NULL,
     incident_severity VARCHAR(50) NOT NULL CHECK (incident_severity IN ('none', 'minor', 'moderate', 'urgent')),

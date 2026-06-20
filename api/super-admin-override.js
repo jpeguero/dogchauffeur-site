@@ -131,6 +131,43 @@ export default async function handler(req, res) {
       });
     }
 
+    // Check if the trip is a vaccine appointment, and if so, write a log to chauffeur_logs
+    try {
+      const { data: tripData } = await supabase
+        .from("trips")
+        .select("trip_intent, driver_email")
+        .eq("id", trip_id)
+        .single();
+        
+      if (tripData && tripData.trip_intent === "vaccine_appointment") {
+        const logPayload = {
+          trip_id,
+          passenger_profile_id,
+          chauffeur_id: tripData.driver_email || "system-admin@pawffeur.com",
+          event_type: "vaccine_override_exception",
+          behavior_summary: "other",
+          incident_severity: "none",
+          recommend_profile_review: false,
+          recommend_risk_reassessment: false,
+          notes: `Ride conditionally cleared specifically for a veterinary clinic transit destination. Override authorized by ${overridden_by.toLowerCase()} on ${new Date().toISOString()}`,
+          created_at: new Date().toISOString()
+        };
+        
+        const { error: logError } = await supabase
+          .from("chauffeur_logs")
+          .insert([logPayload]);
+          
+        if (logError) {
+          console.error("[api/super-admin-override] Failed to insert exception to chauffeur_logs:", logError);
+        } else {
+          console.log("[api/super-admin-override] Successfully logged vaccine override exception to chauffeur_logs");
+        }
+      }
+    } catch (err) {
+      console.error("[api/super-admin-override] Error logging exception to chauffeur_logs:", err);
+    }
+
+
     return res.status(200).json({
       success: true,
       message: "Super-Admin emergency override granted and logged successfully",

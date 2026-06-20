@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { getPolicyNumber } from "../lib/policies.js";
+import { getPolicyNumber, evaluatePreClearanceStatus } from "../lib/policies.js";
 
 export default async function handler(req, res) {
   console.log(`[api/admin-document-clearance] Route hit: ${req.method}`);
@@ -77,11 +77,27 @@ export default async function handler(req, res) {
         });
       }
 
+      // Evaluate case-by-case vaccine override intent
+      let pre_clearance_status = "cleared";
+      if (passenger_profile_id) {
+        const { trip_id } = req.query || {};
+        let tripQuery = supabase.from("trips").select("*").eq("passenger_profile_id", passenger_profile_id);
+        if (trip_id) {
+          tripQuery = tripQuery.eq("id", trip_id);
+        }
+        const { data: trips } = await tripQuery;
+        const activeTrip = (trips || []).find(t => t.status !== "completed" && t.status !== "cancelled");
+
+        pre_clearance_status = await evaluatePreClearanceStatus(supabase, passenger_profile_id, activeTrip);
+      }
+
       return res.status(200).json({
         success: true,
         data: records || [],
+        pre_clearance_status
       });
     }
+
 
     // ==========================================
     // POST METHOD: Save/Update clearance records
