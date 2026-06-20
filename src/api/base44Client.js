@@ -28,7 +28,51 @@ export const base44 = {
     },
     Trip: {
       list: async () => [],
-      filter: async () => [],
+      filter: async (criteria = {}) => {
+        const mockTrips = [
+          {
+            id: "TRIP-MOCK-1",
+            pet_name: "Rocky",
+            scheduled_date: "2026-06-20",
+            scheduled_time: "10:00 AM",
+            status: "confirmed",
+            pickup_location: "1200 S Michigan Ave, Chicago, IL",
+            dropoff_location: "2400 N Sheffield Ave, Chicago, IL",
+            owner_phone: "555-789-0123",
+            owner_email: "preview-customer@dev.local",
+            driver_email: "preview-driver@dev.local",
+            driver_name: "Alex Chauffeur",
+            notes: "Prefers soft treats, standard leashed walk loading.",
+            passenger_profile_id: "mock-rocky-id"
+          },
+          {
+            id: "TRIP-MOCK-2",
+            pet_name: "Luna",
+            scheduled_date: "2026-06-21",
+            scheduled_time: "2:00 PM",
+            status: "completed",
+            pickup_location: "500 W Madison St, Chicago, IL",
+            dropoff_location: "1500 N Wells St, Chicago, IL",
+            owner_phone: "555-999-8888",
+            owner_email: "preview-customer@dev.local",
+            driver_email: "preview-driver@dev.local",
+            driver_name: "Alex Chauffeur",
+            notes: "No profile linked test.",
+            passenger_profile_id: null
+          }
+        ];
+
+        if (criteria.driver_email) {
+          return mockTrips.filter(t => t.driver_email.toLowerCase() === criteria.driver_email.toLowerCase());
+        }
+        if (criteria.owner_email) {
+          return mockTrips.filter(t => t.owner_email.toLowerCase() === criteria.owner_email.toLowerCase());
+        }
+        if (criteria.id) {
+          return mockTrips.filter(t => t.id === criteria.id);
+        }
+        return mockTrips;
+      },
       create: async (data) => data,
       update: async () => {},
       subscribe: () => () => {},

@@ -1,59 +1,460 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, PawPrint, Loader2, Trash2 } from "lucide-react";
+import { Plus, PawPrint, Loader2, Trash2, Edit2, ShieldAlert, Users, Send, Check, X, AlertCircle } from "lucide-react";
 import PetCard from "../components/dashboard/PetCard";
+import { useAuth } from "../components/auth/useAuth";
+
+const initialFormState = {
+  pet_name: "",
+  species: "",
+  breed: "",
+  weight: "",
+  age_group: "",
+  temperament: "",
+  escape_risk: false,
+  bite_scratch_risk: false,
+  medical_risk: false,
+  carrier_required: false,
+  emergency_contact_name: "",
+  emergency_contact_phone: "",
+  emergency_vet_name: "",
+  emergency_vet_phone: "",
+  emergency_vet_address: "",
+  emergency_vet_consent: false,
+  write_in_feedback: { notes: "" },
+  species_specific_data: {
+    harness_preference: "",
+    loading_method: "",
+    reactivity_class: "None",
+    carrier_style: "",
+    handling_tolerance: "",
+    hide_light_preference: "",
+    calming_permission: false
+  }
+};
 
 export default function Pets() {
-  const [user, setUser] = useState(null);
+  const { effectiveUser } = useAuth();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", pet_type: "", breed: "", age: "", weight: "", notes: "" });
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(initialFormState);
+  const [error, setError] = useState("");
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+  // Co-ownership & suggestion states
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteError, setInviteError] = useState("");
+  const [reviewProfile, setReviewProfile] = useState(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
-  const { data: pets = [], isLoading } = useQuery({
-    queryKey: ["my-pets", user?.email],
-    queryFn: () => base44.entities.Pet.filter({ owner_email: user.email }),
-    enabled: !!user,
+  const userEmail = effectiveUser?.email;
+
+  // 1. Fetch Passenger Profiles
+  const { data: profiles = [], isLoading } = useQuery({
+    queryKey: ["my-pets", userEmail],
+    queryFn: async () => {
+      const res = await fetch(`/api/passenger-profile?owner_email=${encodeURIComponent(userEmail)}`);
+      if (!res.ok) throw new Error("Failed to fetch passenger profiles");
+      const result = await res.json();
+      return result.data || [];
+    },
+    enabled: !!userEmail,
   });
 
+  // Filter out archived profiles
+  const activeProfiles = profiles.filter(p => p.lifecycle_state !== "Archived");
+
+  // Determine if editing profile is co-owned
+  const activeEditingProfile = editingId ? activeProfiles.find(p => p.id === editingId) : null;
+  const isCoOwned = activeEditingProfile ? activeEditingProfile.owner_email !== userEmail : false;
+
+  // 2. Fetch Co-owners for Edit dialog
+  const { data: coOwnersList = [], refetch: refetchCoOwners } = useQuery({
+    queryKey: ["co-owners", editingId],
+    queryFn: async () => {
+      const res = await fetch(`/api/passenger-profile?action=list-co-owners&passenger_profile_id=${editingId}`);
+      if (!res.ok) throw new Error("Failed to fetch co-owners");
+      const result = await res.json();
+      return result.data || [];
+    },
+    enabled: !!editingId && !isCoOwned,
+  });
+
+  // 3. Mutations
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Pet.create(data),
+    mutationFn: async (payload) => {
+      const res = await fetch("/api/passenger-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to create profile");
+      return result.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-pets"] });
-      setOpen(false);
-      setForm({ name: "", pet_type: "", breed: "", age: "", weight: "", notes: "" });
+      handleClose();
     },
+    onError: (err) => {
+      setError(err.message);
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const res = await fetch(`/api/passenger-profile?id=${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to update profile");
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-pets"] });
+      handleClose();
+    },
+    onError: (err) => {
+      setError(err.message);
+    }
+  });
+
+  const suggestMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const res = await fetch(`/api/passenger-profile?action=suggest-change`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          co_owner_email: userEmail,
+          suggested_data: payload
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to suggest changes");
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-pets"] });
+      handleClose();
+    },
+    onError: (err) => {
+      setError(err.message);
+    }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Pet.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-pets"] }),
+    mutationFn: async (id) => {
+      const res = await fetch(`/api/passenger-profile?id=${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          owner_email: userEmail,
+          lifecycle_state: "Archived"
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to archive profile");
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-pets"] });
+    }
   });
 
-  const handleSubmit = () => {
-    createMutation.mutate({
-      ...form,
-      age: form.age ? Number(form.age) : undefined,
-      weight: form.weight ? Number(form.weight) : undefined,
-      special_care_instructions: form.notes || undefined,
-      owner_email: user.email,
+  const inviteMutation = useMutation({
+    mutationFn: async (coEmail) => {
+      const res = await fetch("/api/passenger-profile?action=invite-co-owner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passenger_profile_id: editingId,
+          co_owner_email: coEmail,
+          owner_email: userEmail
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to invite co-owner");
+      return result.data;
+    },
+    onSuccess: () => {
+      refetchCoOwners();
+      setInviteEmail("");
+      setInviteError("");
+    },
+    onError: (err) => {
+      setInviteError(err.message);
+    }
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: async (reviewAction) => {
+      const res = await fetch("/api/passenger-profile?action=review-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: reviewProfile.id,
+          owner_email: userEmail,
+          review_action: reviewAction
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to review suggestion");
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-pets"] });
+      setReviewOpen(false);
+      setReviewProfile(null);
+    }
+  });
+
+  // 4. Handlers
+  const handleOpenAdd = () => {
+    setEditingId(null);
+    setForm(initialFormState);
+    setError("");
+    setOpen(true);
+  };
+
+  const handleOpenEdit = (profile) => {
+    setEditingId(profile.id);
+    setError("");
+    setForm({
+      pet_name: profile.pet_name || "",
+      species: profile.species || "",
+      breed: profile.breed || "",
+      weight: profile.weight ? String(profile.weight) : "",
+      age_group: profile.age_group || "",
+      temperament: profile.temperament || "",
+      escape_risk: !!profile.escape_risk,
+      bite_scratch_risk: !!profile.bite_scratch_risk,
+      medical_risk: !!profile.medical_risk,
+      carrier_required: !!profile.carrier_required,
+      emergency_contact_name: profile.emergency_contact_name || "",
+      emergency_contact_phone: profile.emergency_contact_phone || "",
+      emergency_vet_name: profile.emergency_vet_name || "",
+      emergency_vet_phone: profile.emergency_vet_phone || "",
+      emergency_vet_address: profile.emergency_vet_address || "",
+      emergency_vet_consent: !!profile.emergency_vet_consent,
+      write_in_feedback: { notes: profile.write_in_feedback?.notes || "" },
+      species_specific_data: {
+        harness_preference: profile.species_specific_data?.harness_preference || "",
+        loading_method: profile.species_specific_data?.loading_method || "",
+        reactivity_class: profile.species_specific_data?.reactivity_class || "None",
+        carrier_style: profile.species_specific_data?.carrier_style || "",
+        handling_tolerance: profile.species_specific_data?.handling_tolerance || "",
+        hide_light_preference: profile.species_specific_data?.hide_light_preference || "",
+        calming_permission: !!profile.species_specific_data?.calming_permission
+      }
     });
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setForm(initialFormState);
+    setError("");
+    setEditingId(null);
+    setInviteEmail("");
+    setInviteError("");
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+
+    // Client-side validations
+    if (!form.pet_name.trim()) return setError("Pet Name is required");
+    if (!form.species) return setError("Species is required");
+    if (!form.weight || Number(form.weight) <= 0) return setError("Weight must be greater than 0");
+    if (!form.age_group) return setError("Age Group is required");
+    if (!form.temperament) return setError("Temperament is required");
+
+    if (!isCoOwned) {
+      if (!form.emergency_contact_name.trim()) return setError("Emergency Contact Name is required");
+      if (!form.emergency_contact_phone.trim()) return setError("Emergency Contact Phone is required");
+
+      if (form.medical_risk) {
+        if (!form.emergency_vet_consent) {
+          return setError("Emergency Veterinary Consent is required when Medical Risk is enabled");
+        }
+        if (!form.emergency_vet_name || !form.emergency_vet_name.trim()) {
+          return setError("Preferred Clinic Name is required when Medical Risk is enabled");
+        }
+        if (!form.emergency_vet_phone || !form.emergency_vet_phone.trim()) {
+          return setError("Preferred Clinic Phone is required when Medical Risk is enabled");
+        }
+        if (!form.emergency_vet_address || !form.emergency_vet_address.trim()) {
+          return setError("Preferred Clinic Address is required when Medical Risk is enabled");
+        }
+      }
+    }
+
+    if (form.write_in_feedback?.notes?.length > 1000) {
+      return setError("Notes must not exceed 1000 characters");
+    }
+
+    // Build species-specific data payload
+    const specData = {};
+    if (form.species === "Dog") {
+      if (!form.species_specific_data.harness_preference) return setError("Harness preference is required for dogs");
+      if (!form.species_specific_data.loading_method) return setError("Loading method is required for dogs");
+      specData.harness_preference = form.species_specific_data.harness_preference;
+      specData.loading_method = form.species_specific_data.loading_method;
+      specData.reactivity_class = "None";
+    } else if (form.species === "Cat") {
+      if (!form.species_specific_data.carrier_style) return setError("Carrier style is required for cats");
+      if (!form.species_specific_data.handling_tolerance) return setError("Handling tolerance is required for cats");
+      if (!form.species_specific_data.hide_light_preference) return setError("Light preference is required for cats");
+      specData.carrier_style = form.species_specific_data.carrier_style;
+      specData.handling_tolerance = form.species_specific_data.handling_tolerance;
+      specData.hide_light_preference = form.species_specific_data.hide_light_preference;
+      specData.calming_permission = !!form.species_specific_data.calming_permission;
+    }
+
+    if (isCoOwned) {
+      // Co-owner suggestion payload (excludes restricted safety/contact/owner fields)
+      const coPayload = {
+        pet_name: form.pet_name,
+        breed: form.breed || "",
+        weight: Number(form.weight),
+        age_group: form.age_group,
+        temperament: form.temperament,
+        species_specific_data: specData,
+        write_in_feedback: form.write_in_feedback || {},
+        species: form.species
+      };
+      suggestMutation.mutate({ id: editingId, payload: coPayload });
+    } else {
+      // Primary Owner payload
+      const payload = {
+        pet_name: form.pet_name,
+        species: form.species,
+        breed: form.breed || "",
+        weight: Number(form.weight),
+        age_group: form.age_group,
+        temperament: form.temperament,
+        escape_risk: !!form.escape_risk,
+        bite_scratch_risk: !!form.bite_scratch_risk,
+        medical_risk: !!form.medical_risk,
+        carrier_required: !!form.carrier_required,
+        emergency_contact_name: form.emergency_contact_name,
+        emergency_contact_phone: form.emergency_contact_phone,
+        emergency_vet_name: form.emergency_vet_name || "",
+        emergency_vet_phone: form.emergency_vet_phone || "",
+        emergency_vet_address: form.emergency_vet_address || "",
+        emergency_vet_consent: !!form.emergency_vet_consent,
+        emergency_vet_consent_timestamp: form.emergency_vet_consent ? new Date().toISOString() : null,
+        emergency_vet_consent_method: form.emergency_vet_consent ? "In-App Checkbox" : null,
+        species_specific_data: specData,
+        write_in_feedback: form.write_in_feedback || {},
+        owner_email: userEmail,
+        lifecycle_state: "Active"
+      };
+
+      if (editingId) {
+        updateMutation.mutate({ id: editingId, payload });
+      } else {
+        createMutation.mutate(payload);
+      }
+    }
+  };
+
+  const handleInviteCoOwner = (e) => {
+    e.preventDefault();
+    setInviteError("");
+    if (!inviteEmail.trim()) return;
+    inviteMutation.mutate(inviteEmail);
+  };
+
+  const handleOpenReview = (profile) => {
+    setReviewProfile(profile);
+    setReviewOpen(true);
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending || suggestMutation.isPending;
+
+  // Diff Builder helper
+  const renderDiffTable = () => {
+    if (!reviewProfile || !reviewProfile.suggested_changes) return null;
+    const sug = reviewProfile.suggested_changes;
+    const diffs = [];
+
+    if (sug.pet_name !== undefined && sug.pet_name !== reviewProfile.pet_name) {
+      diffs.push({ field: "Pet Name", old: reviewProfile.pet_name, new: sug.pet_name });
+    }
+    if (sug.breed !== undefined && sug.breed !== reviewProfile.breed) {
+      diffs.push({ field: "Breed", old: reviewProfile.breed || "(empty)", new: sug.breed || "(empty)" });
+    }
+    if (sug.weight !== undefined && Number(sug.weight) !== Number(reviewProfile.weight)) {
+      diffs.push({ field: "Weight", old: `${reviewProfile.weight} lbs`, new: `${sug.weight} lbs` });
+    }
+    if (sug.age_group !== undefined && sug.age_group !== reviewProfile.age_group) {
+      diffs.push({ field: "Age Group", old: reviewProfile.age_group, new: sug.age_group });
+    }
+    if (sug.temperament !== undefined && sug.temperament !== reviewProfile.temperament) {
+      diffs.push({ field: "Temperament", old: reviewProfile.temperament, new: sug.temperament });
+    }
+
+    const oldNotes = reviewProfile.write_in_feedback?.notes || "";
+    const newNotes = sug.write_in_feedback?.notes || "";
+    if (newNotes !== oldNotes) {
+      diffs.push({ field: "Comfort Notes", old: oldNotes || "(empty)", new: newNotes || "(empty)" });
+    }
+
+    // Species specific comparison
+    if (reviewProfile.species === "Dog") {
+      const oldHarness = reviewProfile.species_specific_data?.harness_preference || "";
+      const newHarness = sug.species_specific_data?.harness_preference || "";
+      if (newHarness && newHarness !== oldHarness) {
+        diffs.push({ field: "Harness Pref", old: oldHarness, new: newHarness });
+      }
+    } else if (reviewProfile.species === "Cat") {
+      const oldCarrier = reviewProfile.species_specific_data?.carrier_style || "";
+      const newCarrier = sug.species_specific_data?.carrier_style || "";
+      if (newCarrier && newCarrier !== oldCarrier) {
+        diffs.push({ field: "Carrier Style", old: oldCarrier, new: newCarrier });
+      }
+    }
+
+    if (diffs.length === 0) {
+      return <p className="text-xs text-slate-500 italic text-center py-4">No changes detected in suggestion payload.</p>;
+    }
+
+    return (
+      <div className="border border-[#EDE8D9] rounded-2xl overflow-hidden text-xs">
+        <div className="grid grid-cols-3 bg-[#F9F7F3] p-3 font-bold text-[#1B4332] border-b border-[#EDE8D9]">
+          <span>Field</span>
+          <span>Current Value</span>
+          <span>Proposed Value</span>
+        </div>
+        <div className="divide-y divide-[#EDE8D9]">
+          {diffs.map((item, idx) => (
+            <div key={idx} className="grid grid-cols-3 p-3 items-center text-[#6B5B4F] bg-white">
+              <span className="font-semibold text-[#1B4332]">{item.field}</span>
+              <span className="line-through text-red-500 bg-red-50/50 px-1.5 py-0.5 rounded max-w-fit">{item.old}</span>
+              <span className="text-green-700 bg-green-50 px-1.5 py-0.5 rounded font-bold max-w-fit">{item.new}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -61,102 +462,579 @@ export default function Pets() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1B4332]">My Pets</h1>
-          <p className="text-[#6B5B4F]/60 mt-1">Manage your pet profiles</p>
+          <p className="text-[#6B5B4F]/60 mt-1">Manage pet profiles and suggestion queues</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl gap-2">
-              <Plus className="w-4 h-4" /> Add Pet
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="rounded-2xl">
+        <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+          <Button onClick={handleOpenAdd} className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl gap-2 font-semibold px-4 py-2 shadow-sm">
+            <Plus className="w-4 h-4" /> Add Pet Profile
+          </Button>
+          <DialogContent className="rounded-2xl max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-[#1B4332]">Add a Pet</DialogTitle>
+              <DialogTitle className="text-[#1B4332] text-xl font-bold">
+                {isCoOwned ? "Propose Profile Changes" : editingId ? "Edit Pet Profile" : "Add Pet Profile"}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-[#1B4332]">Pet Name *</Label>
-                  <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="rounded-xl mt-1" />
+            
+            {isCoOwned && (
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5 text-blue-800 text-[11px] font-medium leading-relaxed">
+                <Users className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <span>You are editing as a <strong>Co-Owner</strong>. Your updates will be queued as suggestions for the primary owner to review. Safety, contacts, and consent details cannot be modified by co-owners.</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5 mt-2">
+              
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 text-red-600 text-xs font-semibold">
+                  <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
-                <div>
-                  <Label className="text-[#1B4332]">Pet Type *</Label>
-                  <Select value={form.pet_type} onValueChange={(v) => setForm({...form, pet_type: v})}>
-                    <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+              )}
+
+              {/* Identity Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332] font-semibold text-xs">Pet Name *</Label>
+                  <Input value={form.pet_name} onChange={(e) => setForm({...form, pet_name: e.target.value})} className="rounded-xl border-[#D8F3DC]" placeholder="e.g. Max" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332] font-semibold text-xs">Species *</Label>
+                  <Select disabled={isCoOwned} value={form.species} onValueChange={(v) => setForm({...form, species: v})}>
+                    <SelectTrigger className="rounded-xl border-[#D8F3DC]"><SelectValue placeholder="Select Species" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Dog">Dog</SelectItem>
-                      <SelectItem value="Cat">Cat</SelectItem>
-                      <SelectItem value="Other household pet">Other household pet</SelectItem>
+                      <SelectItem value="Dog">Dog 🐶</SelectItem>
+                      <SelectItem value="Cat">Cat 🐱</SelectItem>
+                      <SelectItem value="Other">Other household pet 🐹</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div>
-                <Label className="text-[#1B4332]">Breed (optional)</Label>
-                <Input value={form.breed} onChange={(e) => setForm({...form, breed: e.target.value})} className="rounded-xl mt-1" />
-              </div>
+
+              {/* Breed & Weight */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-[#1B4332]">Age (years, optional)</Label>
-                  <Input type="number" value={form.age} onChange={(e) => setForm({...form, age: e.target.value})} className="rounded-xl mt-1" />
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332] font-semibold text-xs">Breed (optional)</Label>
+                  <Input value={form.breed} onChange={(e) => setForm({...form, breed: e.target.value})} className="rounded-xl border-[#D8F3DC]" placeholder="e.g. Golden Retriever" />
                 </div>
-                <div>
-                  <Label className="text-[#1B4332]">Weight (lbs, optional)</Label>
-                  <Input type="number" value={form.weight} onChange={(e) => setForm({...form, weight: e.target.value})} className="rounded-xl mt-1" />
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332] font-semibold text-xs">Weight (lbs) *</Label>
+                  <Input type="number" step="any" value={form.weight} onChange={(e) => setForm({...form, weight: e.target.value})} className="rounded-xl border-[#D8F3DC]" placeholder="e.g. 45" />
                 </div>
               </div>
-              <div>
-                <Label className="text-[#1B4332]">Important Notes (optional)</Label>
+
+              {/* Age & Temperament */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332] font-semibold text-xs">Life Stage / Age Group *</Label>
+                  <Select value={form.age_group} onValueChange={(v) => setForm({...form, age_group: v})}>
+                    <SelectTrigger className="rounded-xl border-[#D8F3DC]"><SelectValue placeholder="Select age group" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Puppy/Kitten">Puppy/Kitten</SelectItem>
+                      <SelectItem value="Adult">Adult</SelectItem>
+                      <SelectItem value="Senior">Senior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[#1B4332] font-semibold text-xs">General Temperament *</Label>
+                  <Select value={form.temperament} onValueChange={(v) => setForm({...form, temperament: v})}>
+                    <SelectTrigger className="rounded-xl border-[#D8F3DC]"><SelectValue placeholder="Select temperament" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Calm">Calm 😴</SelectItem>
+                      <SelectItem value="Excited">Excited ⚡</SelectItem>
+                      <SelectItem value="Anxious">Anxious 🥺</SelectItem>
+                      <SelectItem value="Fearful">Fearful 🫣</SelectItem>
+                      <SelectItem value="Reactive">Reactive 😠</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Dynamic Dog Section */}
+              {form.species === "Dog" && (
+                <div className="bg-[#EDF7F0] border border-[#B7E4C7] rounded-2xl p-4 space-y-4">
+                  <h4 className="text-[#1B4332] font-bold text-xs">Dog Handling Preferences</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[#1B4332] font-semibold text-xs">Harness Preference *</Label>
+                      <Select value={form.species_specific_data.harness_preference} onValueChange={(v) => setForm({
+                        ...form,
+                        species_specific_data: { ...form.species_specific_data, harness_preference: v }
+                      })}>
+                        <SelectTrigger className="rounded-xl border-white bg-white"><SelectValue placeholder="Select harness" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Back-Clip">Back-Clip</SelectItem>
+                          <SelectItem value="Front-Clip">Front-Clip</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-[10px] text-[#6B5B4F]/70">Collar-only harness preference is blocked.</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[#1B4332] font-semibold text-xs">Loading Method *</Label>
+                      <Select value={form.species_specific_data.loading_method} onValueChange={(v) => setForm({
+                        ...form,
+                        species_specific_data: { ...form.species_specific_data, loading_method: v }
+                      })}>
+                        <SelectTrigger className="rounded-xl border-white bg-white"><SelectValue placeholder="Select loading" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Self-Walk (Leashed)">Self-Walk (Leashed)</SelectItem>
+                          <SelectItem value="Lifted by Staff">Lifted by Staff</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Dynamic Cat Section */}
+              {form.species === "Cat" && (
+                <div className="bg-[#EDF7F0] border border-[#B7E4C7] rounded-2xl p-4 space-y-4">
+                  <h4 className="text-[#1B4332] font-bold text-xs">Cat Handling Preferences</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[#1B4332] font-semibold text-xs">Carrier Style *</Label>
+                      <Select value={form.species_specific_data.carrier_style} onValueChange={(v) => setForm({
+                        ...form,
+                        species_specific_data: { ...form.species_specific_data, carrier_style: v }
+                      })}>
+                        <SelectTrigger className="rounded-xl border-white bg-white"><SelectValue placeholder="Select carrier" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Soft-Sided">Soft-Sided</SelectItem>
+                          <SelectItem value="Hard-Plastic">Hard-Plastic</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-[10px] text-[#6B5B4F]/70">Cardboard style carriers are blocked.</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[#1B4332] font-semibold text-xs">Handling Tolerance *</Label>
+                      <Select value={form.species_specific_data.handling_tolerance} onValueChange={(v) => setForm({
+                        ...form,
+                        species_specific_data: { ...form.species_specific_data, handling_tolerance: v }
+                      })}>
+                        <SelectTrigger className="rounded-xl border-white bg-white"><SelectValue placeholder="Select tolerance" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="High (allows hands-on)">High (allows hands-on)</SelectItem>
+                          <SelectItem value="Moderate (cautious)">Moderate (cautious)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[#1B4332] font-semibold text-xs">Light Preference *</Label>
+                      <Select value={form.species_specific_data.hide_light_preference} onValueChange={(v) => setForm({
+                        ...form,
+                        species_specific_data: { ...form.species_specific_data, hide_light_preference: v }
+                      })}>
+                        <SelectTrigger className="rounded-xl border-white bg-white"><SelectValue placeholder="Select light" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Covered (prefers dark/towel)">Covered (prefers dark/towel)</SelectItem>
+                          <SelectItem value="Open (prefers to look out)">Open (prefers to look out)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center gap-2 pt-6">
+                      <Checkbox
+                        id="calming_permission"
+                        checked={form.species_specific_data.calming_permission}
+                        onCheckedChange={(checked) => setForm({
+                          ...form,
+                          species_specific_data: { ...form.species_specific_data, calming_permission: !!checked }
+                        })}
+                        className="border-[#D8F3DC] text-[#1B4332] focus:ring-[#52B788]"
+                      />
+                      <Label htmlFor="calming_permission" className="text-xs text-[#6B5B4F] cursor-pointer font-semibold">
+                        Permit Feliway/Calming Sprays
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Emergency Contact (Restricted for Co-Owners) */}
+              <div className={`bg-[#F9F7F3] border border-[#EDE8D9] rounded-2xl p-4 space-y-4 ${isCoOwned ? "opacity-60" : ""}`}>
+                <h4 className="text-[#1B4332] font-bold text-xs">Emergency Care Contact</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[#1B4332] font-semibold text-xs">Primary Contact Name *</Label>
+                    <Input disabled={isCoOwned} value={form.emergency_contact_name} onChange={(e) => setForm({...form, emergency_contact_name: e.target.value})} className="rounded-xl border-white bg-white" placeholder="Jane Smith" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[#1B4332] font-semibold text-xs">Primary Contact Phone *</Label>
+                    <Input disabled={isCoOwned} value={form.emergency_contact_phone} onChange={(e) => setForm({...form, emergency_contact_phone: e.target.value})} className="rounded-xl border-white bg-white" placeholder="(555) 888-9999" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Emergency Vet Consent (Restricted for Co-Owners) */}
+              <div className={`bg-[#F9F7F3] border border-[#EDE8D9] rounded-2xl p-4 space-y-4 ${isCoOwned ? "opacity-60" : ""}`}>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    disabled={isCoOwned}
+                    id="emergency_vet_consent"
+                    checked={form.emergency_vet_consent}
+                    onCheckedChange={(checked) => setForm({...form, emergency_vet_consent: !!checked})}
+                    className="border-[#D8F3DC] text-[#1B4332] focus:ring-[#52B788]"
+                  />
+                  <Label htmlFor="emergency_vet_consent" className="text-xs text-[#1B4332] cursor-pointer font-bold flex items-center gap-1.5">
+                    Emergency Veterinary Consent Authorized *
+                  </Label>
+                </div>
+                <p className="text-[10px] text-[#6B5B4F]/85 leading-relaxed">
+                  I authorize Pawffeur to transport my pet to the designated clinic below and seek emergency treatment if I cannot be reached.
+                </p>
+
+                {form.emergency_vet_consent && (
+                  <div className="space-y-4 pt-2 border-t border-[#EDE8D9]">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[#1B4332] font-semibold text-xs">Preferred Clinic Name</Label>
+                        <Input disabled={isCoOwned} value={form.emergency_vet_name} onChange={(e) => setForm({...form, emergency_vet_name: e.target.value})} className="rounded-xl border-white bg-white" placeholder="West Loop Animal Hospital" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[#1B4332] font-semibold text-xs">Preferred Clinic Phone</Label>
+                        <Input disabled={isCoOwned} value={form.emergency_vet_phone} onChange={(e) => setForm({...form, emergency_vet_phone: e.target.value})} className="rounded-xl border-white bg-white" placeholder="(312) 555-4040" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[#1B4332] font-semibold text-xs">Preferred Clinic Address</Label>
+                      <Input disabled={isCoOwned} value={form.emergency_vet_address} onChange={(e) => setForm({...form, emergency_vet_address: e.target.value})} className="rounded-xl border-white bg-white" placeholder="815 W Randolph St, Chicago, IL" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Safety & Handling Flags */}
+              <div className="bg-red-50/40 border border-red-100 rounded-2xl p-4 space-y-4">
+                <h4 className="text-red-900 font-bold text-xs flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-red-600 shrink-0" />
+                  Safety & Handling Flags
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-2.5">
+                    <Checkbox
+                      disabled={isCoOwned}
+                      id="escape_risk"
+                      checked={form.escape_risk}
+                      onCheckedChange={(checked) => setForm({...form, escape_risk: !!checked})}
+                      className="border-red-200 text-red-700 focus:ring-red-500 mt-1"
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="escape_risk" className="text-xs text-[#1B4332] cursor-pointer font-bold">
+                        Escape Risk
+                      </Label>
+                      <p className="text-[10px] text-[#6B5B4F]/85 leading-normal">
+                        Passenger is a flight risk, slips collars, or darts out of crates.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <Checkbox
+                      disabled={isCoOwned}
+                      id="bite_scratch_risk"
+                      checked={form.bite_scratch_risk}
+                      onCheckedChange={(checked) => setForm({...form, bite_scratch_risk: !!checked})}
+                      className="border-red-200 text-red-700 focus:ring-red-500 mt-1"
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="bite_scratch_risk" className="text-xs text-[#1B4332] cursor-pointer font-bold">
+                        Bite / Scratch Risk
+                      </Label>
+                      <p className="text-[10px] text-[#6B5B4F]/85 leading-normal">
+                        History of nipping, scratching, or defensive biting.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <Checkbox
+                      disabled={isCoOwned}
+                      id="medical_risk"
+                      checked={form.medical_risk}
+                      onCheckedChange={(checked) => setForm({...form, medical_risk: !!checked, emergency_vet_consent: !!checked || form.emergency_vet_consent})}
+                      className="border-red-200 text-red-700 focus:ring-red-500 mt-1"
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="medical_risk" className="text-xs text-[#1B4332] cursor-pointer font-bold">
+                        Medical Risk
+                      </Label>
+                      <p className="text-[10px] text-[#6B5B4F]/85 leading-normal">
+                        Chronic illness, seizures, or special mobility requirements.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <Checkbox
+                      disabled={isCoOwned}
+                      id="carrier_required"
+                      checked={form.carrier_required}
+                      onCheckedChange={(checked) => setForm({...form, carrier_required: !!checked})}
+                      className="border-red-200 text-red-700 focus:ring-red-500 mt-1"
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="carrier_required" className="text-xs text-[#1B4332] cursor-pointer font-bold">
+                        Carrier Required
+                      </Label>
+                      <p className="text-[10px] text-[#6B5B4F]/85 leading-normal">
+                        Must remain secured inside a carrier during transport.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dynamic Warning Notes */}
+                {(form.escape_risk || form.bite_scratch_risk || form.medical_risk) && (
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2 mt-2">
+                    <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">⚠️ Pawffeur Safety Requirements:</p>
+                    <ul className="list-disc list-inside text-[10px] text-amber-700 space-y-1">
+                      {form.escape_risk && <li><strong>Escape Risk</strong>: Chauffeur must use double-leash/crate security checks during transfer.</li>}
+                      {form.bite_scratch_risk && <li><strong>Bite / Scratch Risk</strong>: Chauffeur must pack heavy-duty gloves and limit direct contact.</li>}
+                      {form.medical_risk && <li><strong>Medical Risk</strong>: Requires active emergency vet authorization and consent on file.</li>}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Freeform Notes */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[#1B4332] font-semibold text-xs">Comfort & Care Notes (optional)</Label>
+                  <span className="text-[10px] text-[#6B5B4F]/60">
+                    {form.write_in_feedback?.notes?.length || 0} / 1000 chars
+                  </span>
+                </div>
                 <Textarea
-                  value={form.notes}
-                  onChange={(e) => setForm({...form, notes: e.target.value})}
-                  className="rounded-xl mt-1 resize-none"
+                  value={form.write_in_feedback?.notes || ""}
+                  onChange={(e) => setForm({
+                    ...form,
+                    write_in_feedback: { notes: e.target.value }
+                  })}
+                  className="rounded-xl border-[#D8F3DC] resize-none"
                   rows={3}
-                  placeholder="Medications, anxiety triggers, crate needs, allergies, or other instructions"
+                  placeholder="Special comfort guides, travel sickness guides, favorite treat rewards, or specific seating preferences."
+                  maxLength={1000}
                 />
               </div>
+
+              {/* Co-Owner Invitation section (Only visible to Primary Owner during Edit mode) */}
+              {editingId && !isCoOwned && (
+                <div className="border-t border-[#EDF7F0] pt-5 space-y-3">
+                  <Label className="text-[#1B4332] font-bold text-xs flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-[#2D6A4F]" />
+                    Family & Co-owners
+                  </Label>
+                  
+                  {/* Co-owner list */}
+                  {coOwnersList.length > 0 ? (
+                    <div className="space-y-2">
+                      {coOwnersList.map(co => (
+                        <div key={co.id} className="flex justify-between items-center bg-[#F9F7F3] border border-[#EDE8D9] rounded-xl px-3 py-2 text-xs text-[#6B5B4F] font-medium">
+                          <span>{co.co_owner_email}</span>
+                          <Badge className="bg-blue-100 text-blue-800 border-none rounded-full text-[10px] font-semibold">Active Caretaker</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-[#6B5B4F]/60 italic">No secondary co-owners linked to this passenger profile yet.</p>
+                  )}
+
+                  {/* Add co-owner form */}
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="co-owner@email.com"
+                        className="rounded-xl border-[#D8F3DC] text-xs h-9"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleInviteCoOwner}
+                      disabled={inviteMutation.isPending || !inviteEmail}
+                      className="bg-[#2D6A4F] hover:bg-[#1B4332] text-white rounded-xl px-3 text-xs h-9 flex gap-1 font-semibold"
+                    >
+                      {inviteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      Invite
+                    </Button>
+                  </div>
+                  {inviteError && <p className="text-[10px] text-red-600 font-semibold">{inviteError}</p>}
+                </div>
+              )}
+
+              {/* Past Chauffeur Observations Log History (Timeline) - Visible only during Edit mode */}
+              {editingId && activeEditingProfile?.observations && (
+                <div className="border-t border-[#EDF7F0] pt-5 space-y-3">
+                  <Label className="text-[#1B4332] font-bold text-xs flex items-center gap-1.5">
+                    📝 Driver Observations Timeline
+                  </Label>
+                  <div className="space-y-3">
+                    {activeEditingProfile.observations.length > 0 ? (
+                      <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                        {activeEditingProfile.observations.map((obs) => (
+                          <div key={obs.id} className="bg-[#F9F7F3] border border-[#EDE8D9] rounded-xl p-3 shadow-sm space-y-1.5 text-left">
+                            <div className="flex justify-between items-center text-[10px]">
+                              <span className="font-bold text-[#1B4332]">{obs.chauffeur_id}</span>
+                              <span className="text-gray-400">{new Date(obs.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge className="bg-blue-100 text-blue-800 text-[10px] hover:bg-blue-100 font-semibold border-none px-2 py-0.5 rounded-full capitalize">
+                                Behavior: {obs.behavior_summary}
+                              </Badge>
+                              <Badge className={`text-[10px] font-semibold border-none px-2 py-0.5 rounded-full capitalize ${
+                                obs.incident_severity === "none" ? "bg-green-100 text-green-800" :
+                                obs.incident_severity === "minor" ? "bg-amber-100 text-amber-800" :
+                                obs.incident_severity === "moderate" ? "bg-orange-100 text-orange-800" :
+                                "bg-red-100 text-red-800"
+                              }`}>
+                                Severity: {obs.incident_severity}
+                              </Badge>
+                            </div>
+                            {obs.handling_outcomes && obs.handling_outcomes.length > 0 && (
+                              <div className="text-[10px] text-[#6B5B4F] leading-tight">
+                                <strong>Outcomes:</strong> {obs.handling_outcomes.map(o => o.replace(/_/g, " ")).join(", ")}
+                              </div>
+                            )}
+                            {obs.notes && (
+                              <p className="text-[11px] text-[#6B5B4F] italic border-l-2 border-[#D8F3DC] pl-2 py-0.5 leading-snug">
+                                "{obs.notes}"
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-[#6B5B4F]/60 italic">No driver observations logged for this pet yet.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <Button
-                onClick={handleSubmit}
-                disabled={!form.name || !form.pet_type || createMutation.isPending}
-                className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl"
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl py-3 h-auto font-bold flex items-center justify-center gap-2 shadow-md"
               >
-                {createMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PawPrint className="w-4 h-4 mr-2" />}
-                Save Pet and Continue
+                {isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <PawPrint className="w-5 h-5" />
+                )}
+                <span>{isCoOwned ? "Submit Proposed Changes" : editingId ? "Save Changes" : "Save Pet and Continue"}</span>
               </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diff Suggestions Queue Review Modal (Only visible to Primary Owners) */}
+        <Dialog open={reviewOpen} onOpenChange={(v) => { if (!v) { setReviewOpen(false); setReviewProfile(null); } }}>
+          <DialogContent className="rounded-2xl max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-[#1B4332] text-xl font-bold flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                Review Proposed Changes
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-5 mt-2">
+              <p className="text-xs text-[#6B5B4F] leading-relaxed">
+                A secondary owner has suggested the following updates for <strong>{reviewProfile?.pet_name}</strong>. Approving will atomically merge all changes into the canonical profile.
+              </p>
+
+              {renderDiffTable()}
+
+              <div className="flex gap-4 border-t border-[#EDE8D9] pt-4">
+                <Button
+                  onClick={() => reviewMutation.mutate("reject")}
+                  disabled={reviewMutation.isPending}
+                  className="flex-1 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 rounded-xl py-2.5 font-semibold flex items-center justify-center gap-2 h-auto"
+                >
+                  <X className="w-4 h-4" /> Reject Suggestions
+                </Button>
+                <Button
+                  onClick={() => reviewMutation.mutate("approve")}
+                  disabled={reviewMutation.isPending}
+                  className="flex-1 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl py-2.5 font-semibold flex items-center justify-center gap-2 h-auto shadow-sm"
+                >
+                  {reviewMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Approve and Merge
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1,2,3].map(i => (
-            <div key={i} className="h-64 rounded-2xl bg-white animate-pulse border border-[#EDF7F0]" />
+            <div key={i} className="h-72 rounded-2xl bg-white animate-pulse border border-[#EDF7F0]" />
           ))}
         </div>
-      ) : pets.length === 0 ? (
-        <div className="text-center py-20">
+      ) : activeProfiles.length === 0 ? (
+        <div className="text-center py-20 bg-white border border-[#EDF7F0] rounded-3xl p-8 max-w-xl mx-auto shadow-sm">
           <div className="w-16 h-16 rounded-3xl bg-[#EDF7F0] flex items-center justify-center mx-auto mb-4">
             <PawPrint className="w-8 h-8 text-[#2D6A4F]/40" />
           </div>
-          <h3 className="text-lg font-semibold text-[#1B4332]">No pets yet</h3>
-          <p className="text-sm text-[#6B5B4F]/50 mt-1">Add your first pet to get started</p>
+          <h3 className="text-lg font-bold text-[#1B4332]">No passenger profiles yet</h3>
+          <p className="text-sm text-[#6B5B4F]/50 mt-1 max-w-xs mx-auto">Create a secure profile for your pet to enable booking transport rides.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pets.map((pet, i) => (
-            <div key={pet.id} className="relative group">
-              <PetCard pet={pet} delay={i * 0.08} />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => deleteMutation.mutate(pet.id)}
-                className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-red-50 hover:text-red-500 rounded-xl h-8 w-8"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {activeProfiles.map((profile, i) => {
+            const hasPendingSuggestions = profile.suggested_changes && Object.keys(profile.suggested_changes).length > 0;
+            const profileOwner = profile.owner_email === userEmail;
+
+            return (
+              <div key={profile.id} className="relative group h-full">
+                <PetCard pet={profile} delay={i * 0.08} />
+                
+                {/* Actions Panel */}
+                <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  
+                  {/* Primary Owner Suggestion Review Queue Button */}
+                  {profileOwner && hasPendingSuggestions && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleOpenReview(profile)}
+                      className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-9 px-3 border-none font-bold text-xs shadow-sm flex gap-1 items-center"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Review Diff
+                    </Button>
+                  )}
+
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleOpenEdit(profile)}
+                    className="bg-white/90 hover:bg-[#EDF7F0] text-[#1B4332] hover:text-[#2D6A4F] rounded-xl h-9 w-9 border border-[#EDF7F0] shadow-sm"
+                    title={profileOwner ? "Edit Profile" : "Suggest Changes"}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                  
+                  {profileOwner && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to delete this pet profile?")) {
+                          deleteMutation.mutate(profile.id);
+                        }
+                      }}
+                      className="bg-white/90 hover:bg-red-50 text-slate-500 hover:text-red-500 rounded-xl h-9 w-9 border border-[#EDF7F0] shadow-sm"
+                      title="Delete Profile"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

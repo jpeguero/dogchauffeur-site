@@ -80,7 +80,12 @@ function AdminDashboard({ user, leads }) {
 function OwnerDashboard({ user }) {
   const { data: pets = [] } = useQuery({
     queryKey: ["pets", user.email],
-    queryFn: () => base44.entities.Pet.filter({ owner_email: user.email }),
+    queryFn: async () => {
+      const res = await fetch(`/api/passenger-profile?owner_email=${encodeURIComponent(user.email)}`);
+      if (!res.ok) throw new Error("Failed to fetch passenger profiles");
+      const result = await res.json();
+      return (result.data || []).filter(p => p.lifecycle_state !== "Archived");
+    },
   });
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery({

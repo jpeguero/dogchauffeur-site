@@ -1,974 +1,1084 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Search, Lock, LogOut, Clock, CheckCircle2, AlertCircle, 
-  Calendar, User, MapPin, Dog, Loader2, RefreshCw, Phone, Mail, FileText,
-  RotateCcw, Check, CheckSquare, ClipboardList, ShieldAlert
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import PetCareNoteManager from "@/components/admin/PetCareNoteManager";
-
-// ─── Pre-loaded B2B Partners Template Data ──────────────────────────────────
-const initialPartners = [
-  { id: 1, name: "Lincoln Park Animal Hospital", type: "Vet Clinic", neighborhood: "Lincoln Park", contact: "(312) 555-0190", isKnown: "Yes", status: "Not Contacted", notes: "Alexander knows the practice manager here." },
-  { id: 2, name: "Wicker Park Veterinary Clinic", type: "Vet Clinic", neighborhood: "Wicker Park", contact: "(773) 555-0210", isKnown: "No", status: "Not Contacted", notes: "High volume clinic. Priority prospect." },
-  { id: 3, name: "Andersonville Cat Clinic", type: "Vet Clinic", neighborhood: "Andersonville", contact: "(773) 555-0340", isKnown: "No", status: "Not Contacted", notes: "Focus on cat boarding and transport referral." },
-  { id: 4, name: "MedVet Chicago", type: "Emergency Clinic", neighborhood: "Avondale", contact: "(773) 555-0450", isKnown: "Yes", status: "Contacted", notes: "Alexander dropped off a test ride here. Active contact." },
-  { id: 5, name: "Lakeview Animal Hospital", type: "Vet Clinic", neighborhood: "Lakeview", contact: "(773) 555-0560", isKnown: "No", status: "Not Contacted", notes: "Good location. Needs outreach package." },
-  { id: 6, name: "Bucktown Animal Hospital", type: "Vet Clinic", neighborhood: "Bucktown", contact: "(773) 555-0670", isKnown: "No", status: "Not Contacted", notes: "" }
-];
-
-// ─── Pre-loaded SOP Checklists Template Data ─────────────────────────────────
-const initialMorningChecklist = [
-  { id: "m1", label: "Vehicle walkaround & tire pressure inspection", checked: false },
-  { id: "m2", label: "Crate lock security & alignment checks", checked: false },
-  { id: "m3", label: "Sanitization supplies restocked (wipes, spray, towels)", checked: false },
-  { id: "m4", label: "Leashes, harness sizes, and reward treats present", checked: false },
-  { id: "m5", label: "Emergency phone card and vehicle papers present", checked: false }
-];
-
-const initialEveningChecklist = [
-  { id: "e1", label: "Log odometer mileage in Google Sheets database", checked: false },
-  { id: "e2", label: "Crate interiors wiped down and sanitized", checked: false },
-  { id: "e3", label: "Fuel level check (fill up if under 1/4 tank)", checked: false },
-  { id: "e4", label: "Send schedule text to tomorrow's client list", checked: false }
-];
+import { Shield, FileText, CheckCircle2, AlertTriangle, Clock, Search, HelpCircle, Loader2 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-  const [loadingAuth, setLoadingAuth] = useState(false);
-  const [activeTab, setActiveTab] = useState("bookings"); // "bookings" | "checklists" | "partners"
-  
-  // Bookings state (central API query)
-  const [bookings, setBookings] = useState([]);
-  const [loadingBookings, setLoadingBookings] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [updatingId, setUpdatingId] = useState(null);
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [driverInputs, setDriverInputs] = useState({});
+  const [activeTab, setActiveTab] = useState("clearance"); // 'clearance', 'override', 'policy'
+  const [userRole, setUserRole] = useState("super_admin"); // 'admin' or 'super_admin'
 
-  // Checklists local state
-  const [morningChecklist, setMorningChecklist] = useState(initialMorningChecklist);
-  const [eveningChecklist, setEveningChecklist] = useState(initialEveningChecklist);
+  // Document clearance form states
+  const [profileId, setProfileId] = useState("mock-rocky-id");
+  const [docType, setDocType] = useState("rabies_certificate");
+  const [docUrl, setDocUrl] = useState("https://pawffeur-docs.s3.amazonaws.com/cert-rocky.pdf");
+  const [status, setStatus] = useState("pending_review");
+  const [vetName, setVetName] = useState("");
+  const [vetLicense, setVetLicense] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [clinicPhone, setClinicPhone] = useState("");
+  const [vaccineManufacturer, setVaccineManufacturer] = useState("");
+  const [vaccineLot, setVaccineLot] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
+  const [pdfIntegrity, setPdfIntegrity] = useState(false);
+  const [pdfChecksum, setPdfChecksum] = useState("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [savingClearance, setSavingClearance] = useState(false);
 
-  // B2B Partners local state
-  const [partners, setPartners] = useState(initialPartners);
-  const [partnersSearchQuery, setPartnersSearchQuery] = useState("");
+  // Super-Admin Override states
+  const [overrideTripId, setOverrideTripId] = useState("TRIP-MOCK-1");
+  const [overrideProfileId, setOverrideProfileId] = useState("mock-rocky-id");
+  const [overrideCategory, setOverrideCategory] = useState("medical_emergency");
+  const [overrideNotes, setOverrideNotes] = useState("");
+  const [bypassHours, setBypassHours] = useState("12");
+  const [savingOverride, setSavingOverride] = useState(false);
 
-  // Check auth state from sessionStorage on load
-  useEffect(() => {
-    const token = sessionStorage.getItem("dc_admin_token");
-    if (token) {
-      setIsAuthenticated(true);
-      fetchBookings(token);
-    }
-  }, []);
+  // Expiry states
+  const [issueDate, setIssueDate] = useState("");
+  const [policyRabiesMaxAge, setPolicyRabiesMaxAge] = useState(1095);
+  const [policyUsdaMaxAge, setPolicyUsdaMaxAge] = useState(30);
+  const [policyDocExpiryWarning, setPolicyDocExpiryWarning] = useState(30);
+  const [localRabiesMaxAge, setLocalRabiesMaxAge] = useState(1095);
+  const [localUsdaMaxAge, setLocalUsdaMaxAge] = useState(30);
+  const [localDocExpiryWarning, setLocalDocExpiryWarning] = useState(30);
+  const [allClearances, setAllClearances] = useState([]);
+  const [loadingAllClearances, setLoadingAllClearances] = useState(false);
+  const [triggeringCron, setTriggeringCron] = useState(false);
+  const [cronLogs, setCronLogs] = useState([]);
 
-  // Fetch bookings list from backend Vercel endpoint
-  const fetchBookings = async (token) => {
-    setLoadingBookings(true);
-    try {
-      const response = await fetch("/api/admin/bookings", {
-        method: "GET",
-        headers: {
-          "Authorization": token || sessionStorage.getItem("dc_admin_token")
-        }
-      });
-      const data = await response.json().catch(() => ({}));
-      if (response.ok && data.success) {
-        setBookings(data.bookings || []);
-        
-        // Initialize driver inputs
-        const initialDrivers = {};
-        (data.bookings || []).forEach(b => {
-          initialDrivers[b.bookingId] = b.driver || "Unassigned";
-        });
-        setDriverInputs(initialDrivers);
-      } else {
-        throw new Error(data.error || "Failed to load bookings");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Error loading bookings data");
-    } finally {
-      setLoadingBookings(false);
-    }
-  };
+  // Policies configuration states
+  const [policies, setPolicies] = useState([]);
+  const [loadingPolicies, setLoadingPolicies] = useState(false);
+  const [updatingPolicyKey, setUpdatingPolicyKey] = useState("");
+  const [localMaxHours, setLocalMaxHours] = useState(12);
+  const [localMinChars, setLocalMinChars] = useState(50);
+  const [policyMaxHours, setPolicyMaxHours] = useState(12);
+  const [policyMinChars, setPolicyMinChars] = useState(50);
 
-  // Authenticate Admin
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoadingAuth(true);
-    try {
-      const response = await fetch("/api/admin/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
-      });
-      const data = await response.json().catch(() => ({}));
-      
-      if (response.ok && data.success) {
-        sessionStorage.setItem("dc_admin_token", data.token);
-        setIsAuthenticated(true);
-        toast.success("Welcome to Control Tower!");
-        fetchBookings(data.token);
-      } else {
-        throw new Error(data.error || "Authentication failed");
-      }
-    } catch (err) {
-      toast.error(err.message || "Invalid password");
-    } finally {
-      setLoadingAuth(false);
-    }
-  };
-
-  // Sign out Admin
-  const handleLogout = () => {
-    sessionStorage.removeItem("dc_admin_token");
-    setIsAuthenticated(false);
-    setBookings([]);
-    setPassword("");
-    toast.success("Logged out successfully");
-  };
-
-  // Update Booking Status or Driver Assignment
-  const handleUpdate = async (bookingId, updatedFields) => {
-    setUpdatingId(bookingId);
-    const token = sessionStorage.getItem("dc_admin_token");
-    try {
-      const response = await fetch("/api/admin/bookings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": token
-        },
-        body: JSON.stringify({
-          action: "update",
-          bookingId,
-          ...updatedFields
-        })
-      });
-      const data = await response.json().catch(() => ({}));
-      
-      if (response.ok && data.success) {
-        toast.success(
-          updatedFields.status 
-            ? `Status updated to '${updatedFields.status}'` 
-            : "Driver assigned successfully"
-        );
-        
-        // Update local state row
-        setBookings(prev => prev.map(b => 
-          b.bookingId === bookingId 
-            ? { ...b, ...updatedFields } 
-            : b
-        ));
-      } else {
-        throw new Error(data.error || "Update failed");
-      }
-    } catch (err) {
-      toast.error(err.message || "Failed to update booking");
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  // Handle local driver input change
-  const handleDriverInputChange = (bookingId, val) => {
-    setDriverInputs(prev => ({ ...prev, [bookingId]: val }));
-  };
-
-  // ─── Tab 2: Checklist Handlers ──────────────────────────────────────────────
-  const toggleMorningItem = (id) => {
-    setMorningChecklist(prev => prev.map(item => 
-      item.id === id ? { ...item, checked: !item.checked } : item
-    ));
-  };
-
-  const toggleEveningItem = (id) => {
-    setEveningChecklist(prev => prev.map(item => 
-      item.id === id ? { ...item, checked: !item.checked } : item
-    ));
-  };
-
-  const handleResetChecklists = () => {
-    setMorningChecklist(prev => prev.map(item => ({ ...item, checked: false })));
-    setEveningChecklist(prev => prev.map(item => ({ ...item, checked: false })));
-    toast.success("Shift checklists have been reset!");
-  };
-
-  // ─── Tab 3: Partners Handlers ───────────────────────────────────────────────
-  const handlePartnerStatusChange = (id, newStatus) => {
-    setPartners(prev => prev.map(p => 
-      p.id === id ? { ...p, status: newStatus } : p
-    ));
-    toast.success("Partner pipeline status updated");
-  };
-
-  const handlePartnerNotesChange = (id, newNotes) => {
-    setPartners(prev => prev.map(p => 
-      p.id === id ? { ...p, notes: newNotes } : p
-    ));
-  };
-
-  // ─── Filter Bookings ────────────────────────────────────────────────────────
-  const filteredBookings = bookings.filter(b => {
-    const matchesSearch = 
-      (b.bookingId || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (b.full_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (b.phone || "").toLowerCase().includes(searchQuery.toLowerCase());
-      
-    if (statusFilter === "All") return matchesSearch;
-    
-    const cleanStatus = (b.status || "").toLowerCase().replace("_", " ");
-    const cleanFilter = statusFilter.toLowerCase();
-    
-    if (cleanFilter === "pending review") {
-      return matchesSearch && (cleanStatus.includes("pending") || cleanStatus.includes("review"));
-    }
-    return matchesSearch && cleanStatus === cleanFilter;
+  // Fetch clearances for currently selected profile
+  const { data: clearanceRecords = [], refetch: refetchClearances, isLoading: loadingClearances } = useQuery({
+    queryKey: ["admin-clearances", profileId],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin-document-clearance?passenger_profile_id=${profileId}`);
+      if (!res.ok) throw new Error("Failed to load clearance records");
+      const json = await res.json();
+      return json.data;
+    },
+    enabled: !!profileId,
   });
 
-  const filteredPartners = partners.filter(p => 
-    p.name.toLowerCase().includes(partnersSearchQuery.toLowerCase()) ||
-    p.neighborhood.toLowerCase().includes(partnersSearchQuery.toLowerCase()) ||
-    p.type.toLowerCase().includes(partnersSearchQuery.toLowerCase())
-  );
+  // Pre-fill fields when selecting an existing record
+  const handleSelectRecord = (rec) => {
+    setDocType(rec.document_type);
+    setDocUrl(rec.document_url);
+    setStatus(rec.status);
+    setVetName(rec.vet_signing_name || "");
+    setVetLicense(rec.vet_license_number || "");
+    setClinicName(rec.clinic_name || "");
+    setClinicPhone(rec.clinic_phone || "");
+    setVaccineManufacturer(rec.vaccine_manufacturer || "");
+    setVaccineLot(rec.vaccine_lot_number || "");
+    setExpirationDate(rec.vaccine_expiration_date || "");
+    setIssueDate(rec.issue_date || "");
+    setPdfIntegrity(!!rec.pdf_integrity_checked);
+    setPdfChecksum(rec.pdf_checksum || "");
+    setRejectionReason(rec.rejection_reason || "");
+  };
 
-  // Calculate stats
-  const totalCount = bookings.length;
-  const pendingCount = bookings.filter(b => {
-    const s = (b.status || "Pending Review").toLowerCase();
-    return s.includes("pending") || s.includes("review");
-  }).length;
-  const confirmedCount = bookings.filter(b => (b.status || "").toLowerCase() === "confirmed").length;
-  const completedCount = bookings.filter(b => (b.status || "").toLowerCase() === "completed").length;
+  async function handleSaveClearance() {
+    if (status === "approved_active") {
+      if (!vetName || !vetLicense || !clinicName || !vaccineLot || !expirationDate || !issueDate) {
+        toast.error("Please fill in all mandatory QA fields to approve the document (including Issue Date).");
+        return;
+      }
+      if (!pdfIntegrity) {
+        toast.error("Please check the PDF Integrity Checklist checkbox before approving.");
+        return;
+      }
+    }
+    if (status === "rejected" && !rejectionReason.trim()) {
+      toast.error("Please enter a rejection reason.");
+      return;
+    }
 
-  // ─── RENDERS ────────────────────────────────────────────────────────────────
-  
-  // Tab 1: Bookings Content View
-  const renderBookingsTab = () => (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-extrabold text-[#1B4332] tracking-tight">Rides Control Tower</h2>
-        <p className="text-[#6B5B4F]/80 mt-1 font-medium">Manage fleet dispatch, bookings, and carrier triggers</p>
-      </div>
+    setSavingClearance(true);
+    try {
+      const res = await fetch("/api/admin-document-clearance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passenger_profile_id: profileId,
+          document_type: docType,
+          document_url: docUrl,
+          status,
+          vet_signing_name: vetName || null,
+          vet_license_number: vetLicense || null,
+          clinic_name: clinicName || null,
+          clinic_phone: clinicPhone || null,
+          vaccine_manufacturer: vaccineManufacturer || null,
+          vaccine_lot_number: vaccineLot || null,
+          vaccine_expiration_date: expirationDate || null,
+          issue_date: issueDate || null,
+          pdf_integrity_checked: pdfIntegrity,
+          pdf_checksum: pdfChecksum || null,
+          rejection_reason: status === "rejected" ? rejectionReason : null,
+          reviewed_by: "office-admin@pawffeur.com"
+        }),
+      });
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#EDF7F0] text-[#1B4332] rounded-xl flex items-center justify-center shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-[#6B5B4F]/70 font-bold uppercase tracking-wider">Total Requests</p>
-              <h3 className="text-2xl font-bold text-[#1B4332] mt-0.5">{totalCount}</h3>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-[#6B5B4F]/70 font-bold uppercase tracking-wider">Pending Review</p>
-              <h3 className="text-2xl font-bold text-amber-600 mt-0.5">{pendingCount}</h3>
-            </div>
-          </CardContent>
-        </Card>
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to save clearance");
+      }
 
-        <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-              <CheckSquare className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-[#6B5B4F]/70 font-bold uppercase tracking-wider">Confirmed</p>
-              <h3 className="text-2xl font-bold text-emerald-600 mt-0.5">{confirmedCount}</h3>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-10 h-10 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center shrink-0">
-              <RefreshCw className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[10px] text-[#6B5B4F]/70 font-bold uppercase tracking-wider">Completed</p>
-              <h3 className="text-2xl font-bold text-sky-600 mt-0.5">{completedCount}</h3>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white border border-[#EDF7F0] p-4 rounded-2xl shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B5B4F]/60" />
-          <Input
-            type="text"
-            placeholder="Search by ID, name, phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-xl border-[#D8F3DC]"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          {["All", "Pending Review", "Confirmed", "Completed", "Cancelled"].map(tab => (
-            <Button
-              key={tab}
-              variant={statusFilter === tab ? "default" : "outline"}
-              size="sm"
-              onClick={() => setStatusFilter(tab)}
-              className={`rounded-xl h-9 text-xs font-semibold ${
-                statusFilter === tab 
-                  ? "bg-[#1B4332] hover:bg-[#2D6A4F] text-white" 
-                  : "border-[#D8F3DC] text-[#6B5B4F] hover:bg-[#EDF7F0]"
-              }`}
-            >
-              {tab}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Table grid */}
-      <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-        {loadingBookings ? (
-          <div className="py-20 flex flex-col items-center justify-center text-[#6B5B4F]/60">
-            <Loader2 className="w-10 h-10 animate-spin text-[#1B4332] mb-3" />
-            <p className="font-semibold text-sm">Querying Google Sheets database...</p>
-          </div>
-        ) : filteredBookings.length === 0 ? (
-          <div className="py-20 text-center text-[#6B5B4F]/60">
-            <AlertCircle className="w-10 h-10 mx-auto text-[#6B5B4F]/40 mb-3" />
-            <p className="font-semibold text-sm">No bookings found matching filters</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-[#EDF7F0]/40">
-                <TableRow className="border-b border-[#EDF7F0]">
-                  <TableHead className="text-[#1B4332] font-bold">Booking ID</TableHead>
-                  <TableHead className="text-[#1B4332] font-bold">Customer</TableHead>
-                  <TableHead className="text-[#1B4332] font-bold">Trip Details</TableHead>
-                  <TableHead className="text-[#1B4332] font-bold">Date & Time</TableHead>
-                  <TableHead className="text-[#1B4332] font-bold">Status</TableHead>
-                  <TableHead className="text-[#1B4332] font-bold">Driver Assigned</TableHead>
-                  <TableHead className="text-[#1B4332] font-bold text-right">Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBookings.map((b) => {
-                  const isUrgent = b.is_urgent === "YES" || b.is_urgent === true;
-                  const cleanStatus = b.status || "Pending Review";
-                  return (
-                    <TableRow 
-                      key={b.bookingId} 
-                      className={`border-b border-[#EDF7F0]/60 transition-colors ${
-                        isUrgent ? "bg-[#FEF3C7]/20 hover:bg-[#FEF3C7]/30" : "hover:bg-[#EDF7F0]/10"
-                      }`}
-                    >
-                      <TableCell className="font-bold text-[#1B4332]">
-                        <div className="flex flex-col">
-                          <span>{b.bookingId}</span>
-                          {isUrgent && (
-                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border border-red-200 text-[10px] py-0 px-1.5 w-max font-extrabold mt-1">
-                              🚨 URGENT
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-semibold text-gray-800">{b.full_name}</div>
-                        <div className="text-xs text-[#6B5B4F]/80 flex items-center gap-1.5 mt-0.5">
-                          <Phone className="w-3.5 h-3.5" /> {b.phone}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs">
-                        <div className="text-xs font-semibold text-gray-700 truncate">
-                          <span className="text-[#1B4332] font-bold">From: </span>{b.pickup_address}
-                        </div>
-                        <div className="text-xs text-[#6B5B4F] truncate mt-0.5">
-                          <span className="text-[#1B4332] font-bold">To: </span>{b.dropoff_address}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-xs font-bold text-gray-700">{b.preferred_date}</div>
-                        <div className="text-xs text-[#6B5B4F] mt-0.5">{b.preferred_time_window || "All day"}</div>
-                      </TableCell>
-                      <TableCell>
-                        {updatingId === b.bookingId ? (
-                          <Loader2 className="w-5 h-5 animate-spin text-[#1B4332]" />
-                        ) : (
-                          <Select 
-                            value={cleanStatus} 
-                            onValueChange={(val) => handleUpdate(b.bookingId, { status: val })}
-                          >
-                            <SelectTrigger className={`w-36 h-9 rounded-xl font-bold border-0 text-xs shadow-none text-white ${
-                              cleanStatus === "Confirmed" ? "bg-emerald-600 hover:bg-emerald-700" :
-                              cleanStatus === "Completed" ? "bg-sky-600 hover:bg-sky-700" :
-                              cleanStatus === "Cancelled" ? "bg-rose-600 hover:bg-rose-700" :
-                              "bg-[#6C757D] hover:bg-[#5A6268]"
-                            }`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl border-[#D8F3DC]">
-                              <SelectItem value="Pending Review">Pending Review</SelectItem>
-                              <SelectItem value="Confirmed">Confirmed</SelectItem>
-                              <SelectItem value="Completed">Completed</SelectItem>
-                              <SelectItem value="Cancelled">Cancelled</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={driverInputs[b.bookingId] || ""}
-                          onChange={(e) => handleDriverInputChange(b.bookingId, e.target.value)}
-                          onBlur={() => {
-                            if (driverInputs[b.bookingId] !== b.driver) {
-                              handleUpdate(b.bookingId, { driver: driverInputs[b.bookingId] });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && driverInputs[b.bookingId] !== b.driver) {
-                              handleUpdate(b.bookingId, { driver: driverInputs[b.bookingId] });
-                            }
-                          }}
-                          className="w-36 h-9 rounded-xl border-[#D8F3DC] text-xs font-semibold text-gray-700"
-                          placeholder="Type driver name..."
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedBooking(b)}
-                          className="rounded-xl border-[#D8F3DC] text-[#1B4332] hover:bg-[#EDF7F0] h-9"
-                        >
-                          View Card
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </Card>
-    </div>
-  );
-
-  // Tab 2: Checklists Content View
-  const renderChecklistsTab = () => (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-[#1B4332] tracking-tight">Daily Readiness Checklist</h2>
-          <p className="text-[#6B5B4F]/80 mt-1 font-medium">Standard vehicle safety and sanitization audits</p>
-        </div>
-        <Button
-          onClick={handleResetChecklists}
-          variant="outline"
-          className="border-amber-200 text-amber-800 bg-amber-50/50 hover:bg-amber-50 rounded-xl font-bold shrink-0 self-start sm:self-center"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Reset checklists
-        </Button>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Morning Checklist Card */}
-        <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-[#1B4332] p-5 text-white flex items-center gap-3">
-            <Calendar className="w-5 h-5" />
-            <div>
-              <h3 className="font-bold text-base">Morning Shift Prep</h3>
-              <p className="text-xs text-white/70">Execute before departing for first pickup</p>
-            </div>
-          </div>
-          <CardContent className="p-6 space-y-4">
-            {morningChecklist.map(item => (
-              <label 
-                key={item.id} 
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${
-                  item.checked 
-                    ? "bg-[#EDF7F0]/40 border-[#D8F3DC] text-[#6B5B4F]/60 line-through" 
-                    : "bg-white border-[#EDF7F0] text-gray-800 hover:bg-[#EDF7F0]/10"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={item.checked}
-                  onChange={() => toggleMorningItem(item.id)}
-                  className="mt-1 w-4 h-4 accent-[#1B4332] cursor-pointer"
-                />
-                <span className="text-sm font-semibold leading-relaxed">{item.label}</span>
-              </label>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Evening Checklist Card */}
-        <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-[#2D6A4F] p-5 text-white flex items-center gap-3">
-            <ClipboardList className="w-5 h-5" />
-            <div>
-              <h3 className="font-bold text-base">Evening Shift Wrap-up</h3>
-              <p className="text-xs text-white/70">Execute upon parking vehicle for the night</p>
-            </div>
-          </div>
-          <CardContent className="p-6 space-y-4">
-            {eveningChecklist.map(item => (
-              <label 
-                key={item.id} 
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${
-                  item.checked 
-                    ? "bg-[#EDF7F0]/40 border-[#D8F3DC] text-[#6B5B4F]/60 line-through" 
-                    : "bg-white border-[#EDF7F0] text-gray-800 hover:bg-[#EDF7F0]/10"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={item.checked}
-                  onChange={() => toggleEveningItem(item.id)}
-                  className="mt-1 w-4 h-4 accent-[#1B4332] cursor-pointer"
-                />
-                <span className="text-sm font-semibold leading-relaxed">{item.label}</span>
-              </label>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="bg-[#F9F7F3] border border-[#EDF7F0] rounded-2xl p-5 flex items-start gap-4">
-        <ShieldAlert className="w-5 h-5 text-[#2D6A4F] shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <h4 className="text-sm font-bold text-[#1B4332]">SOP Safety Note</h4>
-          <p className="text-xs text-[#6B5B4F] leading-relaxed">
-            Standard checks protect the animal, the driver, and the brand. Never bypass tire inspections or leash integrity verifications. Sanitization check blocks potential cross-contamination between clients.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Tab 3: B2B Partnerships view
-  const renderPartnersTab = () => (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-extrabold text-[#1B4332] tracking-tight">Partnerships Pipeline</h2>
-        <p className="text-[#6B5B4F]/80 mt-1 font-medium">B2B client referral clinics, groomers, and pipeline logs</p>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white border border-[#EDF7F0] p-4 rounded-2xl shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B5B4F]/60" />
-          <Input
-            type="text"
-            placeholder="Search prospects by clinic, area..."
-            value={partnersSearchQuery}
-            onChange={(e) => setPartnersSearchQuery(e.target.value)}
-            className="pl-10 rounded-xl border-[#D8F3DC]"
-          />
-        </div>
-      </div>
-
-      {/* Partners Grid */}
-      <Card className="bg-white border border-[#EDF7F0] rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-[#EDF7F0]/40">
-              <TableRow className="border-b border-[#EDF7F0]">
-                <TableHead className="text-[#1B4332] font-bold">Business Name</TableHead>
-                <TableHead className="text-[#1B4332] font-bold">Neighborhood</TableHead>
-                <TableHead className="text-[#1B4332] font-bold">Type</TableHead>
-                <TableHead className="text-[#1B4332] font-bold">Contact Phone</TableHead>
-                <TableHead className="text-[#1B4332] font-bold">Known By Alex</TableHead>
-                <TableHead className="text-[#1B4332] font-bold">Outreach Status</TableHead>
-                <TableHead className="text-[#1B4332] font-bold">Outreach Notes / Logs</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPartners.map(p => (
-                <TableRow key={p.id} className="border-b border-[#EDF7F0]/60 hover:bg-[#EDF7F0]/10">
-                  <TableCell className="font-bold text-[#1B4332]">{p.name}</TableCell>
-                  <TableCell className="font-semibold text-gray-800">{p.neighborhood}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-[#EDF7F0]/20 text-[#2D6A4F] border-[#D8F3DC] font-bold text-[10px]">
-                      {p.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-gray-600 font-semibold">{p.contact}</TableCell>
-                  <TableCell>
-                    <Badge className={`text-[10px] font-extrabold ${p.isKnown === "Yes" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-600"}`}>
-                      {p.isKnown}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Select 
-                      value={p.status} 
-                      onValueChange={(val) => handlePartnerStatusChange(p.id, val)}
-                    >
-                      <SelectTrigger className={`w-36 h-9 rounded-xl font-bold border-0 text-xs text-white ${
-                        p.status === "Active Partner" ? "bg-emerald-600" :
-                        p.status === "Meeting Scheduled" ? "bg-sky-600" :
-                        p.status === "Contacted" ? "bg-amber-600" :
-                        p.status === "Needs Follow-Up" ? "bg-rose-600" :
-                        "bg-[#6C757D]"
-                      }`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl border-[#D8F3DC]">
-                        <SelectItem value="Not Contacted">Not Contacted</SelectItem>
-                        <SelectItem value="Contacted">Contacted</SelectItem>
-                        <SelectItem value="Meeting Scheduled">Meeting Scheduled</SelectItem>
-                        <SelectItem value="Active Partner">Active Partner</SelectItem>
-                        <SelectItem value="Needs Follow-Up">Needs Follow-Up</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="text"
-                      value={p.notes}
-                      onChange={(e) => handlePartnerNotesChange(p.id, e.target.value)}
-                      className="w-56 h-9 rounded-xl border-[#D8F3DC] text-xs font-semibold text-gray-700"
-                      placeholder="Add logging notes here..."
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
-    </div>
-  );
-
-  // ─── Render Authentication Page ─────────────────────────────────────────────
-  if (!isAuthenticated) {
-    return (
-      <main className="min-h-screen bg-[#F9F7F3] flex items-center justify-center p-6 font-sans">
-        <Card className="w-full max-w-md bg-white border border-[#EDF7F0] shadow-2xl rounded-3xl overflow-hidden">
-          <div className="forest-gradient p-8 text-center text-white relative">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_0%,transparent_60%)]" />
-            <div className="w-14 h-14 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-              <Lock className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Control Tower 🗼</h1>
-            <p className="text-white/80 text-sm mt-1">Pawffeur Fleet Operations</p>
-          </div>
-          
-          <CardContent className="p-8">
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#1B4332] font-semibold">Admin Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-xl border-[#D8F3DC] focus-visible:ring-[#2D6A4F] h-11"
-                  required
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                disabled={loadingAuth}
-                className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl h-11 text-base font-semibold"
-              >
-                {loadingAuth ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Authenticating...
-                  </>
-                ) : (
-                  "Log In"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </main>
-    );
+      toast.success("Document clearance record updated successfully!");
+      refetchClearances();
+      fetchAllClearances();
+    } catch (e) {
+      toast.error(e.message || "Failed to update record");
+    } finally {
+      setSavingClearance(false);
+    }
   }
 
-  // ─── Render Main Layout Panel Shell ─────────────────────────────────────────
+  const fetchPolicies = async () => {
+    setLoadingPolicies(true);
+    try {
+      const res = await fetch(`/api/admin-policy-config?role=${userRole}`);
+      if (!res.ok) {
+        throw new Error("Failed to retrieve system policies");
+      }
+      const json = await res.json();
+      const loadedPolicies = json.data || [];
+      setPolicies(loadedPolicies);
+      const maxHoursPol = loadedPolicies.find(p => p.policy_key === "override_max_hours");
+      if (maxHoursPol) {
+        setLocalMaxHours(maxHoursPol.value_number);
+        setPolicyMaxHours(maxHoursPol.value_number);
+      }
+      const minCharsPol = loadedPolicies.find(p => p.policy_key === "override_min_audit_chars");
+      if (minCharsPol) {
+        setLocalMinChars(minCharsPol.value_number);
+        setPolicyMinChars(minCharsPol.value_number);
+      }
+      const rabiesMaxAgePol = loadedPolicies.find(p => p.policy_key === "rabies_max_age_days");
+      if (rabiesMaxAgePol) {
+        setLocalRabiesMaxAge(rabiesMaxAgePol.value_number);
+        setPolicyRabiesMaxAge(rabiesMaxAgePol.value_number);
+      }
+      const usdaMaxAgePol = loadedPolicies.find(p => p.policy_key === "usda_max_age_days");
+      if (usdaMaxAgePol) {
+        setLocalUsdaMaxAge(usdaMaxAgePol.value_number);
+        setPolicyUsdaMaxAge(usdaMaxAgePol.value_number);
+      }
+      const docExpiryWarningPol = loadedPolicies.find(p => p.policy_key === "doc_expiry_warning_days");
+      if (docExpiryWarningPol) {
+        setLocalDocExpiryWarning(docExpiryWarningPol.value_number);
+        setPolicyDocExpiryWarning(docExpiryWarningPol.value_number);
+      }
+    } catch (err) {
+      console.warn("Failed to load policies:", err);
+    } finally {
+      setLoadingPolicies(false);
+    }
+  };
+
+  const fetchAllClearances = async () => {
+    setLoadingAllClearances(true);
+    try {
+      const res = await fetch(`/api/admin-document-clearance?all=true&role=${userRole}`);
+      if (!res.ok) throw new Error("Failed to load warnings console");
+      const json = await res.json();
+      setAllClearances(json.data || []);
+    } catch (e) {
+      console.warn("Failed to fetch clearances for warnings panel:", e);
+    } finally {
+      setLoadingAllClearances(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userRole === "super_admin") {
+      fetchPolicies();
+    } else {
+      setPolicyMaxHours(12);
+      setPolicyMinChars(50);
+      setPolicyRabiesMaxAge(1095);
+      setPolicyUsdaMaxAge(30);
+      setPolicyDocExpiryWarning(30);
+    }
+
+    if (userRole === "super_admin" || userRole === "admin") {
+      fetchAllClearances();
+    }
+  }, [userRole]);
+
+  useEffect(() => {
+    if (activeTab === "policy" && userRole === "super_admin") {
+      fetchPolicies();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (parseInt(bypassHours, 10) > policyMaxHours) {
+      setBypassHours(String(policyMaxHours));
+    }
+  }, [policyMaxHours]);
+
+  const handleUpdatePolicy = async (key, val) => {
+    setUpdatingPolicyKey(key);
+    try {
+      const res = await fetch("/api/admin-policy-config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          policy_key: key,
+          value_number: val,
+          role: userRole,
+          updated_by: "super-admin@pawffeur.com"
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to update policy");
+      }
+      toast.success(json.message || `Policy ${key} updated successfully!`);
+      await fetchPolicies();
+      fetchAllClearances();
+    } catch (err) {
+      toast.error(err.message || "Failed to save policy changes");
+    } finally {
+      setUpdatingPolicyKey("");
+    }
+  };
+
+  const getDocumentStatus = (doc) => {
+    if (doc.status !== "approved_active") {
+      return { status: doc.status, daysRemaining: null };
+    }
+    
+    let maxAgeDays = doc.document_type === "rabies_certificate" ? policyRabiesMaxAge : policyUsdaMaxAge;
+    let calculatedExpiry;
+    
+    if (doc.issue_date) {
+      const issDate = new Date(doc.issue_date);
+      const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+      const policyExpiry = new Date(issDate.getTime() + maxAgeMs);
+      
+      if (doc.document_type === "rabies_certificate" && doc.vaccine_expiration_date) {
+        const vetExpDate = new Date(doc.vaccine_expiration_date);
+        calculatedExpiry = policyExpiry < vetExpDate ? policyExpiry : vetExpDate;
+      } else {
+        calculatedExpiry = policyExpiry;
+      }
+    } else {
+      calculatedExpiry = doc.calculated_expiry_at ? new Date(doc.calculated_expiry_at) : new Date(doc.vaccine_expiration_date);
+    }
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    calculatedExpiry.setHours(0,0,0,0);
+    
+    if (calculatedExpiry < today) {
+      return { status: "expired", daysRemaining: 0, expiryDate: calculatedExpiry.toISOString().split("T")[0] };
+    }
+    
+    const diffTime = calculatedExpiry.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= policyDocExpiryWarning) {
+      return { status: "expiring_soon", daysRemaining: diffDays, expiryDate: calculatedExpiry.toISOString().split("T")[0] };
+    }
+    
+    return { status: "valid", daysRemaining: diffDays, expiryDate: calculatedExpiry.toISOString().split("T")[0] };
+  };
+
+  async function handleSaveOverride() {
+    if (!overrideNotes || overrideNotes.trim().length < policyMinChars) {
+      toast.error(`Audit requirement: Notes must explain the emergency in detail (min ${policyMinChars} chars).`);
+      return;
+    }
+
+    setSavingOverride(true);
+    try {
+      const expDate = new Date(Date.now() + parseInt(bypassHours, 10) * 60 * 60 * 1000);
+      const res = await fetch("/api/super-admin-override", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trip_id: overrideTripId,
+          passenger_profile_id: overrideProfileId,
+          reason_category: overrideCategory,
+          override_notes: overrideNotes,
+          bypass_expires_at: expDate.toISOString(),
+          role: userRole,
+          overridden_by: "super-admin@pawffeur.com"
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to log override");
+      }
+
+      toast.success("Super-Admin emergency bypass granted!");
+      setOverrideNotes("");
+    } catch (e) {
+      toast.error(e.message || "Override failed");
+    } finally {
+      setSavingOverride(false);
+    }
+  }
+
+  const handleTriggerCron = async () => {
+    setTriggeringCron(true);
+    setCronLogs([]);
+    try {
+      const res = await fetch("/api/admin-expiry-notifications", {
+        method: "POST"
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to trigger notifications cron");
+      }
+      toast.success(`Cron executed! Notified ${json.notified_count} passengers.`);
+      if (json.logs && json.logs.length > 0) {
+        setCronLogs(json.logs);
+      } else {
+        setCronLogs(["Cron run completed successfully. No new passenger warnings met the notification criteria."]);
+      }
+      fetchAllClearances();
+    } catch (err) {
+      toast.error(err.message || "Failed to execute cron");
+    } finally {
+      setTriggeringCron(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F9F7F3] flex flex-col md:flex-row font-sans">
-      {/* Sidebar - Visible on Desktop */}
-      <aside className="w-full md:w-64 bg-[#1B4332] text-white flex flex-col border-r border-[#2D6A4F]/20 md:min-h-screen shrink-0">
-        {/* Brand */}
-        <div className="px-6 py-6 border-b border-[#2D6A4F]/30 flex items-center gap-3">
-          <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-8 h-8" />
-          <div>
-            <h1 className="font-bold text-base tracking-tight leading-tight">Pawffeur</h1>
-            <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Control Tower</p>
-          </div>
+    <div className="max-w-4xl mx-auto space-y-6 p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[#EDF7F0] pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1B4332] flex items-center gap-2">
+            <Shield className="w-6 h-6 text-[#52B788]" />
+            Admin Dispatch & Clearance
+          </h1>
+          <p className="text-xs text-[#6B5B4F]/70 mt-1">
+            Pre-verify passenger veterinary health records or manage emergency dispatch exceptions.
+          </p>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          <button
-            onClick={() => setActiveTab("bookings")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "bookings"
-                ? "bg-white text-[#1B4332] shadow-lg"
-                : "text-white/80 hover:bg-[#2D6A4F]/30 hover:text-white"
-            }`}
-          >
-            <RefreshCw className="w-4 h-4 shrink-0" />
-            <span>Bookings Tower</span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("checklists")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "checklists"
-                ? "bg-white text-[#1B4332] shadow-lg"
-                : "text-white/80 hover:bg-[#2D6A4F]/30 hover:text-white"
-            }`}
-          >
-            <CheckSquare className="w-4 h-4 shrink-0" />
-            <span>Daily Checklists</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("partners")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "partners"
-                ? "bg-white text-[#1B4332] shadow-lg"
-                : "text-white/80 hover:bg-[#2D6A4F]/30 hover:text-white"
-            }`}
-          >
-            <User className="w-4 h-4 shrink-0" />
-            <span>Partners Pipeline</span>
-          </button>
-        </nav>
-
-        {/* User Card */}
-        <div className="p-4 border-t border-[#2D6A4F]/30 space-y-2">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <User className="w-4 h-4 text-emerald-300" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold truncate">Alexander P.</p>
-              <p className="text-[9px] text-emerald-400 font-bold uppercase">Technician</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="w-full text-white/70 hover:text-white hover:bg-red-950/20 rounded-xl justify-start h-9 text-xs px-3"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile Nav Header */}
-        <header className="md:hidden bg-[#1B4332] text-white px-6 py-4 flex items-center justify-between border-b border-[#2D6A4F]/30">
-          <div className="flex items-center gap-3">
-            <img src="/assets/pawffeur-logo-icon.svg" alt="Pawffeur" className="w-6 h-6" />
-            <span className="font-bold text-base">Pawffeur</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchBookings()}
-              disabled={loadingBookings}
-              className="border-white/20 bg-white/10 text-white hover:bg-white/20 h-8"
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 bg-[#EDF7F0]/80 rounded-xl px-2.5 py-1.5 border border-[#D8F3DC]">
+            <span className="text-[10px] uppercase font-bold text-[#6B5B4F]/80">Role Context:</span>
+            <select
+              value={userRole}
+              onChange={(e) => {
+                setUserRole(e.target.value);
+                if (e.target.value !== "super_admin" && activeTab === "policy") {
+                  setActiveTab("clearance");
+                }
+              }}
+              className="bg-transparent text-xs font-bold text-[#1B4332] outline-none cursor-pointer border-none p-0 focus:ring-0"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingBookings ? "animate-spin" : ""}`} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-white/80 hover:text-white h-8"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </Button>
+              <option value="admin">Office Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
           </div>
-        </header>
-
-        {/* Mobile Tab selectors */}
-        <div className="md:hidden bg-white border-b border-[#EDF7F0] p-2 flex justify-around">
-          {["bookings", "checklists", "partners"].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`text-xs font-bold px-3 py-1.5 rounded-lg capitalize ${
-                activeTab === tab 
-                  ? "bg-[#EDF7F0] text-[#1B4332]" 
-                  : "text-[#6B5B4F]"
-              }`}
-            >
-              {tab === "partners" ? "Partners" : tab === "checklists" ? "Checklists" : "Bookings"}
-            </button>
-          ))}
-        </div>
-
-        {/* Dynamic content rendering */}
-        <div className="p-6 md:p-8 flex-1 max-w-6xl w-full mx-auto">
-          {activeTab === "bookings" && renderBookingsTab()}
-          {activeTab === "checklists" && renderChecklistsTab()}
-          {activeTab === "partners" && renderPartnersTab()}
+          <Badge className="bg-[#1B4332] text-white py-1 px-3 rounded-full font-bold text-xs shadow-sm">
+            Office Console
+          </Badge>
         </div>
       </div>
 
-      {/* Details Slide Drawer */}
-      {selectedBooking && (
-        <Sheet open={!!selectedBooking} onOpenChange={(open) => { if (!open) setSelectedBooking(null); }}>
-          <SheetContent className="sm:max-w-md border-l border-[#D8F3DC]/60 overflow-y-auto bg-white font-sans p-6 rounded-l-3xl">
-            <SheetHeader className="pb-6 border-b border-[#EDF7F0]">
-              <SheetTitle className="text-2xl font-extrabold text-[#1B4332]">
-                Booking Information
-              </SheetTitle>
-              <SheetDescription className="text-xs font-semibold text-[#6B5B4F]/80">
-                Created: {selectedBooking.createdAt}
-              </SheetDescription>
-            </SheetHeader>
+      {/* Tabs */}
+      <div className="flex gap-2 bg-[#EDF7F0]/60 rounded-xl p-1 max-w-lg">
+        <button
+          onClick={() => setActiveTab("clearance")}
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition ${
+            activeTab === "clearance" ? "bg-[#1B4332] text-white shadow-sm" : "text-[#6B5B4F] hover:text-[#1B4332]"
+          }`}
+        >
+          🩺 Health Clearance
+        </button>
+        <button
+          onClick={() => setActiveTab("override")}
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition ${
+            activeTab === "override" ? "bg-[#1B4332] text-white shadow-sm" : "text-[#6B5B4F] hover:text-[#1B4332]"
+          }`}
+        >
+          🚨 Emergency Override
+        </button>
+        {userRole === "super_admin" && (
+          <button
+            onClick={() => setActiveTab("policy")}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition ${
+              activeTab === "policy" ? "bg-[#1B4332] text-white shadow-sm" : "text-[#6B5B4F] hover:text-[#1B4332]"
+            }`}
+          >
+            ⚙️ Policy Config
+          </button>
+        )}
+      </div>
 
-            <div className="space-y-6 py-6">
-              <div className="bg-[#EDF7F0] border border-[#B7E4C7] rounded-2xl p-4 flex justify-between items-center">
+      {/* Tab Content: Clearance */}
+      {activeTab === "clearance" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left panel: Profiles & Existing Records */}
+          <div className="md:col-span-1 space-y-4">
+            <div className="bg-white border border-[#EDF7F0] rounded-2xl p-4 shadow-sm space-y-4">
+              <div>
+                <Label className="text-xs font-bold text-[#1B4332] uppercase">Select Profile</Label>
+                <select
+                  value={profileId}
+                  onChange={(e) => setProfileId(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-white p-2.5 text-xs font-medium focus:ring-[#52B788] outline-none mt-1"
+                >
+                  <option value="mock-rocky-id">Rocky (Dog - Golden Retriever)</option>
+                  <option value="mock-luna-id">Luna (Cat - Siamese)</option>
+                  <option value="new-profile">Test Profile ID (Lookup)</option>
+                </select>
+              </div>
+
+              {profileId === "new-profile" && (
                 <div>
-                  <p className="text-[10px] text-[#2D6A4F] uppercase font-bold tracking-wider">Booking ID</p>
-                  <p className="text-lg font-extrabold text-[#1B4332]">{selectedBooking.bookingId}</p>
+                  <Label className="text-xs font-bold text-[#1B4332] uppercase">Write-in Profile ID</Label>
+                  <input
+                    type="text"
+                    value={profileId === "new-profile" ? "" : profileId}
+                    onChange={(e) => setProfileId(e.target.value)}
+                    placeholder="Enter UUID..."
+                    className="w-full rounded-xl border border-gray-200 p-2 text-xs outline-none mt-1"
+                  />
                 </div>
-                <div className="text-right">
-                  <Badge className={`text-white text-xs font-bold px-3 py-1 rounded-full ${
-                    selectedBooking.status === "Confirmed" ? "bg-emerald-600" :
-                    selectedBooking.status === "Completed" ? "bg-sky-600" :
-                    selectedBooking.status === "Cancelled" ? "bg-rose-600" :
-                    "bg-[#6C757D]"
-                  }`}>
-                    {selectedBooking.status || "Pending Review"}
-                  </Badge>
-                </div>
-              </div>
+              )}
 
-              <div className="space-y-3">
-                <h4 className="text-xs uppercase tracking-wider text-[#1B4332] font-bold border-b border-[#EDF7F0] pb-1 flex items-center gap-1.5">
-                  <User className="w-4 h-4" /> Customer Contact
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Name:</span>
-                    <span className="font-bold text-gray-800">{selectedBooking.full_name}</span>
+              <div className="border-t border-[#EDF7F0] pt-3">
+                <p className="text-xs font-bold text-[#1B4332] uppercase mb-2">Stored Documents</p>
+                {loadingClearances ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-[#52B788]" />
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Phone:</span>
-                    <a href={`tel:${selectedBooking.phone}`} className="font-bold text-[#1B4332] hover:underline flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5" /> {selectedBooking.phone}
-                    </a>
+                ) : clearanceRecords.length === 0 ? (
+                  <p className="text-[11px] text-[#6B5B4F]/60 italic py-2">No documents cleared or reviewed yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {clearanceRecords.map((rec) => (
+                      <button
+                        key={rec.id}
+                        onClick={() => handleSelectRecord(rec)}
+                        className="w-full text-left p-2.5 rounded-xl border border-gray-150 hover:bg-[#EDF7F0]/20 transition flex items-center justify-between text-xs"
+                      >
+                        <div className="space-y-0.5">
+                          <p className="font-bold text-[#1B4332] capitalize">
+                            {rec.document_type.replace(/_/g, " ")}
+                          </p>
+                          <p className="text-[10px] text-gray-400">Exp: {rec.vaccine_expiration_date || "N/A"}</p>
+                        </div>
+                        {(() => {
+                          const docStatus = getDocumentStatus(rec);
+                          if (docStatus.status === "expired") {
+                            return (
+                              <Badge className="bg-red-100 text-red-800 border border-red-200 font-bold text-[10px] animate-pulse">
+                                ❌ Expired
+                              </Badge>
+                            );
+                          }
+                          if (docStatus.status === "expiring_soon") {
+                            return (
+                              <Badge className="bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px]">
+                                ⚠️ Expiring in {docStatus.daysRemaining}d
+                              </Badge>
+                            );
+                          }
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={
+                                rec.status === "approved_active"
+                                  ? "bg-green-50 text-green-700 border-green-200"
+                                  : rec.status === "rejected"
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                              }
+                            >
+                              {rec.status.replace(/_/g, " ")}
+                            </Badge>
+                          );
+                        })()}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Email:</span>
-                    <span className="font-semibold text-gray-700 flex items-center gap-1">
-                      <Mail className="w-3.5 h-3.5" /> {selectedBooking.email || "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs uppercase tracking-wider text-[#1B4332] font-bold border-b border-[#EDF7F0] pb-1 flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" /> Trip Details
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Ride Type:</span>
-                    <span className="font-bold text-gray-800">{selectedBooking.ride_type}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Urgent:</span>
-                    <span className="font-bold text-gray-800">{selectedBooking.is_urgent}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Date:</span>
-                    <span className="font-bold text-gray-800 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" /> {selectedBooking.preferred_date}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Time Window:</span>
-                    <span className="font-bold text-gray-800">{selectedBooking.preferred_time_window || "All day"}</span>
-                  </div>
-                  <div className="flex flex-col text-sm pt-1">
-                    <span className="text-xs text-[#1B4332] font-bold flex items-center gap-1">📍 Pickup Address:</span>
-                    <span className="font-medium text-gray-700 mt-0.5 leading-snug">{selectedBooking.pickup_address}</span>
-                  </div>
-                  <div className="flex flex-col text-sm pt-1">
-                    <span className="text-xs text-[#1B4332] font-bold flex items-center gap-1">🏁 Drop-off Destination:</span>
-                    <span className="font-medium text-gray-700 mt-0.5 leading-snug">{selectedBooking.dropoff_address}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs uppercase tracking-wider text-[#1B4332] font-bold border-b border-[#EDF7F0] pb-1 flex items-center gap-1.5">
-                  <Dog className="w-4 h-4" /> Pet Specifications
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Number of Dogs:</span>
-                    <span className="font-bold text-gray-800">{selectedBooking.number_of_dogs}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#6B5B4F] font-medium">Size(s):</span>
-                    <span className="font-bold text-gray-800">{selectedBooking.dog_sizes}</span>
-                  </div>
-                </div>
-              </div>
-
-              <PetCareNoteManager booking={selectedBooking} />
-
-              <div className="space-y-3">
-                <h4 className="text-xs uppercase tracking-wider text-[#1B4332] font-bold border-b border-[#EDF7F0] pb-1">
-                  Additional Notes
-                </h4>
-                <div className="bg-[#F9F7F3] border border-[#EDF7F0] rounded-xl p-3 text-sm text-[#6B5B4F] leading-relaxed max-h-36 overflow-y-auto font-medium">
-                  {selectedBooking.notes || "No notes or instructions provided."}
-                </div>
+                )}
               </div>
             </div>
-            
-            <div className="pt-4 border-t border-[#EDF7F0] flex justify-end">
+          </div>
+
+          {/* Right panel: Clearance Review Form */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="bg-white border border-[#EDF7F0] rounded-2xl p-5 shadow-sm space-y-4">
+              <h2 className="text-sm font-bold text-[#1B4332] uppercase tracking-wide flex items-center gap-1.5 border-b border-[#EDF7F0] pb-2">
+                <FileText className="w-4 h-4 text-[#52B788]" />
+                Document Review Form
+              </h2>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-semibold text-[#1B4332]">Document Type</Label>
+                  <select
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                    className="w-full rounded-xl border border-gray-250 bg-white p-2.5 text-xs outline-none mt-1"
+                  >
+                    <option value="rabies_certificate">Rabies Certificate</option>
+                    <option value="usda_health_certificate">USDA/APHIS Health Cert</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-[#1B4332]">Document URL</Label>
+                  <input
+                    type="text"
+                    value={docUrl}
+                    onChange={(e) => setDocUrl(e.target.value)}
+                    className="w-full rounded-xl border border-gray-250 p-2 text-xs mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-semibold text-[#1B4332]">Verification Status</Label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full rounded-xl border border-gray-250 bg-white p-2.5 text-xs outline-none mt-1"
+                  >
+                    <option value="pending_review">Pending Review</option>
+                    <option value="approved_active">Approved / Active</option>
+                    <option value="rejected">Rejected (Flag Problem)</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-[#1B4332]">PDF Checksum (SHA256)</Label>
+                  <input
+                    type="text"
+                    value={pdfChecksum}
+                    onChange={(e) => setPdfChecksum(e.target.value)}
+                    placeholder="Auto-hashed or input string"
+                    className="w-full rounded-xl border border-gray-250 p-2 text-xs mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* QA & Verification Fields (Visible for all, mandatory for approved) */}
+              <div className="bg-[#F9F7F3] border border-[#EDE8D9] rounded-xl p-4 space-y-3">
+                <p className="text-xs font-bold text-[#1B4332] uppercase tracking-wider border-b border-[#EDF7F0] pb-1 flex items-center gap-1.5">
+                  🛡️ QA Validation & Anti-Fraud Checklist
+                </p>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Vet Signing Name *</Label>
+                    <input
+                      type="text"
+                      value={vetName}
+                      onChange={(e) => setVetName(e.target.value)}
+                      placeholder="e.g. Dr. Sarah Jenkins"
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Vet License Number *</Label>
+                    <input
+                      type="text"
+                      value={vetLicense}
+                      onChange={(e) => setVetLicense(e.target.value)}
+                      placeholder="e.g. CA-99120"
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Clinic Name *</Label>
+                    <input
+                      type="text"
+                      value={clinicName}
+                      onChange={(e) => setClinicName(e.target.value)}
+                      placeholder="e.g. Green Lake Animal Hospital"
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Clinic Phone (Optional)</Label>
+                    <input
+                      type="text"
+                      value={clinicPhone}
+                      onChange={(e) => setClinicPhone(e.target.value)}
+                      placeholder="e.g. 555-019-2831"
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Lot Number *</Label>
+                    <input
+                      type="text"
+                      value={vaccineLot}
+                      onChange={(e) => setVaccineLot(e.target.value)}
+                      placeholder="e.g. LOT-AB910"
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Manufacturer (Optional)</Label>
+                    <input
+                      type="text"
+                      value={vaccineManufacturer}
+                      onChange={(e) => setVaccineManufacturer(e.target.value)}
+                      placeholder="e.g. Zoetis"
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Issue Date *</Label>
+                    <input
+                      type="date"
+                      value={issueDate}
+                      onChange={(e) => setIssueDate(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[11px] font-semibold text-[#1B4332]">Expiration Date *</Label>
+                    <input
+                      type="date"
+                      value={expirationDate}
+                      onChange={(e) => setExpirationDate(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 pt-1.5 border-t border-[#EDF7F0] mt-1.5">
+                  <Checkbox
+                    id="pdfIntegrity"
+                    checked={pdfIntegrity}
+                    onCheckedChange={(checked) => setPdfIntegrity(!!checked)}
+                    className="border-amber-250 text-[#1B4332] mt-0.5"
+                  />
+                  <Label htmlFor="pdfIntegrity" className="text-[11px] text-[#6B5B4F] cursor-pointer font-medium leading-tight">
+                    <strong>PDF Integrity Check Completed</strong>: I have verified this PDF file shows no indications of digital alterations, font refitting, or modified dates.
+                  </Label>
+                </div>
+              </div>
+
+              {/* Rejection Reason (Conditional) */}
+              {status === "rejected" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-red-700">Rejection Reason *</Label>
+                  <Textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    className="rounded-xl border-red-250 text-xs focus:ring-red-500"
+                    rows={2}
+                    placeholder="Specify why the certificate was rejected (e.g. blurry scan, expired lot number, incorrect clinic credential)..."
+                  />
+                </div>
+              )}
+
+              {/* Actions */}
               <Button
-                onClick={() => setSelectedBooking(null)}
-                className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl"
+                onClick={handleSaveClearance}
+                disabled={savingClearance}
+                className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl py-2.5 font-bold transition flex items-center justify-center shadow-sm"
               >
-                Close Card
+                {savingClearance ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                Save Clearance Record
               </Button>
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+        </div>
+
+        {/* Expiry & Warnings Console */}
+        <div className="bg-white border border-[#EDF7F0] rounded-2xl p-6 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#EDF7F0] pb-4 gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-[#1B4332] flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Passenger Document Expiry & Warnings Console
+              </h3>
+              <p className="text-xs text-[#6B5B4F]/70 mt-0.5">
+                Real-time status overview of passenger medical/travel documents and proactive alert triggering.
+              </p>
+            </div>
+            <Button
+              onClick={handleTriggerCron}
+              disabled={triggeringCron}
+              className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white text-xs font-bold py-2 px-4 rounded-xl transition flex items-center gap-2 shadow-sm self-start sm:self-center animate-pulse"
+            >
+              {triggeringCron ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Clock className="w-3.5 h-3.5" />
+              )}
+              Run Expiry Notifications Cron
+            </Button>
+          </div>
+
+          {/* Metrics cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-red-50/50 border border-red-100 rounded-xl p-4 flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-red-700 tracking-wider">Expired Documents</span>
+              <span className="text-2xl font-extrabold text-red-800 mt-1">
+                {allClearances.filter(c => getDocumentStatus(c).status === "expired").length}
+              </span>
+            </div>
+            <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-4 flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-amber-700 tracking-wider">Expiring Soon (In {policyDocExpiryWarning} Days)</span>
+              <span className="text-2xl font-extrabold text-amber-800 mt-1">
+                {allClearances.filter(c => getDocumentStatus(c).status === "expiring_soon").length}
+              </span>
+            </div>
+            <div className="bg-green-50/50 border border-green-100 rounded-xl p-4 flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-green-700 tracking-wider">Valid Documents</span>
+              <span className="text-2xl font-extrabold text-green-800 mt-1">
+                {allClearances.filter(c => getDocumentStatus(c).status === "valid").length}
+              </span>
+            </div>
+          </div>
+
+          {/* Cron logs console */}
+          {cronLogs.length > 0 && (
+            <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Cron Execution Logs</p>
+              <div className="text-[11px] font-mono text-green-400 max-h-32 overflow-y-auto space-y-1">
+                {cronLogs.map((log, idx) => (
+                  <div key={idx} className="leading-relaxed">{`> ${log}`}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Details Table */}
+          <div className="space-y-3">
+            <h4 className="text-xs uppercase font-bold text-[#1B4332] tracking-wider">All Stored Document Clearances</h4>
+            {loadingAllClearances ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-[#52B788]" />
+              </div>
+            ) : allClearances.length === 0 ? (
+              <p className="text-xs text-[#6B5B4F]/60 italic py-4 border border-dashed border-[#EDF7F0] rounded-xl text-center">
+                No records stored in system_policies or clearances.
+              </p>
+            ) : (
+              <div className="border border-[#EDF7F0] rounded-xl overflow-hidden">
+                <div className="max-h-60 overflow-y-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-[#EDF7F0]/40 text-[#1B4332] font-bold border-b border-[#EDF7F0] sticky top-0 bg-white">
+                      <tr>
+                        <th className="p-3">Passenger ID</th>
+                        <th className="p-3">Doc Type</th>
+                        <th className="p-3">Issue Date</th>
+                        <th className="p-3">Calculated Expiry</th>
+                        <th className="p-3 text-right">Status / Warning</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EDF7F0]">
+                      {allClearances.map((clearance) => {
+                        const docStatus = getDocumentStatus(clearance);
+                        return (
+                          <tr key={clearance.id} className="hover:bg-[#EDF7F0]/10 transition">
+                            <td className="p-3 font-mono text-[10px] text-gray-500">
+                              {clearance.passenger_profile_id.substring(0, 8)}...
+                            </td>
+                            <td className="p-3 capitalize font-semibold text-gray-700">
+                              {clearance.document_type.replace(/_/g, " ")}
+                            </td>
+                            <td className="p-3 text-gray-600 font-medium">
+                              {clearance.issue_date || "N/A"}
+                            </td>
+                            <td className="p-3 text-gray-600 font-medium">
+                              {docStatus.expiryDate || clearance.vaccine_expiration_date || "N/A"}
+                            </td>
+                            <td className="p-3 text-right">
+                              {docStatus.status === "expired" && (
+                                <Badge className="bg-red-100 text-red-800 border border-red-200 font-bold text-[10px]">
+                                  ❌ Expired
+                                </Badge>
+                              )}
+                              {docStatus.status === "expiring_soon" && (
+                                <Badge className="bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[10px]">
+                                  ⚠️ {docStatus.daysRemaining} days left
+                                </Badge>
+                              )}
+                              {docStatus.status === "valid" && (
+                                <Badge className="bg-green-100 text-green-800 border border-green-200 font-bold text-[10px]">
+                                  ✓ Active / Valid
+                                </Badge>
+                              )}
+                              {docStatus.status !== "expired" && docStatus.status !== "expiring_soon" && docStatus.status !== "valid" && (
+                                <Badge variant="outline" className="capitalize">
+                                  {clearance.status.replace(/_/g, " ")}
+                                </Badge>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+      {/* Tab Content: Override */}
+      {activeTab === "override" && (
+        <div className="max-w-xl mx-auto bg-white border border-[#EDF7F0] rounded-2xl p-6 shadow-sm space-y-5">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 shadow-sm text-amber-950">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0 animate-pulse" />
+            <div className="space-y-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-800">
+                🚨 Super-Admin Dispatch Override Tool
+              </p>
+              <p className="text-[11px] text-amber-700 leading-relaxed font-semibold">
+                This tool grants an emergency bypass for a specific trip, allowing dispatch progression past launch gates even if passenger document clearances are missing or expired. Bypasses are logged to an immutable audit trail.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#1B4332]">Target Trip ID</Label>
+                <select
+                  value={overrideTripId}
+                  onChange={(e) => setOverrideTripId(e.target.value)}
+                  className="w-full rounded-xl border border-gray-250 bg-white p-2.5 text-xs outline-none mt-1"
+                >
+                  <option value="TRIP-MOCK-1">TRIP-MOCK-1 (Rocky)</option>
+                  <option value="TRIP-9-1">TRIP-9-1 (Test Rocky)</option>
+                  <option value="other-trip">Other Trip ID (Manual)</option>
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-[#1B4332]">Passenger Profile ID</Label>
+                <input
+                  type="text"
+                  value={overrideProfileId}
+                  onChange={(e) => setOverrideProfileId(e.target.value)}
+                  placeholder="Enter Profile UUID..."
+                  className="w-full rounded-xl border border-gray-250 p-2.5 text-xs mt-1"
+                />
+              </div>
+            </div>
+
+            {overrideTripId === "other-trip" && (
+              <div>
+                <Label className="text-xs font-semibold text-[#1B4332]">Write-in Trip ID</Label>
+                <input
+                  type="text"
+                  value={overrideTripId === "other-trip" ? "" : overrideTripId}
+                  onChange={(e) => setOverrideTripId(e.target.value)}
+                  placeholder="Enter Trip ID string..."
+                  className="w-full rounded-xl border border-gray-250 p-2.5 text-xs mt-1"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#1B4332]">Override Category</Label>
+                <select
+                  value={overrideCategory}
+                  onChange={(e) => setOverrideCategory(e.target.value)}
+                  className="w-full rounded-xl border border-gray-250 bg-white p-2.5 text-xs outline-none mt-1"
+                >
+                  <option value="medical_emergency">Medical Emergency</option>
+                  <option value="vet_direct_confirmation">Vet Direct-Phone Confirmation</option>
+                  <option value="clerical_exception">Clerical Exception / Correction</option>
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-[#1B4332]">Bypass Expiration Time</Label>
+                <select
+                  value={bypassHours}
+                  onChange={(e) => setBypassHours(e.target.value)}
+                  className="w-full rounded-xl border border-gray-250 bg-white p-2.5 text-xs outline-none mt-1"
+                >
+                  {[1, 2, 6, 12, 18, 24].filter(h => h <= policyMaxHours).map(h => (
+                    <option key={h} value={h}>{h} Hour{h > 1 ? "s" : ""}{h === policyMaxHours ? " (Max limit)" : ""}</option>
+                  ))}
+                  {![1, 2, 6, 12, 18, 24].includes(policyMaxHours) && (
+                    <option value={policyMaxHours}>{policyMaxHours} Hours (Max limit)</option>
+                  )}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs font-semibold text-[#1B4332]">Audit Notes (Mandatory - min {policyMinChars} chars) *</Label>
+                <span className={`text-[10px] ${overrideNotes.length < policyMinChars ? "text-amber-600 font-bold" : "text-gray-400"}`}>
+                  {overrideNotes.length} / {policyMinChars} characters minimum
+                </span>
+              </div>
+              <Textarea
+                value={overrideNotes}
+                onChange={(e) => setOverrideNotes(e.target.value)}
+                className="rounded-xl border-gray-250 text-xs focus:ring-[#52B788]"
+                rows={4}
+                placeholder="Explain the critical necessity for this override, the verbal confirmation details, and why document clearance checks are bypassed for this trip..."
+              />
+            </div>
+
+            <Button
+              onClick={handleSaveOverride}
+              disabled={savingOverride || overrideNotes.trim().length < policyMinChars || userRole !== "super_admin"}
+              className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl py-2.5 font-bold transition flex items-center justify-center shadow-sm"
+            >
+              {savingOverride ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Clock className="w-4 h-4 mr-2" />
+              )}
+              {userRole !== "super_admin" ? "Super-Admin Authorization Required" : (savingOverride ? "Issuing Bypass..." : "Authorize Emergency Bypass (Immutable Log)")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content: Policy Config */}
+      {activeTab === "policy" && userRole === "super_admin" && (
+        <div className="max-w-xl mx-auto bg-white border border-[#EDF7F0] rounded-2xl p-6 shadow-sm space-y-6">
+          <div className="border-b border-[#EDF7F0] pb-3">
+            <h2 className="text-lg font-bold text-[#1B4332] flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#52B788]" />
+              System Policy & Configuration Tooling
+            </h2>
+            <p className="text-xs text-[#6B5B4F]/70 mt-1">
+              Configure system-wide limits and emergency override criteria. Changes affect future requests only.
+            </p>
+          </div>
+
+          {loadingPolicies ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-2">
+              <Loader2 className="w-8 h-8 animate-spin text-[#52B788]" />
+              <p className="text-xs text-[#6B5B4F]/60">Loading system policies...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {policies.map((policy) => {
+                const key = policy.policy_key;
+                let minVal = 30;
+                let maxVal = 1460;
+                let unit = "days";
+                let localVal = 30;
+                let setLocalVal = () => {};
+
+                if (key === "override_max_hours") {
+                  minVal = 1;
+                  maxVal = 24;
+                  unit = "hours";
+                  localVal = localMaxHours;
+                  setLocalVal = setLocalMaxHours;
+                } else if (key === "override_min_audit_chars") {
+                  minVal = 20;
+                  maxVal = 200;
+                  unit = "chars";
+                  localVal = localMinChars;
+                  setLocalVal = setLocalMinChars;
+                } else if (key === "rabies_max_age_days") {
+                  localVal = localRabiesMaxAge;
+                  setLocalVal = setLocalRabiesMaxAge;
+                } else if (key === "usda_max_age_days") {
+                  localVal = localUsdaMaxAge;
+                  setLocalVal = setLocalUsdaMaxAge;
+                } else if (key === "doc_expiry_warning_days") {
+                  localVal = localDocExpiryWarning;
+                  setLocalVal = setLocalDocExpiryWarning;
+                }
+
+                const stepVal = 1;
+
+                return (
+                  <div key={policy.id} className="border border-[#EDF7F0] bg-[#F9F7F3]/40 rounded-xl p-4 space-y-3.5 hover:shadow-md transition">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-sm font-bold text-[#1B4332] font-mono">
+                          {policy.policy_key}
+                        </h3>
+                        <p className="text-xs text-[#6B5B4F] mt-0.5">
+                          {policy.description}
+                        </p>
+                      </div>
+                      <Badge className="bg-[#52B788]/20 text-[#1B4332] text-[10px] hover:bg-[#52B788]/20 animate-pulse">
+                        {policy.value_number} {unit}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[11px] text-[#6B5B4F] font-semibold">
+                        <span>Min: {minVal} {unit}</span>
+                        <span className="text-[#1B4332] font-bold">Value: {localVal} {unit}</span>
+                        <span>Max: {maxVal} {unit}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={minVal}
+                        max={maxVal}
+                        step={stepVal}
+                        value={localVal}
+                        onChange={(e) => setLocalVal(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#52B788] transition-all hover:bg-gray-300"
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center border-t border-[#EDF7F0] pt-2 text-[10px] text-[#6B5B4F]/70">
+                      <div>
+                        <span>Last updated by: </span>
+                        <span className="font-semibold text-[#1B4332]">{policy.updated_by || "system"}</span>
+                        <span> on </span>
+                        <span className="font-semibold">{policy.updated_at ? new Date(policy.updated_at).toLocaleString() : "N/A"}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdatePolicy(policy.policy_key, localVal)}
+                        disabled={updatingPolicyKey === policy.policy_key || localVal === policy.value_number}
+                        className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white py-1 px-3 rounded-lg text-[10px] font-bold h-7 transition"
+                      >
+                        {updatingPolicyKey === policy.policy_key ? (
+                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                        ) : null}
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

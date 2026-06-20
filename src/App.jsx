@@ -52,6 +52,7 @@ export default function App() {
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="*" element={<AuthenticatedApp />} />
       </Routes>
     </Suspense>
