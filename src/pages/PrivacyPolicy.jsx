@@ -8,7 +8,7 @@ export default function PrivacyPolicy() {
       <nav className="bg-white/90 backdrop-blur border-b border-[#D8F3DC]/60 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to={createPageUrl("PublicSite")} className="flex items-center gap-2">
-            <img src="/assets/pawffeur-icon.svg" alt="Pawffeur" className="w-8 h-8" />
+            <img src="/assets/pawffeur-icon.png" alt="Pawffeur" className="w-8 h-8" />
             <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
           </Link>
         </div>

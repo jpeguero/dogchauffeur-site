@@ -10,7 +10,7 @@ export default function BookingRequest() {
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-[#D8F3DC]/60">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to={createPageUrl("PublicSite")} className="flex items-center">
-            <img src="/assets/pawffeur-logo-primary.svg" alt="Pawffeur" className="h-11 w-auto" />
+            <img src="/assets/pawffeur-logo-primary.png" alt="Pawffeur" className="h-11 w-auto" />
           </Link>
         </div>
       </nav>

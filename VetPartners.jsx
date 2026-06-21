@@ -48,14 +48,14 @@ export default function VetPartners() {
           <Link to={createPageUrl("PublicSite")} className="flex items-center">
             {/* Desktop: Primary lockup */}
             <img 
-              src="/assets/pawffeur-logo-primary.svg" 
+              src="/assets/pawffeur-logo-primary.png" 
               alt="Pawffeur" 
               className="h-11 w-auto hidden sm:block"
             />
             {/* Mobile: Icon + Text */}
             <div className="flex items-center gap-2 sm:hidden">
               <img 
-                src="/assets/pawffeur-icon.svg" 
+                src="/assets/pawffeur-icon.png" 
                 alt="Pawffeur" 
                 className="h-8 w-8"
               />
@@ -197,7 +197,7 @@ export default function VetPartners() {
 
       <footer className="border-t border-[#D8F3DC] bg-white py-8 px-6 text-center text-sm text-[#6B5B4F]">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <img src="/assets/pawffeur-icon.svg" alt="Pawffeur" className="w-6 h-6" />
+          <img src="/assets/pawffeur-icon.png" alt="Pawffeur" className="w-6 h-6" />
           <span className="font-semibold text-[#1B4332]">Pawffeur™</span>
         </div>
         <div className="flex justify-center gap-6 mb-3 flex-wrap">

@@ -28,14 +28,14 @@ export default function PublicSite() {
             <Link to={createPageUrl("PublicSite")} className="flex items-center">
               {/* Desktop: Primary lockup */}
               <img 
-                src="/assets/pawffeur-logo-primary.svg" 
+                src="/assets/pawffeur-logo-primary.png" 
                 alt="Pawffeur" 
                 className="h-11 w-auto hidden sm:block"
               />
               {/* Mobile: Icon + Text */}
               <div className="flex items-center gap-2 sm:hidden">
                 <img 
-                  src="/assets/pawffeur-icon.svg" 
+                  src="/assets/pawffeur-icon.png" 
                   alt="Pawffeur" 
                   className="h-8 w-8"
                 />
@@ -391,7 +391,7 @@ export default function PublicSite() {
       <footer className="bg-[#1B4332] text-white/70 text-center py-12">
         <div className="max-w-6xl mx-auto px-4 space-y-6">
           <div>
-            <img src="/assets/pawffeur-logo-tagline.svg" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
+            <img src="/assets/pawffeur-logo-tagline.png" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
             <div className="flex justify-center items-center text-sm text-white/80">
               <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
             </div>
