@@ -554,7 +554,7 @@ export default function TrackRide() {
               <div className="photo-frame">
                 {isPhotoCaptured ? (
                   <img
-                    src="/assets/dog_chauffeur_hero.png"
+                    src="/assets/dog_passenger_hero.png"
                     alt={`${petName} pictured during pickup check-in`}
                   />
                 ) : (
