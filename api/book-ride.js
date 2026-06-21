@@ -1,3 +1,5 @@
+import { validateSafetyScreener } from "../lib/safety-screener.js";
+
 const IS_LLC_ACTIVE = false; // Set to true once the LLC is officially filed/approved
 
 export default async function handler(req, res) {
@@ -13,6 +15,18 @@ export default async function handler(req, res) {
     }
 
     console.log("[book-ride] Body received:", req.body);
+
+    const body = req.body || {};
+    const tripIntent = body.trip_intent || "standard";
+    const safetyAttestations = body.safety_attestations || null;
+
+    const validation = validateSafetyScreener(tripIntent, safetyAttestations);
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        error: validation.error
+      });
+    }
 
     const bookingId = `DC-${Date.now()}`;
     const booking = {

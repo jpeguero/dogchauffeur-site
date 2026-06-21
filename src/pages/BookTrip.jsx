@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { SCREENER_SYMPTOMS, SCREENER_ATTESTATIONS } from "../../lib/safety-screener.js";
 import StepIndicator from "@/components/booking/StepIndicator";
 import StepRideDetails from "@/components/booking/StepRideDetails";
 import StepAddPet from "@/components/booking/StepAddPet";
@@ -36,6 +37,7 @@ export default function BookTrip() {
     scheduled_time: "",
     notes: "",
     trip_intent: "standard",
+    safety_attestations: null,
   });
 
   const [showScreener, setShowScreener] = useState(false);
@@ -48,7 +50,7 @@ export default function BookTrip() {
   });
   const [attestations, setAttestations] = useState({
     stable: false,
-    nonEmergency: false,
+    non_emergency: false,
   });
 
   const handleScreenerClose = () => {
@@ -62,13 +64,14 @@ export default function BookTrip() {
     });
     setAttestations({
       stable: false,
-      nonEmergency: false,
+      non_emergency: false,
     });
+    setForm(f => ({ ...f, safety_attestations: null }));
   };
 
   const hasEmergencySymptom = Object.values(screenerAnswers).some(val => val === "yes");
   const allNo = Object.values(screenerAnswers).every(val => val === "no");
-  const canContinue = allNo && attestations.stable && attestations.nonEmergency;
+  const canContinue = allNo && attestations.stable && attestations.non_emergency;
 
   const [newPet, setNewPet] = useState({
     name: "",
@@ -263,13 +266,7 @@ export default function BookTrip() {
                   Is your pet experiencing any of these symptoms?
                 </p>
                 
-                {[
-                  { key: "bleeding", label: "Active Bleeding" },
-                  { key: "seizures", label: "Seizures" },
-                  { key: "breathing", label: "Trouble Breathing / Respiratory Distress" },
-                  { key: "collapse", label: "Collapse / Shock" },
-                  { key: "unresponsiveness", label: "Unresponsiveness / Lethargy" }
-                ].map(symptom => (
+                SCREENER_SYMPTOMS.map(symptom => (
                   <div key={symptom.key} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-xl p-3">
                     <span className="text-xs font-semibold text-[#1B4332]">{symptom.label}</span>
                     <div className="flex gap-2">
@@ -293,7 +290,7 @@ export default function BookTrip() {
                       </Button>
                     </div>
                   </div>
-                ))}
+                ))
               </div>
 
               {allNo && (
@@ -307,29 +304,19 @@ export default function BookTrip() {
                   </p>
                   
                   <div className="space-y-3 bg-[#F9F7F3] border border-[#EDE8D9] rounded-xl p-3">
-                    <div className="flex items-start gap-2.5">
-                      <Checkbox
-                        id="attest_stable"
-                        checked={attestations.stable}
-                        onCheckedChange={(checked) => setAttestations(prev => ({ ...prev, stable: !!checked }))}
-                        className="border-gray-300 text-[#1B4332] focus:ring-[#52B788] mt-0.5"
-                      />
-                      <Label htmlFor="attest_stable" className="text-xs text-[#6B5B4F] cursor-pointer font-medium leading-tight">
-                        I attest that my pet is medically stable and fit for standard, non-emergency transport.
-                      </Label>
-                    </div>
-
-                    <div className="flex items-start gap-2.5">
-                      <Checkbox
-                        id="attest_nonEmergency"
-                        checked={attestations.nonEmergency}
-                        onCheckedChange={(checked) => setAttestations(prev => ({ ...prev, nonEmergency: !!checked }))}
-                        className="border-gray-300 text-[#1B4332] focus:ring-[#52B788] mt-0.5"
-                      />
-                      <Label htmlFor="attest_nonEmergency" className="text-xs text-[#6B5B4F] cursor-pointer font-medium leading-tight">
-                        I understand that Pawffeur is a specialty transport service, NOT an ambulance, and cannot provide medical treatment in transit.
-                      </Label>
-                    </div>
+                    {SCREENER_ATTESTATIONS.map(attestation => (
+                      <div key={attestation.key} className="flex items-start gap-2.5">
+                        <Checkbox
+                          id={`attest_${attestation.key}`}
+                          checked={attestations[attestation.key]}
+                          onCheckedChange={(checked) => setAttestations(prev => ({ ...prev, [attestation.key]: !!checked }))}
+                          className="border-gray-300 text-[#1B4332] focus:ring-[#52B788] mt-0.5"
+                        />
+                        <Label htmlFor={`attest_${attestation.key}`} className="text-xs text-[#6B5B4F] cursor-pointer font-medium leading-tight">
+                          {attestation.label}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               )}
@@ -339,6 +326,17 @@ export default function BookTrip() {
                   type="button"
                   disabled={!canContinue}
                   onClick={() => {
+                    const safety_attestations = {
+                      symptom_bleeding: screenerAnswers.bleeding === "yes",
+                      symptom_seizures: screenerAnswers.seizures === "yes",
+                      symptom_breathing: screenerAnswers.breathing === "yes",
+                      symptom_collapse: screenerAnswers.collapse === "yes",
+                      symptom_unresponsiveness: screenerAnswers.unresponsiveness === "yes",
+                      attestation_stable: attestations.stable,
+                      attestation_non_emergency: attestations.non_emergency,
+                      certified_at: new Date().toISOString()
+                    };
+                    setForm(f => ({ ...f, safety_attestations }));
                     setStep(STEP_AGREEMENT);
                     setShowScreener(false);
                   }}
