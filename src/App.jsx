@@ -1,5 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClientInstance } from "./lib/query-client";
 
 const BookingRequest = lazy(() => import("../BookingRequest"));
 const SafetyStandards = lazy(() => import("./pages/SafetyStandards"));
@@ -38,23 +40,25 @@ function LoadingSpinner() {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <Routes>
-        <Route path="/BookingRequest" element={<BookingRequest />} />
-        <Route path="/bookingrequest" element={<BookingRequest />} />
-        <Route path="/SafetyStandards" element={<SafetyStandards />} />
-        <Route path="/estimate-preview" element={
-          <div className="min-h-screen bg-[#F9F7F3] py-12 px-4">
-            <PawffeurEstimator />
-          </div>
-        } />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-        <Route path="/terms" element={<TermsAndConditions />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
-        <Route path="*" element={<AuthenticatedApp />} />
-      </Routes>
-    </Suspense>
+    <QueryClientProvider client={queryClientInstance}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route path="/BookingRequest" element={<BookingRequest />} />
+          <Route path="/bookingrequest" element={<BookingRequest />} />
+          <Route path="/SafetyStandards" element={<SafetyStandards />} />
+          <Route path="/estimate-preview" element={
+            <div className="min-h-screen bg-[#F9F7F3] py-12 px-4">
+              <PawffeurEstimator />
+            </div>
+          } />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/AdminDashboard" element={<AdminDashboard />} />
+          <Route path="*" element={<AuthenticatedApp />} />
+        </Routes>
+      </Suspense>
+    </QueryClientProvider>
   );
 }
