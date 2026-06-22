@@ -39,7 +39,7 @@ function DriverTripCard({ trip, onUpdated }) {
   const [showMileagePrompt, setShowMileagePrompt] = useState(false);
   const [showSafetyCard, setShowSafetyCard] = useState(false);
   const [showObservationModal, setShowObservationModal] = useState(false);
-  const { effectiveUser } = useAuth();
+  const { effectiveUser, isDevModeActive } = useAuth();
   const driverEmail = effectiveUser?.email || "preview-driver@dev.local";
 
   const { data: observation, refetch: refetchObservation } = useQuery({
@@ -226,12 +226,14 @@ function DriverTripCard({ trip, onUpdated }) {
             </div>
           )}
 
-          <Link
-            to={`/Messages?tripId=${trip.id}`}
-            className="flex items-center justify-center gap-2 w-full bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
-          >
-            <MessageCircle className="w-4 h-4 text-[#2D6A4F]" /> Chat in App (Owner & Admin Dispatch)
-          </Link>
+          {isDevModeActive && (
+            <Link
+              to={`/Messages?tripId=${trip.id}`}
+              className="flex items-center justify-center gap-2 w-full bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
+            >
+              <MessageCircle className="w-4 h-4 text-[#2D6A4F]" /> Chat in App (Owner & Admin Dispatch)
+            </Link>
+          )}
         </div>
 
         {/* Safety Card button */}

@@ -12,6 +12,19 @@ export default async function handler(req, res) {
       });
     }
 
+    // 1. Production Admin token enforcement
+    const adminToken = process.env.ADMIN_API_TOKEN;
+    if (!adminToken) {
+      console.error("[api/ride-messages] ADMIN_API_TOKEN environment variable is missing.");
+      return res.status(500).json({
+        success: false,
+        error: "Internal Server Configuration Error",
+      });
+    }
+
+    const authHeader = req.headers.authorization || "";
+    const isAdmin = authHeader === `Bearer ${adminToken}`;
+
     // Initialize Supabase client
     let supabaseUrl = (process.env.SUPABASE_URL || "").trim();
     if (supabaseUrl.startsWith('"') && supabaseUrl.endsWith('"')) {
@@ -39,7 +52,7 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Resolve credentials and parameters
+    // Resolve parameters
     const query = req.query || {};
     const body = req.body || {};
     
@@ -49,19 +62,8 @@ export default async function handler(req, res) {
     const conversationId = query.conversationId || body.conversationId || query.conversation_id || body.conversation_id || null;
 
     const rawOwnerToken = req.headers["x-owner-token"] || query.token || body.token || null;
-    const driverEmail = req.headers["x-driver-email"] || query.driver_email || body.driver_email || null;
-    
-    // Auth header check
-    const authHeader = req.headers.authorization || "";
-    const adminToken = process.env.ADMIN_API_TOKEN || "super_admin_token";
-    const isAdmin = 
-      authHeader === "Bearer super_admin_token" || 
-      authHeader === `Bearer ${adminToken}` || 
-      req.headers["x-preview-role"] === "admin" ||
-      body.role === "admin" ||
-      query.role === "admin";
 
-    // 1. Fetch or initialize conversation
+    // 2. Fetch or initialize conversation
     let conversation = null;
 
     // Try to lookup by conversation ID first
@@ -105,9 +107,12 @@ export default async function handler(req, res) {
       let targetBookingRef = bookingRef;
       let targetLeadId = leadId;
 
-      let isInitAuthorized = false;
-      if (isAdmin) {
-        isInitAuthorized = true;
+      // Only admins are authorized to trigger conversation initialization in v1
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          error: "Access Forbidden: Conversation does not exist or invalid authorization credentials",
+        });
       }
 
       // If tripId is provided, lookup the driver details from public.trips table
@@ -124,21 +129,10 @@ export default async function handler(req, res) {
           if (!targetBookingRef && trip.lead_ref) {
             targetBookingRef = trip.lead_ref;
           }
-
-          if (driverEmail && assignedDriverEmail && driverEmail.toLowerCase() === assignedDriverEmail.toLowerCase()) {
-            isInitAuthorized = true;
-          }
         }
       }
 
-      if (!isInitAuthorized) {
-        return res.status(403).json({
-          success: false,
-          error: "Access Forbidden: Conversation does not exist or invalid authorization credentials",
-        });
-      }
-
-      // Generate secure token and hash
+      // Generate secure token and hash server-side
       newlyGeneratedToken = crypto.randomBytes(32).toString("hex");
       const tokenHash = crypto.createHash("sha256").update(newlyGeneratedToken).digest("hex");
 
@@ -172,13 +166,11 @@ export default async function handler(req, res) {
       console.log("[api/ride-messages] Conversation auto-initialized successfully:", conversation.id);
     }
 
-    // 2. Perform Gated Authorization Checks
+    // 3. Perform Gated Authorization Checks
     let userRole = null;
 
     if (isAdmin) {
       userRole = "admin";
-    } else if (driverEmail && conversation.assigned_driver_email && driverEmail.toLowerCase() === conversation.assigned_driver_email.toLowerCase()) {
-      userRole = "driver";
     } else if (rawOwnerToken) {
       // Hash incoming token and match against DB
       const incomingHash = crypto.createHash("sha256").update(rawOwnerToken).digest("hex");
@@ -253,10 +245,10 @@ export default async function handler(req, res) {
         });
       }
 
-      if (!sender_role || !["owner", "driver", "admin"].includes(sender_role)) {
+      if (!sender_role || !["owner", "admin"].includes(sender_role)) {
         return res.status(400).json({
           success: false,
-          error: "Valid sender_role ('owner', 'driver', or 'admin') is required",
+          error: "Valid sender_role ('owner' or 'admin') is required in v1",
         });
       }
 

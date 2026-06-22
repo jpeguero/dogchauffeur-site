@@ -1,5 +1,5 @@
--- DDL Migration: Create Ride Chat Tables
--- Adds public.ride_conversations and public.ride_messages tables in Supabase.
+-- DDL Migration: Create Ride Chat Tables & RLS Lockdown
+-- Adds public.ride_conversations and public.ride_messages tables in Supabase with RLS enabled.
 
 -- 1. Create ride_conversations table
 CREATE TABLE IF NOT EXISTS public.ride_conversations (
@@ -36,3 +36,21 @@ CREATE TABLE IF NOT EXISTS public.ride_messages (
 
 -- Index on conversation_id for fast fetching
 CREATE INDEX IF NOT EXISTS idx_ride_messages_conversation_id ON public.ride_messages(conversation_id);
+
+-- 3. Row Level Security (RLS) Lockdown Policies
+ALTER TABLE public.ride_conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ride_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Block public access" ON public.ride_conversations;
+CREATE POLICY "Block public access"
+ON public.ride_conversations
+FOR ALL
+USING (false)
+WITH CHECK (false);
+
+DROP POLICY IF EXISTS "Block public access" ON public.ride_messages;
+CREATE POLICY "Block public access"
+ON public.ride_messages
+FOR ALL
+USING (false)
+WITH CHECK (false);
