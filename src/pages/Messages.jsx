@@ -6,18 +6,15 @@ import { createPageUrl } from "@/utils";
 import { MessageCircle, PawPrint, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { useAuth } from "../components/auth/useAuth";
 import ChatWindow from "../components/messages/ChatWindow";
 
 export default function Messages() {
-  const [user, setUser] = useState(null);
+  const { effectiveUser: user } = useAuth();
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [searchParams] = useSearchParams();
   const tripIdFromUrl = searchParams.get("tripId") || searchParams.get("trip");
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   const isDriver = user?.role === "driver";
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
