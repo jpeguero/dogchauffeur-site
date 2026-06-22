@@ -10,11 +10,20 @@ import { useAuth } from "../components/auth/useAuth";
 import ChatWindow from "../components/messages/ChatWindow";
 
 export default function Messages() {
-  const { effectiveUser: user } = useAuth();
+  const { effectiveUser: authUser } = useAuth();
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [searchParams] = useSearchParams();
   const tripIdFromUrl = searchParams.get("tripId") || searchParams.get("trip");
+  const tokenFromUrl = searchParams.get("token");
   const queryClient = useQueryClient();
+
+  const user = authUser || (tokenFromUrl ? { role: "owner", email: "client@pawffeur.com", full_name: "Pet Owner" } : null);
+
+  useEffect(() => {
+    if (tokenFromUrl && tripIdFromUrl && !selectedTrip) {
+      setSelectedTrip({ id: tripIdFromUrl, pet_name: "My Ride Chat" });
+    }
+  }, [tokenFromUrl, tripIdFromUrl, selectedTrip]);
 
   const isDriver = user?.role === "driver";
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";

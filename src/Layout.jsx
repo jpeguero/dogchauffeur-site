@@ -59,7 +59,9 @@ export default function Layout({ children, currentPageName }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
-  const isPublicPage = PUBLIC_PAGES.includes(currentPageName);
+  const searchParams = new URLSearchParams(window.location.search);
+  const hasToken = searchParams.has("token");
+  const isPublicPage = PUBLIC_PAGES.includes(currentPageName) || (currentPageName === "Messages" && hasToken);
 
   // ── Routing guard ──────────────────────────────────────────────────────────
   useEffect(() => {

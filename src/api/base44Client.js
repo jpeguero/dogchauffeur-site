@@ -104,21 +104,102 @@ export const base44 = {
     },
     Message: {
       create: async (data) => {
-        console.log("[base44 Mock] Creating Message:", data);
-        const msg = {
-          id: "msg-" + Math.random().toString(36).substring(7),
-          created_date: new Date().toISOString(),
-          ...data
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get("token") || "";
+        const role = sessionStorage.getItem("dc_preview_role") || "customer";
+
+        let driverEmail = "";
+        if (role === "driver") {
+          driverEmail = "preview-driver@dev.local";
+        }
+
+        const payload = {
+          tripId: data.trip_id || null,
+          content: data.content,
+          sender_role: role === "super_admin" || role === "admin" ? "admin" : role === "driver" ? "driver" : "owner",
+          sender_name: data.sender_name || (role === "admin" ? "Admin Dispatch" : role === "driver" ? "Alex Chauffeur" : "Pet Owner")
         };
-        mockMessages.push(msg);
-        return msg;
+
+        const headers = {
+          "Content-Type": "application/json",
+          "X-Preview-Role": role
+        };
+
+        if (token) {
+          headers["X-Owner-Token"] = token;
+        }
+        if (driverEmail) {
+          headers["X-Driver-Email"] = driverEmail;
+        }
+        if (role === "super_admin" || role === "admin") {
+          headers["Authorization"] = "Bearer super_admin_token";
+        }
+
+        const res = await fetch("/api/ride-messages", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || "Failed to send message");
+        }
+
+        return {
+          id: json.data.id,
+          trip_id: data.trip_id,
+          sender_email: data.sender_email,
+          sender_name: json.data.sender_display_name,
+          sender_role: json.data.sender_role,
+          content: json.data.message_body,
+          created_date: json.data.created_at
+        };
       },
       filter: async (criteria = {}) => {
-        let msgs = mockMessages;
-        if (criteria.trip_id) {
-          msgs = msgs.filter(m => m.trip_id === criteria.trip_id);
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get("token") || "";
+        const role = sessionStorage.getItem("dc_preview_role") || "customer";
+
+        let driverEmail = "";
+        if (role === "driver") {
+          driverEmail = "preview-driver@dev.local";
         }
-        return msgs;
+
+        const headers = {
+          "X-Preview-Role": role
+        };
+
+        if (token) {
+          headers["X-Owner-Token"] = token;
+        }
+        if (driverEmail) {
+          headers["X-Driver-Email"] = driverEmail;
+        }
+        if (role === "super_admin" || role === "admin") {
+          headers["Authorization"] = "Bearer super_admin_token";
+        }
+
+        const tripId = criteria.trip_id || "";
+        const res = await fetch(`/api/ride-messages?tripId=${tripId}`, {
+          method: "GET",
+          headers
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || "Failed to fetch messages");
+        }
+
+        return (json.data || []).map(msg => ({
+          id: msg.id,
+          trip_id: tripId,
+          sender_email: msg.sender_role === "admin" ? "admin@pawffeur.com" : msg.sender_role === "driver" ? "preview-driver@dev.local" : "preview-customer@dev.local",
+          sender_name: msg.sender_display_name,
+          sender_role: msg.sender_role,
+          content: msg.message_body,
+          created_date: msg.created_at
+        }));
       },
     },
     User: {
