@@ -1,4 +1,25 @@
 // Stub client to decouple from @base44/sdk and prevent build failures
+let mockMessages = [
+  {
+    id: "msg-1",
+    trip_id: "TRIP-MOCK-1",
+    sender_email: "preview-customer@dev.local",
+    sender_name: "Jane Doe (Owner)",
+    sender_role: "owner",
+    content: "Hi! Just checking in if everything is ready for Rocky's ride tomorrow?",
+    created_date: "2026-06-19T18:30:00.000Z"
+  },
+  {
+    id: "msg-2",
+    trip_id: "TRIP-MOCK-1",
+    sender_email: "preview-driver@dev.local",
+    sender_name: "Alex Chauffeur",
+    sender_role: "driver",
+    content: "Hi Jane! Yes, all set. I have his safety card reviewed and harness preferences ready.",
+    created_date: "2026-06-19T18:35:00.000Z"
+  }
+];
+
 export const base44 = {
   auth: {
     me: async () => null,
@@ -82,7 +103,23 @@ export const base44 = {
       subscribe: () => () => {},
     },
     Message: {
-      filter: async () => [],
+      create: async (data) => {
+        console.log("[base44 Mock] Creating Message:", data);
+        const msg = {
+          id: "msg-" + Math.random().toString(36).substring(7),
+          created_date: new Date().toISOString(),
+          ...data
+        };
+        mockMessages.push(msg);
+        return msg;
+      },
+      filter: async (criteria = {}) => {
+        let msgs = mockMessages;
+        if (criteria.trip_id) {
+          msgs = msgs.filter(m => m.trip_id === criteria.trip_id);
+        }
+        return msgs;
+      },
     },
     User: {
       filter: async () => [],

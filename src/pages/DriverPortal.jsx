@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PawPrint, Truck, CheckCircle2, Navigation, Phone, MapPin, Clock, FileText, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
+import { PawPrint, Truck, CheckCircle2, Navigation, Phone, MapPin, Clock, FileText, ChevronDown, ChevronUp, AlertCircle, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import DriverAvailabilityToggle from "../components/drivers/DriverAvailabilityToggle";
 import TripMileagePrompt from "../components/contractor/TripMileagePrompt";
 import { Button } from "@/components/ui/button";
@@ -203,26 +204,35 @@ function DriverTripCard({ trip, onUpdated }) {
         </a>
 
         {/* Customer contact */}
-        {(trip.owner_phone || trip.owner_email) && (
-          <div className="flex items-center gap-2">
-            {trip.owner_phone && (
-              <a
-                href={`tel:${trip.owner_phone}`}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
-              >
-                <Phone className="w-4 h-4 text-[#2D6A4F]" /> Call Owner
-              </a>
-            )}
-            {trip.owner_phone && (
-              <a
-                href={`sms:${trip.owner_phone}`}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
-              >
-                💬 Text Owner
-              </a>
-            )}
-          </div>
-        )}
+        <div className="space-y-2">
+          {(trip.owner_phone || trip.owner_email) && (
+            <div className="flex items-center gap-2">
+              {trip.owner_phone && (
+                <a
+                  href={`tel:${trip.owner_phone}`}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
+                >
+                  <Phone className="w-4 h-4 text-[#2D6A4F]" /> Call Owner
+                </a>
+              )}
+              {trip.owner_phone && (
+                <a
+                  href={`sms:${trip.owner_phone}`}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
+                >
+                  💬 Text Owner
+                </a>
+              )}
+            </div>
+          )}
+
+          <Link
+            to={`/Messages?tripId=${trip.id}`}
+            className="flex items-center justify-center gap-2 w-full bg-[#EDF7F0] rounded-xl py-2.5 text-sm font-semibold text-[#1B4332] hover:bg-[#D8F3DC] transition"
+          >
+            <MessageCircle className="w-4 h-4 text-[#2D6A4F]" /> Chat in App (Owner & Admin Dispatch)
+          </Link>
+        </div>
 
         {/* Safety Card button */}
         <Button

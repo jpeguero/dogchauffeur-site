@@ -22,7 +22,7 @@ export default function ChatWindow({ tripId, currentUser, messages, onNewMessage
       sender_email: currentUser.email,
       sender_name: currentUser.full_name || currentUser.email,
       content: text.trim(),
-      sender_role: currentUser.role === "driver" ? "driver" : "owner",
+      sender_role: currentUser.role === "driver" ? "driver" : (currentUser.role === "admin" || currentUser.role === "super_admin") ? "admin" : "owner",
     });
     setText("");
     setSending(false);
@@ -51,7 +51,7 @@ export default function ChatWindow({ tripId, currentUser, messages, onNewMessage
                 </div>
                 <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : ""}`}>
                   <span className="text-[10px] text-[#6B5B4F]/40">
-                    {msg.sender_name} · {format(new Date(msg.created_date), "h:mm a")}
+                    {msg.sender_name} {msg.sender_role === "admin" && "(Admin)"} · {format(new Date(msg.created_date), "h:mm a")}
                   </span>
                 </div>
               </div>

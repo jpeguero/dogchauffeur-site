@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { MessageCircle, PawPrint, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
@@ -11,6 +11,8 @@ import ChatWindow from "../components/messages/ChatWindow";
 export default function Messages() {
   const [user, setUser] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [searchParams] = useSearchParams();
+  const tripIdFromUrl = searchParams.get("tripId") || searchParams.get("trip");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -18,15 +20,28 @@ export default function Messages() {
   }, []);
 
   const isDriver = user?.role === "driver";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
 
   const { data: trips = [] } = useQuery({
-    queryKey: ["msg-trips", user?.email, isDriver],
+    queryKey: ["msg-trips", user?.email, isDriver, user?.role],
     queryFn: () => {
+      if (isAdmin) {
+        return base44.entities.Trip.filter({}, "-created_date");
+      }
       if (isDriver) return base44.entities.Trip.filter({ driver_email: user.email }, "-created_date");
       return base44.entities.Trip.filter({ owner_email: user.email }, "-created_date");
     },
     enabled: !!user,
   });
+
+  useEffect(() => {
+    if (tripIdFromUrl && trips.length > 0) {
+      const match = trips.find(t => t.id === tripIdFromUrl);
+      if (match) {
+        setSelectedTrip(match);
+      }
+    }
+  }, [tripIdFromUrl, trips]);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["msg-messages", selectedTrip?.id],
@@ -61,7 +76,11 @@ export default function Messages() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-[#1B4332]">Messages</h1>
-        <p className="text-[#6B5B4F]/60 mt-1">Communicate with your {isDriver ? "pet owners" : "drivers"}</p>
+        <p className="text-[#6B5B4F]/60 mt-1">
+          {isAdmin 
+            ? "Monitor and participate in active trip conversations" 
+            : `Communicate with your ${isDriver ? "pet owners" : "drivers"} (Admin Dispatch is also in this channel)`}
+        </p>
       </div>
 
       <div className="grid md:grid-cols-[360px_1fr] gap-4 h-[600px]">
