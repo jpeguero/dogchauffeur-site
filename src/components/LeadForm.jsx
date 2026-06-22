@@ -96,9 +96,17 @@ export default function LeadForm() {
   const nextStep = () => {
     setError("");
     if (step === 1) {
-      if (!form.full_name.trim() || !form.phone.trim() || !form.email.trim()) {
-        setError("Please fill in your name, email, and phone number.");
+      if (!form.full_name.trim() || !form.phone.trim()) {
+        setError("Please fill in your name and phone number.");
         return;
+      }
+      const emailVal = form.email.trim();
+      if (emailVal) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailVal)) {
+          setError("Please enter a valid email address or leave it blank.");
+          return;
+        }
       }
       if (!form.consent) {
         setError("Please accept the terms and SMS consent to proceed.");
@@ -269,7 +277,7 @@ export default function LeadForm() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-[#1B4332] font-semibold">Email Address *</Label>
+                  <Label htmlFor="email" className="text-[#1B4332] font-semibold">Email Address (Optional)</Label>
                   <Input 
                     id="email"
                     type="email"

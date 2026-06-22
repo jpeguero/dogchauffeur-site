@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       source
     } = body;
 
-    if (!full_name || !phone || !email || !ride_type || !pickup_address || !dropoff_address || !preferred_date) {
+    if (!full_name || !phone || !ride_type || !pickup_address || !dropoff_address || !preferred_date) {
       return res.status(400).json({
         success: false,
         error: "Missing required fields",
@@ -67,7 +67,17 @@ export default async function handler(req, res) {
     }
 
     const normalizedPhone = String(phone).replace(/\D/g, "");
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedEmail = email ? String(email).trim().toLowerCase() : "";
+
+    if (email && email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          error: "Please enter a valid email address or leave it blank."
+        });
+      }
+    }
 
     // Initialize Supabase client
     let supabaseUrl = (process.env.SUPABASE_URL || "").trim();
@@ -106,11 +116,17 @@ export default async function handler(req, res) {
     const seventyTwoHoursAgo = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
     
     try {
-      const { data: emailMatch, error: emailErr } = await supabase
-        .from("leads")
-        .select("id")
-        .eq("normalized_email", normalizedEmail)
-        .gte("created_at", seventyTwoHoursAgo);
+      let emailMatch = [];
+      let emailErr = null;
+      if (normalizedEmail) {
+        const { data, error } = await supabase
+          .from("leads")
+          .select("id")
+          .eq("normalized_email", normalizedEmail)
+          .gte("created_at", seventyTwoHoursAgo);
+        emailMatch = data;
+        emailErr = error;
+      }
 
       const { data: phoneMatch, error: phoneErr } = await supabase
         .from("leads")
@@ -187,7 +203,7 @@ export default async function handler(req, res) {
       status: "new",
       full_name,
       phone,
-      email,
+      email: email || null,
       pet_name: pet_name || null,
       pet_type: pet_type || null,
       pet_size: pet_size || null,
@@ -215,7 +231,7 @@ export default async function handler(req, res) {
       consent_text,
       possible_duplicate: possibleDuplicate,
       normalized_phone: normalizedPhone,
-      normalized_email: normalizedEmail,
+      normalized_email: normalizedEmail || null,
       notification_status: "pending"
     };
 
