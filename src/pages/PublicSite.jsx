@@ -188,7 +188,7 @@ export default function PublicSite() {
             </motion.div>
           </div>
           
-          <motion.div {...fade(0.2)} className="relative hidden md:block space-y-3">
+          <motion.div {...fade(0.2)} className="relative block mt-10 md:mt-0 space-y-3">
             <div className="absolute inset-0 bg-[#E08A2B] rounded-3xl rotate-2 opacity-10 blur-sm pointer-events-none" />
             <img 
               src="/assets/features_infographic.png" 
