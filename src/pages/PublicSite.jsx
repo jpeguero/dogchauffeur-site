@@ -63,6 +63,20 @@ export default function PublicSite() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleResetForm = () => {
+    setName("");
+    setEmail("");
+    setPhone("");
+    setPickupZip("");
+    setDestinationType("");
+    setPetTypeSize("");
+    setPetCount(1);
+    setTiming("");
+    setNotes("");
+    setConsent(false);
+    setSubmitted(false);
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!consent) return;
@@ -481,6 +495,12 @@ export default function PublicSite() {
                     <p className="text-sm text-[#3A3F47]/80 mt-2 max-w-sm mx-auto">
                       Thanks! Your early access request is in. We'll reach out as launch slots open.
                     </p>
+                    <button 
+                      onClick={handleResetForm}
+                      className="mt-6 border border-[#273B2F]/20 hover:border-[#E08A2B] hover:text-[#E08A2B] text-xs font-bold text-[#273B2F] rounded-xl px-5 py-2.5 bg-transparent transition-all active:scale-95"
+                    >
+                      ← Back to Form
+                    </button>
                   </div>
                 </motion.div>
               )}
