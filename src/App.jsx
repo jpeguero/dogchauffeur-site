@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClientInstance } from "./lib/query-client";
 
@@ -56,6 +56,8 @@ export default function App() {
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/AdminDashboard" element={<AdminDashboard />} />
+          <Route path="/early-access" element={<Navigate to="/PublicSite#early-access" replace />} />
+          <Route path="/earlyaccess" element={<Navigate to="/PublicSite#early-access" replace />} />
           <Route path="*" element={<AuthenticatedApp />} />
         </Routes>
       </Suspense>

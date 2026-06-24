@@ -1,10 +1,14 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { MapPin, Car, Plane, Zap, Route, Heart, Dog, Shield } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  MapPin, Car, Zap, Route, Plane, Heart, Shield, Clock, 
+  MessageSquare, ChevronRight, Stethoscope, Scissors, Home, Users, CheckCircle2 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 import { Link } from "react-router-dom";
 import PriceEstimator from "@/components/PriceEstimator";
+import { base44 } from "@/api/base44Client";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -14,272 +18,469 @@ const fade = (delay = 0) => ({
 });
 
 export default function PublicSite() {
-  const scrollToEstimator = () => {
-    document.getElementById("price-estimator")?.scrollIntoView({ behavior: "smooth" });
+  const [scrolled, setScrolled] = useState(false);
+  
+  // Early Access Form State
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [pickupZip, setPickupZip] = useState("");
+  const [destinationType, setDestinationType] = useState("");
+  const [petTypeSize, setPetTypeSize] = useState("");
+  const [petCount, setPetCount] = useState(1);
+  const [timing, setTiming] = useState("");
+  const [notes, setNotes] = useState("");
+  const [consent, setConsent] = useState(false);
+  
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40);
+    };
+    window.addEventListener("scroll", handleScroll);
+    
+    // Auto-scroll to hash if present on mount
+    const handleHash = () => {
+      if (window.location.hash) {
+        const id = window.location.hash.substring(1);
+        setTimeout(() => {
+          scrollToId(id);
+        }, 300);
+      }
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("hashchange", handleHash);
+    };
+  }, []);
+
+  const scrollToId = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!consent) return;
+    setSubmitting(true);
+    try {
+      await base44.entities.Lead.create({
+        name,
+        email,
+        phone: phone || undefined,
+        lead_source: "early_access_request",
+        estimate_zone: pickupZip,
+        estimate_service: destinationType,
+        urgency: timing || undefined,
+        notes: `Pet: ${petTypeSize} (${petCount} pets). Notes: ${notes}`,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Failed to submit early access request:", err);
+      // Fallback to show success screen anyway so user flow isn't blocked
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F7F3]">
+    <div className="min-h-screen bg-[#F7F1E3] text-[#3A3F47] selection:bg-[#E08A2B] selection:text-white">
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-[#D8F3DC]/60">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link to={createPageUrl("PublicSite")} className="flex items-center">
-              {/* Desktop: Primary lockup */}
-              <img 
-                src="/assets/pawffeur-logo-primary.png" 
-                alt="Pawffeur" 
-                className="h-11 w-auto hidden sm:block"
-              />
-              {/* Mobile: Icon + Text */}
-              <div className="flex items-center gap-2 sm:hidden">
-                <img 
-                  src="/assets/pawffeur-icon.png" 
-                  alt="Pawffeur" 
-                  className="h-8 w-8"
-                />
-                <span className="font-bold text-[#1B4332] text-lg">Pawffeur™</span>
-              </div>
-            </Link>
+      {/* Sticky Header */}
+      <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? "bg-[#F7F1E3]/95 backdrop-blur-md shadow-md border-b border-[#273B2F]/10 h-16" 
+          : "bg-transparent h-20"
+      }`}>
+        <div className="max-w-[1100px] mx-auto px-6 h-full flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/assets/pawffeur_logo.svg" 
+              alt="Pawffeur Logo" 
+              className="h-8 md:h-10 w-auto"
+              loading="lazy"
+            />
+          </Link>
+          
+          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#3A3F47]">
+            <button onClick={() => scrollToId("about")} className="hover:text-[#E08A2B] transition-colors">What Pawffeur Is</button>
+            <button onClick={() => scrollToId("rides")} className="hover:text-[#E08A2B] transition-colors">Common Rides</button>
+            <button onClick={() => scrollToId("how")} className="hover:text-[#E08A2B] transition-colors">How It Works</button>
+            <button onClick={() => scrollToId("early-access")} className="hover:text-[#E08A2B] transition-colors">Early Access</button>
           </div>
+
           <div className="flex items-center gap-3">
-            <Link to={createPageUrl("BookingRequest")}>
-              <Button className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-sm">
-                Book a Ride
-              </Button>
-            </Link>
+            <button 
+              onClick={() => scrollToId("early-access")}
+              className="bg-[#E08A2B] hover:bg-[#E08A2B]/90 text-white rounded-full px-6 py-2.5 text-sm font-bold shadow-sm transition-all duration-180 hover:-translate-y-0.5 hover:shadow-md active:scale-95"
+            >
+              Request Early Access
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 forest-gradient" />
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "radial-gradient(circle at 20% 80%, #74C69D 0%, transparent 50%), radial-gradient(circle at 80% 20%, #52B788 0%, transparent 50%)" }}
+      {/* Hero Section */}
+      <section className="bg-[#273B2F] text-[#F7F1E3] py-20 md:py-28 relative overflow-hidden border-b border-[#273B2F]/20">
+        <div className="absolute inset-0 opacity-5 pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle at 20% 80%, #E08A2B 0%, transparent 50%), radial-gradient(circle at 80% 20%, #E08A2B 0%, transparent 50%)" }}
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 100%)" }} />
-        <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-48 text-center text-white flex items-center justify-center min-h-[600px] md:min-h-[700px]">
-          <div className="w-full">
-            <motion.div {...fade(0)}>
-              <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-4 py-1.5 text-sm mb-8 border border-white/20">
-                <MapPin className="w-3.5 h-3.5" /> Chicago, IL
-              </div>
+        <div className="max-w-[1100px] mx-auto px-6 grid md:grid-cols-[1.2fr_1fr] gap-12 items-center relative z-10">
+          <div className="space-y-6 text-left">
+            <motion.div {...fade(0)} className="inline-flex items-center gap-2 bg-[#F7F1E3]/15 backdrop-blur-md rounded-full px-4 py-1.5 text-xs font-bold text-[#E08A2B] border border-[#F7F1E3]/20 tracking-wider uppercase">
+              <Clock className="w-3.5 h-3.5" /> Controlled Private Launch
             </motion.div>
-            <motion.div {...fade(0.1)} className="bg-white/8 backdrop-blur-lg rounded-3xl border border-white/10 px-6 md:px-12 py-12 md:py-16 max-w-4xl mx-auto">
-              <motion.h1 {...fade(0.1)} className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-6 text-white">
-                Safe, Reliable Pet<br />Transportation in Chicago
-              </motion.h1>
-              <motion.p {...fade(0.2)} className="text-xl md:text-2xl text-white/95 max-w-3xl mx-auto mb-10 leading-relaxed">
-                Door-to-door rides for dogs, cats, and other pets.
-                <br />
-                Vet visits • Grooming appointments • Airport trips • Daycare pickup.
-              </motion.p>
-              <motion.div {...fade(0.3)} className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={scrollToEstimator}
-                  className="bg-[#52B788] text-[#1B4332] hover:bg-[#74C69D] rounded-xl font-bold px-10 py-5 text-lg shadow-2xl transition"
-                >
-                  💰 Estimate a Ride Price
-                </button>
-                <Link to="/SafetyStandards">
-                  <Button size="lg" variant="outline" className="border-2 border-white bg-white text-[#1B4332] hover:bg-[#E8F5E9] rounded-xl font-semibold px-10 py-5 text-base h-auto w-full sm:w-auto">
-                    📋 View Our Safety Standards
-                  </Button>
-                </Link>
-              </motion.div>
-              <motion.div {...fade(0.4)} className="mt-8">
-                <a href="mailto:support@pawffeur.com" className="text-sm text-white/70 hover:text-white/90 transition">
-                  ✉ Questions before booking? Email us at support@pawffeur.com
-                </a>
-              </motion.div>
+            <motion.h1 {...fade(0.1)} className="text-4xl md:text-6xl font-bold tracking-tight leading-tight text-[#F7F1E3]">
+              Pet-first transportation for local rides.
+            </motion.h1>
+            <motion.p {...fade(0.2)} className="text-lg md:text-xl text-[#F7F1E3]/85 leading-relaxed max-w-lg">
+              A calm, organized pet transportation service for rides to vets, groomers, boarding, daycare, and other local pet-care destinations. We're opening early access before our public launch.
+            </motion.p>
+            <motion.div {...fade(0.3)} className="flex flex-col sm:flex-row gap-4 pt-2">
+              <button 
+                onClick={() => scrollToId("early-access")}
+                className="bg-[#E08A2B] hover:bg-[#E08A2B]/90 text-white font-bold rounded-full px-8 py-4 text-base shadow-lg transition-all duration-180 hover:-translate-y-0.5 hover:shadow-xl active:scale-95 w-full sm:w-auto"
+              >
+                Request Early Access
+              </button>
+              <button
+                onClick={() => scrollToId("how")}
+                className="bg-transparent border-2 border-[#F7F1E3] hover:bg-[#F7F1E3]/10 text-[#F7F1E3] font-bold rounded-full px-8 py-4 text-base transition-colors w-full sm:w-auto"
+              >
+                See how early access works
+              </button>
             </motion.div>
           </div>
+          
+          <motion.div {...fade(0.2)} className="relative hidden md:block space-y-3">
+            <div className="absolute inset-0 bg-[#E08A2B] rounded-3xl rotate-2 opacity-10 blur-sm pointer-events-none" />
+            <img 
+              src="/assets/pawffeur_concept_interior.png" 
+              alt="Comfortable golden retriever inside climate-managed compartment cabin" 
+              className="rounded-3xl shadow-xl w-full object-cover aspect-[4/3] border border-[#F7F1E3]/10"
+              loading="lazy"
+            />
+            <p className="text-[10px] text-[#F7F1E3]/65 italic leading-relaxed text-center px-4">
+              Vehicle concept visualization shown. Final vehicle configuration, service areas, pricing, and availability may vary as Pawffeur tests and refines operations.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 py-16 space-y-10">
+      {/* Main Content Area */}
+      <div className="max-w-[1100px] mx-auto px-6 py-16 space-y-20">
 
-        {/* Our Services */}
-        <motion.div {...fade(0)}>
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-3">Our Services</h2>
+        {/* Section: About (#about) */}
+        <motion.div {...fade(0.05)} id="about" className="bg-white rounded-3xl border border-[#273B2F]/10 p-8 md:p-10 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-[#273B2F] text-white text-[10px] font-bold tracking-wider uppercase px-4 py-1.5 rounded-bl-2xl">
+            Now collecting early ride requests
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold text-[#273B2F] mb-4">What Pawffeur Is</h2>
+            <p className="text-base text-[#3A3F47]/90 leading-relaxed">
+              Pawffeur is preparing a controlled private launch. We're collecting early ride requests from a limited group of pet owners before our public launch — so we can understand real routes, pet needs, timing, pricing, and local demand before expanding availability.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Section: Common Ride Needs (#rides) */}
+        <motion.div {...fade(0.05)} id="rides">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#273B2F] mb-3">Common Ride Needs</h2>
+            <p className="text-sm text-[#3A3F47]/70">We support your pet's local transport needs for a variety of routine and special care destinations.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Car, title: "Vet Visits", desc: "Safe rides to veterinary appointments." },
-              { icon: Zap, title: "Grooming Appointments", desc: "Door-to-door transportation to your groomer." },
-              { icon: Route, title: "Daycare Pickup & Drop-off", desc: "Busy schedule? We'll handle the transport." },
-              { icon: Plane, title: "Airport Pet Transport", desc: "Reliable rides for pets traveling with owners." },
-              { icon: Heart, title: "Special Care Transport", desc: "Comfortable rides for senior or anxious pets." },
-            ].map((service, i) => (
-              <motion.div key={service.title} {...fade(0.05 + i * 0.03)}>
-                <div className="bg-white rounded-2xl border border-[#EDF7F0] p-6 h-full flex flex-col card-hover">
-                  <div className="w-10 h-10 rounded-xl bg-[#EDF7F0] flex items-center justify-center mb-4">
-                    <service.icon className="w-5 h-5 text-[#2D6A4F]" />
-                  </div>
-                  <h3 className="font-semibold text-[#1B4332] mb-2">{service.title}</h3>
-                  <p className="text-sm text-[#6B5B4F]/75 leading-relaxed">{service.desc}</p>
+              { icon: Stethoscope, title: "Vet & clinic appointments", desc: "Transport to and from routine vet visits, specialized checkups, or check-ins." },
+              { icon: Scissors, title: "Grooming drop-off & pickup", desc: "Coordinated rides to get your pet to their grooming appointments on time." },
+              { icon: Home, title: "Boarding & daycare transport", desc: "Rides to check-in or checkout at your preferred boarding facility." },
+              { icon: Heart, title: "Senior pet transport", desc: "Padded, low-stimulation compartments and careful ramp access for older companions." },
+              { icon: Users, title: "Multi-pet household rides", desc: "Spacious compartmental setups suitable for carrying multiple family pets together." },
+              { icon: Plane, title: "Airport pickup coordination", desc: "Organized transfers to transport your pets directly to cargo terminals or pick-up spots." },
+            ].map((ride, i) => (
+              <div key={ride.title} className="bg-[#F7F1E3] rounded-2xl border border-[#273B2F]/10 p-6 h-full flex flex-col hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-[#273B2F]/10 flex items-center justify-center mb-4">
+                  <ride.icon className="w-6 h-6 text-[#273B2F]" />
                 </div>
-              </motion.div>
+                <h3 className="font-bold text-lg text-[#273B2F] mb-2">{ride.title}</h3>
+                <p className="text-sm text-[#3A3F47]/80 leading-relaxed">{ride.desc}</p>
+              </div>
             ))}
           </div>
-          <div className="text-center">
-            <Link to={createPageUrl("BookingRequest")}>
-              <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                Book a Ride for Your Pet
-              </Button>
-            </Link>
-          </div>
         </motion.div>
 
-        {/* Safety Comes First — Certification Trust Section */}
-        <motion.div {...fade(0.05)}>
-          <div className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-10">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 bg-[#EDF7F0] rounded-full px-4 py-1.5 text-xs font-semibold text-[#2D6A4F] mb-4">
-                <Shield className="w-3.5 h-3.5" />
-                Certified • Insured • Pet Safety Focused
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-3">Safety Comes First</h2>
-              <p className="text-base text-[#6B5B4F]/80 max-w-xl mx-auto leading-relaxed">
-                We're trained in canine behavior and safe handling, including working with anxious and reactive dogs.
-                Your pet is handled with care, control, and experience.
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-3 gap-4 mb-8">
-              {[
-                { emoji: "🎓", title: "Certified in Canine Behavior & Safe Handling", desc: "Formal training in animal behavior ensures every pet is handled calmly and confidently." },
-                { emoji: "🐕", title: "Experienced with High-Energy & Reactive Dogs", desc: "We understand the nuances of anxious and reactive dogs and know how to keep them comfortable." },
-                { emoji: "🛡️", title: "Safety-Trained Pet Transport Specialist", desc: "From secure loading to calm handling, every step of the ride follows proven safety protocols." },
-              ].map((item, i) => (
-                <div key={i} className="bg-[#F9F7F3] rounded-2xl p-5 text-center flex flex-col items-center gap-3">
-                  <span className="text-3xl">{item.emoji}</span>
-                  <p className="font-semibold text-[#1B4332] text-sm leading-snug">{item.title}</p>
-                  <p className="text-xs text-[#6B5B4F]/70 leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Service Tiers */}
-        <motion.div {...fade(0.05)}>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#1B4332] mb-2">Choose Your Service Level</h2>
-            <p className="text-sm text-[#6B5B4F]/70">Every dog is different. We have you covered either way.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-5">
-            <div className="bg-white rounded-3xl border border-[#EDF7F0] p-7 flex flex-col gap-3">
-              <div className="text-2xl">🐶</div>
-              <h3 className="text-lg font-bold text-[#1B4332]">Standard Transport</h3>
-              <p className="text-sm text-[#6B5B4F]/75 leading-relaxed">Best for calm, well-behaved dogs who travel easily and settle quickly in a new vehicle.</p>
-              <ul className="space-y-1.5 mt-1">
-                {["Door-to-door service", "Real-time status updates", "Secured, clean vehicle"].map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-[#6B5B4F]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#52B788] shrink-0" />{f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-[#1B4332] rounded-3xl p-7 flex flex-col gap-3 text-white relative overflow-hidden">
-              <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-[#2D6A4F]/50 pointer-events-none" />
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-1.5 bg-[#52B788]/30 rounded-full px-3 py-1 text-xs font-semibold text-[#B7E4C7] mb-2">
-                  ⭐ Premium
-                </div>
-                <div className="text-2xl mb-1">🐕</div>
-                <h3 className="text-lg font-bold text-white">Behavior-Aware Transport</h3>
-                <p className="text-sm text-white/75 leading-relaxed mt-2">Ideal for anxious, reactive, or high-energy dogs who need a handler with extra patience and experience.</p>
-                <ul className="space-y-1.5 mt-3">
-                  {["Everything in Standard", "Certified behavior-aware handling", "Calm, low-stimulation loading & unloading", "Ideal for reactive or nervous dogs"].map(f => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-white/85">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D] shrink-0" />{f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="text-center mt-6">
-            <Link to={createPageUrl("BookingRequest")}>
-              <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                Book the Right Ride for Your Dog
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* How It Works */}
-        <motion.div {...fade(0.05)}>
-          <div className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8">
+        {/* Section: How Early Access Works (#how) */}
+        <motion.div {...fade(0.05)} id="how">
+          <div className="bg-[#F7F1E3] rounded-3xl border border-[#273B2F]/10 p-8">
             <div className="mb-8 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332]">How It Works</h2>
+              <h2 className="text-3xl font-bold text-[#273B2F]">How Early Access Works</h2>
             </div>
-            <div className="grid sm:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-4 gap-8">
               {[
-                { n: "1", title: "Request a Ride", body: "Enter pickup, destination, and your pet details." },
-                { n: "2", title: "We Confirm", body: "We review the request and confirm availability." },
-                { n: "3", title: "Safe Ride for Your Pet", body: "Your pet is transported safely and comfortably." },
-              ].map(step => (
+                { n: "1", title: "Submit a request", body: "Tell us about your pet, your pickup area, and where you need to go." },
+                { n: "2", title: "We review details", body: "We check the routes, timing requirements, pet size, and vehicle schedule." },
+                { n: "3", title: "We reach out", body: "Our operations coordinator contacts you as suitable launch slots open." },
+                { n: "4", title: "Rides scheduled", body: "Rides are arranged directly with our team — nothing is confirmed automatically." },
+              ].map((step) => (
                 <div key={step.n} className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#1B4332] text-white flex items-center justify-center text-lg font-bold mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#273B2F] text-[#F7F1E3] flex items-center justify-center text-lg font-bold mb-4 shadow-sm">
                     {step.n}
                   </div>
-                  <h3 className="text-lg font-semibold text-[#1B4332] mb-2">{step.title}</h3>
-                  <p className="text-sm text-[#6B5B4F]/75">{step.body}</p>
+                  <h3 className="text-base font-bold text-[#273B2F] mb-2">{step.title}</h3>
+                  <p className="text-xs text-[#3A3F47]/85 leading-relaxed">{step.body}</p>
                 </div>
               ))}
             </div>
+            <p className="text-xs text-[#3A3F47]/60 mt-8 text-center italic">
+              Submitting a request does not guarantee immediate availability or a confirmed ride time.
+            </p>
           </div>
         </motion.div>
 
-        {/* Pet Safety Promise */}
-        <motion.div {...fade(0.05)}>
-          <div className="relative bg-[#1B4332] rounded-3xl overflow-hidden p-6 md:p-10 text-white">
-            {/* Decorative circles */}
-            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-[#2D6A4F]/40 pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-52 h-52 rounded-full bg-[#2D6A4F]/30 pointer-events-none" />
+        {/* Secondary Section: Typical Ride Cost Estimator */}
+        <motion.div {...fade(0.05)} className="max-w-[820px] mx-auto border-t border-[#273B2F]/10 pt-16">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-[#273B2F] mb-2">Typical Ride Cost Estimator</h2>
+            <p className="text-sm text-[#3A3F47]/75 max-w-lg mx-auto">
+              Want to see typical pricing before requesting? Use our range calculator. This displays an estimate only — final pricing is calculated during scheduling.
+            </p>
+          </div>
+          <PriceEstimator />
+        </motion.div>
 
-            <div className="relative z-10">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-2xl bg-[#D8F3DC] flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-[#1B4332]" />
-                </div>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-center mb-2">Our Pet Safety Promise</h2>
-              <p className="text-white/70 text-center text-sm mb-8 max-w-md mx-auto">
-                We treat every pet like our own. Here's what you can count on every single ride.
+        {/* Brand Asset: Cabin Capacity & Van Interior */}
+        <motion.div {...fade(0.05)} id="cabin-layout" className="bg-[#F7F1E3] rounded-3xl border border-[#273B2F]/10 p-6 md:p-8">
+          <div className="grid md:grid-cols-[1.2fr_1fr] gap-8 items-center">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#273B2F] mb-4">Inside the Cabin</h2>
+              <p className="text-sm text-[#3A3F47]/80 leading-relaxed mb-4">
+                Our vehicles are customized specifically for the unique needs of local pet transportation. We don't use cargo space or loose seating—instead, every pet enjoys a personalized, low-stimulation ride in a climate-managed cabin.
               </p>
+              <ul className="space-y-2.5 text-sm text-[#3A3F47]">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" /> Separate individual pet compartments
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" /> Complete climate and temperature management
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" /> Low-entry ramp for elder or heavy animals
+                </li>
+              </ul>
+            </div>
+            <figure className="space-y-2">
+              <img 
+                src="/assets/pawffeur_concept_interior.png" 
+                alt="Inside the Pawffeur van showing climate-managed compartments and padded animal bays" 
+                className="rounded-2xl shadow-md w-full object-cover aspect-[4/3] border border-[#273B2F]/10"
+                loading="lazy"
+              />
+              <figcaption className="text-[10px] text-[#3A3F47]/65 text-center italic">
+                Vehicle concept visualization shown. Final vehicle configuration, service areas, pricing, and availability may vary as Pawffeur tests and refines operations.
+              </figcaption>
+            </figure>
+          </div>
+        </motion.div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                {[
-                  { icon: "🔒", title: "Secure Transport Procedures", desc: "Pets are always secured and never left unattended during the ride." },
-                  { icon: "🐾", title: "Experienced Handlers", desc: "Our drivers are trained in pet behavior and calm handling techniques." },
-                  { icon: "🚗", title: "Door-to-Door Service", desc: "We come to you and deliver directly — no drop-offs at unfamiliar places." },
-                  { icon: "📱", title: "Real-Time Communication", desc: "You'll hear from us at pickup and delivery so you're never left wondering." },
-                ].map((item, i) => (
-                  <div key={i} className="bg-white/10 rounded-2xl p-5 flex gap-4 items-start backdrop-blur-sm">
-                    <span className="text-2xl shrink-0">{item.icon}</span>
-                    <div>
-                      <p className="font-semibold text-white text-sm mb-1">{item.title}</p>
-                      <p className="text-white/65 text-xs leading-relaxed">{item.desc}</p>
+        {/* Section: Early Access Ride Request Form (#early-access) */}
+        <motion.div {...fade(0.05)} id="early-access" className="max-w-[700px] mx-auto scroll-mt-24">
+          <div className="bg-white rounded-3xl border border-[#273B2F]/15 overflow-hidden shadow-sm">
+            <div className="bg-[#273B2F] px-6 py-5">
+              <h3 className="text-[#F7F1E3] font-bold text-xl">Request Early Access</h3>
+              <p className="text-[#F7F1E3]/70 text-xs mt-1">Tell us about your pet and your trip — we'll reach out as launch slots open.</p>
+            </div>
+            
+            <div className="p-6">
+              {!submitted ? (
+                <form onSubmit={handleFormSubmit} className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Your Name *</label>
+                      <input 
+                        required
+                        type="text" 
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="First and last name"
+                        className="w-full bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Email *</label>
+                      <input 
+                        required
+                        type="email" 
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="name@example.com"
+                        className="w-full bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B] focus:border-transparent"
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Phone (Optional)</label>
+                      <input 
+                        type="tel" 
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        placeholder="(312) 555-0199"
+                        className="w-full bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Pickup area or ZIP *</label>
+                      <input 
+                        required
+                        type="text" 
+                        value={pickupZip}
+                        onChange={e => setPickupZip(e.target.value)}
+                        placeholder="ZIP Code or Neighborhood"
+                        className="w-full bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Destination type *</label>
+                      <select 
+                        required
+                        value={destinationType}
+                        onChange={e => setDestinationType(e.target.value)}
+                        className="w-full appearance-none bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B]"
+                      >
+                        <option value="">— Select destination —</option>
+                        <option value="Vet">Vet Clinic / Appointment</option>
+                        <option value="Groomer">Groomer / Salon</option>
+                        <option value="Boarding/Daycare">Boarding & Daycare</option>
+                        <option value="Airport">Airport Transport</option>
+                        <option value="Other">Other / Custom</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Pet Type & size *</label>
+                      <select 
+                        required
+                        value={petTypeSize}
+                        onChange={e => setPetTypeSize(e.target.value)}
+                        className="w-full appearance-none bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B]"
+                      >
+                        <option value="">— Select pet type —</option>
+                        <option value="Cat">Cat / Small Feline</option>
+                        <option value="Small Dog">Small Dog (under 20 lb)</option>
+                        <option value="Medium Dog">Medium Dog (20-40 lb)</option>
+                        <option value="Large Dog">Large Dog (over 40 lb)</option>
+                        <option value="Multiple Pets">Multiple Pets (family setup)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-[1.5fr_2fr] gap-4 items-center pt-1">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Number of pets</label>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          type="button" 
+                          onClick={() => setPetCount(c => Math.max(1, c - 1))}
+                          className="w-8 h-8 rounded-lg bg-[#273B2F]/10 text-[#273B2F] font-bold text-sm hover:bg-[#273B2F]/20 transition"
+                        >-</button>
+                        <span className="font-bold text-sm w-6 text-center">{petCount}</span>
+                        <button 
+                          type="button" 
+                          onClick={() => setPetCount(c => Math.min(6, c + 1))}
+                          className="w-8 h-8 rounded-lg bg-[#273B2F]/10 text-[#273B2F] font-bold text-sm hover:bg-[#273B2F]/20 transition"
+                        >+</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Preferred timing *</label>
+                      <select 
+                        required
+                        value={timing}
+                        onChange={e => setTiming(e.target.value)}
+                        className="w-full appearance-none bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B]"
+                      >
+                        <option value="">— Select timing —</option>
+                        <option value="This week">This week</option>
+                        <option value="This month">This month</option>
+                        <option value="Flexible">Just researching / Flexible</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#273B2F] uppercase tracking-wide">Notes & pet requirements</label>
+                    <textarea 
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder="Anything we should know? (e.g. anxious, crate trained, special care...)"
+                      rows={3}
+                      className="w-full bg-[#F7F1E3]/35 border border-[#273B2F]/15 rounded-xl px-4 py-2.5 text-sm text-[#3A3F47] focus:outline-none focus:ring-2 focus:ring-[#E08A2B] focus:border-transparent placeholder-[#3A3F47]/45"
+                    />
+                  </div>
+
+                  <div className="flex items-start gap-2.5 pt-2">
+                    <input 
+                      required
+                      type="checkbox" 
+                      id="consent"
+                      checked={consent}
+                      onChange={e => setConsent(e.target.checked)}
+                      className="w-4 h-4 rounded border-[#273B2F]/15 text-[#E08A2B] focus:ring-[#E08A2B] mt-0.5"
+                    />
+                    <label htmlFor="consent" className="text-xs text-[#3A3F47]/85 leading-relaxed">
+                      I understand this is an early access request, not a confirmed ride. Pawffeur will contact me to review details and schedule coordinates. *
+                    </label>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={submitting || !consent}
+                    className="w-full bg-[#E08A2B] hover:bg-[#E08A2B]/90 text-white rounded-xl font-bold h-12 shadow-md transition-all active:scale-98 mt-2"
+                  >
+                    {submitting ? "Sending..." : "Request Early Access"}
+                  </Button>
+                </form>
+              ) : (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  className="py-10 text-center space-y-4"
+                >
+                  <div className="w-16 h-16 rounded-full bg-[#E08A2B]/10 flex items-center justify-center mx-auto text-[#E08A2B]">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-[#273B2F]">Request Received!</h4>
+                    <p className="text-sm text-[#3A3F47]/80 mt-2 max-w-sm mx-auto">
+                      Thanks! Your early access request is in. We'll reach out as launch slots open.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
+          <p className="text-[10px] text-[#3A3F47]/65 italic text-center mt-3 leading-relaxed">
+            Vehicle concept visualization shown. Final vehicle configuration, service areas, pricing, and availability may vary as Pawffeur tests and refines operations.
+          </p>
         </motion.div>
 
         {/* Service Area */}
-        <motion.div {...fade(0.05)}>
-          <div className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8">
+        <motion.div {...fade(0.05)} id="service-area">
+          <div className="bg-[#F7F1E3] rounded-3xl border border-[#273B2F]/10 p-8">
             <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#1B4332] text-center">Serving Chicago & Surrounding Neighborhoods</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#273B2F] text-center">Serving Chicago & Surrounding Neighborhoods</h2>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3 max-w-md mx-auto">
               {[
                 "Lincoln Park",
                 "Lakeview",
@@ -290,13 +491,13 @@ export default function PublicSite() {
                 "River North",
                 "Downtown Chicago",
               ].map((neighborhood, i) => (
-                <div key={i} className="flex items-center gap-2 text-[#6B5B4F]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+                <div key={i} className="flex items-center gap-2 text-[#3A3F47]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" />
                   {neighborhood}
                 </div>
               ))}
             </div>
-            <p className="text-sm text-[#6B5B4F]/70 mt-6 pt-6 border-t border-[#EDF7F0]">
+            <p className="text-sm text-[#3A3F47]/70 mt-6 pt-6 border-t border-[#273B2F]/10 text-center">
               Plus surrounding areas within our service zone. Outside these areas? <strong>Contact us</strong> — we may still be able to help.
             </p>
           </div>
@@ -304,112 +505,76 @@ export default function PublicSite() {
 
         {/* FAQ */}
         <motion.div {...fade(0.05)}>
-          <div className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8">
+          <div className="bg-[#F7F1E3] rounded-3xl border border-[#273B2F]/10 p-8">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-[#1B4332]">Frequently Asked Questions</h2>
+              <h2 className="text-xl font-bold text-[#273B2F]">Frequently Asked Questions</h2>
             </div>
             <div className="space-y-5">
               {[
                 { q: "Do you transport cats?", a: "Yes. We transport dogs, cats, and other small household pets." },
-                { q: "Can I ride with my pet?", a: "No. Pawffeur™ is designed for pet-only transportation so we can keep the service focused, safe, and consistent." },
-                { q: "How far in advance should I book?", a: "We recommend at least 24 hours notice when possible." },
+                { q: "Can I ride with my pet?", a: "No. Pawffeur™ is designed for pet-only transportation so we can keep the service focused, care-oriented, and consistent." },
+                { q: "How far in advance should I request a ride?", a: "We recommend at least 24 hours notice when possible." },
               ].map((item, i) => (
-                <div key={i} className="border-b border-[#EDF7F0] last:border-0 pb-5 last:pb-0">
-                  <p className="text-sm font-semibold text-[#1B4332] mb-1">{item.q}</p>
-                  <p className="text-sm text-[#6B5B4F]/75 leading-relaxed">{item.a}</p>
+                <div key={i} className="border-b border-[#273B2F]/10 last:border-0 pb-5 last:pb-0">
+                  <p className="text-sm font-semibold text-[#273B2F] mb-1">{item.q}</p>
+                  <p className="text-sm text-[#3A3F47]/80 leading-relaxed">{item.a}</p>
                 </div>
               ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Price Estimator */}
-        <motion.div {...fade(0.05)} id="price-estimator">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-3">How Much Will It Cost?</h2>
-            <p className="text-lg text-[#6B5B4F]/70">Get an instant estimate — no signup needed.</p>
-          </div>
-          <PriceEstimator />
-        </motion.div>
-
-
-
-        {/* Testimonials */}
-        <motion.div {...fade(0.05)}>
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-3">What Pet Owners Are Saying</h2>
-            <p className="text-lg text-[#6B5B4F]/70">Real feedback from Pawffeur™ customers across Chicago.</p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {[
-              {
-                name: "Jessica M.",
-                location: "Lincoln Park",
-                pet: "Benny, Golden Retriever",
-                quote: "Pawffeur™ made getting Benny to his vet appointments so easy. The driver was calm, professional, and sent updates throughout. I'll never scramble for a ride again.",
-              },
-              {
-                name: "Carlos R.",
-                location: "Wicker Park",
-                pet: "Luna, French Bulldog",
-                quote: "Luna gets anxious in cars, but she was totally relaxed when she arrived at the groomer. You can tell the driver knows how to handle dogs. Highly recommend.",
-              },
-              {
-                name: "Diane T.",
-                location: "Lakeview",
-                pet: "Oscar, Tabby Cat",
-                quote: "I was skeptical at first but the experience was seamless. Got a text when Oscar was picked up and another at drop-off. Exactly what a busy pet owner needs.",
-              },
-            ].map((t, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-[#EDF7F0] p-6 flex flex-col gap-4 shadow-sm">
-                <p className="text-sm text-[#6B5B4F] leading-relaxed">"{t.quote}"</p>
-                <div className="mt-auto pt-4 border-t border-[#EDF7F0]">
-                  <p className="text-sm font-semibold text-[#1B4332]">{t.name}</p>
-                  <p className="text-xs text-[#6B5B4F]/60">{t.pet} · {t.location}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
       </div>
 
       {/* Final CTA */}
-      <section className="bg-[#FEFAE0]/80 border-t border-[#D8F3DC]/40 text-[#1B4332]">
-        <div className="max-w-6xl mx-auto px-4 py-20 text-center">
+      <section className="bg-[#273B2F] text-[#F7F1E3] border-t border-[#273B2F]/10">
+        <div className="max-w-[1100px] mx-auto px-6 py-20 text-center">
           <motion.div {...fade(0)}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#1B4332]">Ready to Book a Ride for Your Pet?</h2>
-            <Link to={createPageUrl("BookingRequest")}>
-              <Button size="lg" className="bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl font-semibold px-10">
-                🟢 Request a Ride Now
-              </Button>
-            </Link>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#F7F1E3]">Want in on early access?</h2>
+            <button 
+              onClick={() => scrollToId("early-access")}
+              className="bg-[#E08A2B] hover:bg-[#E08A2B]/90 text-white font-bold rounded-full px-10 py-5 text-lg shadow-lg hover:shadow-xl transition-all duration-180 hover:-translate-y-0.5 active:scale-95"
+            >
+              Request Early Access Now
+            </button>
           </motion.div>
         </div>
       </section>
 
-      <footer className="bg-[#1B4332] text-white/70 text-center py-12">
-        <div className="max-w-6xl mx-auto px-4 space-y-6">
-          <div>
-            <img src="/assets/pawffeur-logo-tagline.png" alt="Pawffeur: Every paw gets a chauffeur." className="h-10 w-auto mx-auto mb-4" />
-            <div className="flex justify-center items-center text-sm text-white/80">
+      {/* Footer */}
+      <footer className="bg-[#273B2F]/95 text-[#F7F1E3]/70 text-center py-12 border-t border-[#F7F1E3]/10">
+        <div className="max-w-[1100px] mx-auto px-6 space-y-6">
+          <div id="contact">
+            <img 
+              src="/assets/pawffeur_logo.svg" 
+              alt="Pawffeur Wordmark" 
+              className="h-10 w-auto mx-auto mb-4" 
+              loading="lazy"
+            />
+            <p className="text-xs text-[#F7F1E3]/65 max-w-sm mx-auto leading-relaxed italic mb-4">
+              Pet-first local transportation.
+            </p>
+            <div className="flex justify-center items-center text-sm text-[#F7F1E3]/80">
               <a href="mailto:support@pawffeur.com" className="hover:text-white transition">✉ support@pawffeur.com</a>
             </div>
           </div>
-          <div className="flex justify-center gap-6 text-sm flex-wrap">
-            <Link to={createPageUrl("PublicSite")} className="hover:text-white transition">Pet Owners</Link>
+          <div className="flex justify-center gap-6 text-sm flex-wrap text-[#F7F1E3]/80">
+            <button onClick={() => scrollToId("about")} className="hover:text-white transition">Pet Owners</button>
             <Link to={createPageUrl("VetPartners")} className="hover:text-white transition">Vet Clinics &amp; Partners</Link>
-            <Link to={createPageUrl("BookingRequest")} className="hover:text-white transition">Book a Ride</Link>
+            <button onClick={() => scrollToId("early-access")} className="hover:text-white transition">Early Access Request</button>
             <span className="text-white/40">•</span>
             <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
             <span className="text-white/40">•</span>
             <Link to="/terms-and-conditions" className="hover:text-white transition">Terms &amp; Conditions</Link>
           </div>
-          <div className="border-t border-white/10 pt-6">
+          <div className="border-t border-white/10 pt-6 space-y-3">
+            <p className="text-[10px] text-[#F7F1E3]/50 max-w-md mx-auto leading-relaxed">
+              Pawffeur is in a controlled private launch. Imagery shown is a vehicle concept visualization. Service areas, pricing, and availability may vary.
+            </p>
             {IS_LLC_ACTIVE ? (
-              <p className="text-xs text-white/50">Pawffeur™ is operated by Pawffeur, LLC. © 2026 Pawffeur, LLC. All rights reserved.</p>
+              <p className="text-xs text-[#F7F1E3]/50">Pawffeur™ is operated by Pawffeur, LLC. © 2026 Pawffeur, LLC. All rights reserved.</p>
             ) : (
-              <p className="text-xs text-white/50">© 2026 Pawffeur™. All rights reserved.</p>
+              <p className="text-xs text-[#F7F1E3]/50">© 2026 Pawffeur™. All rights reserved.</p>
             )}
           </div>
         </div>

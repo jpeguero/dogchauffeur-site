@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --forest-900: #1B4332;
+  --forest-900: #273B2F;
   --forest-800: #2D6A4F;
   --forest-700: #40916C;
   --forest-600: #52B788;
@@ -29,7 +29,7 @@
 
 @layer components {
   .forest-gradient {
-    background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
+    background: linear-gradient(135deg, #273B2F 0%, #354e3e 50%, #446551 100%);
   }
   
   .card-hover {

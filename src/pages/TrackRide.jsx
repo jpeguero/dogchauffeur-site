@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { PawPrint, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,10 +93,10 @@ export default function TrackRide() {
     return (
       <div className="min-h-screen bg-[#F9F7F3] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-2xl bg-[#1B4332] flex items-center justify-center mx-auto mb-3 animate-pulse">
+          <div className="w-12 h-12 rounded-2xl bg-[#273B2F] flex items-center justify-center mx-auto mb-3 animate-pulse">
             <PawPrint className="w-6 h-6 text-white" />
           </div>
-          <p className="text-[#1B4332] font-semibold text-sm">Synchronizing with Pawffeur network...</p>
+          <p className="text-[#273B2F] font-semibold text-sm">Synchronizing with Pawffeur network...</p>
         </div>
       </div>
     );
@@ -107,15 +108,15 @@ export default function TrackRide() {
       <div className="min-h-screen bg-[#F9F7F3] flex items-center justify-center px-4">
         <div className="bg-white rounded-3xl border border-[#D8F3DC] p-8 max-w-md w-full text-center shadow-xl">
           <div className="w-16 h-16 rounded-3xl bg-[#EDF7F0] border border-[#B7E4C7] flex items-center justify-center mx-auto mb-5">
-            <PawPrint className="w-8 h-8 text-[#1B4332]" />
+            <PawPrint className="w-8 h-8 text-[#273B2F]" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1B4332] mb-2 font-serif">Voyage Not Found</h2>
+          <h2 className="text-2xl font-bold text-[#273B2F] mb-2 font-serif">Voyage Not Found</h2>
           <p className="text-[#6B5B4F] text-sm mb-6 leading-relaxed">
             No active trip identifier detected in this link. Please trigger the simulated dashboard demo to view the customer interface.
           </p>
           <Button 
             onClick={launchDemo} 
-            className="w-full bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-2xl py-6 text-base font-semibold flex items-center justify-center gap-2 shadow-md transition"
+            className="w-full bg-[#273B2F] hover:bg-[#2D6A4F] text-white rounded-2xl py-6 text-base font-semibold flex items-center justify-center gap-2 shadow-md transition"
           >
             Launch Live Demo Voyage
           </Button>
@@ -157,7 +158,7 @@ export default function TrackRide() {
     <>
       <style>{`
         :root {
-          --paw-green: #1b4332;
+          --paw-green: #273B2F;
           --paw-green-soft: #edf7f0;
           --paw-green-mid: #b7e4c7;
           --paw-cream: #f9f7f3;
@@ -522,6 +523,28 @@ export default function TrackRide() {
       `}</style>
 
       <div className="tracking-body-container">
+        {/* Sticky Header */}
+        <nav className="sticky top-0 z-50 bg-[#F7F1E3]/95 backdrop-blur-md shadow-md border-b border-[#273B2F]/10 h-16">
+          <div className="max-w-[1100px] mx-auto px-6 h-full flex items-center justify-between">
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/assets/pawffeur_logo.svg" 
+                alt="Pawffeur Logo" 
+                className="h-8 md:h-10 w-auto"
+                loading="lazy"
+              />
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link 
+                to="/PublicSite#early-access"
+                className="bg-[#E08A2B] hover:bg-[#E08A2B]/90 text-white rounded-full px-6 py-2 text-xs font-bold shadow-sm transition-all active:scale-95"
+              >
+                Request Early Access
+              </Link>
+            </div>
+          </div>
+        </nav>
+
         <main className="tracking-shell">
           {/* Header */}
           <section className="tracking-hero">
@@ -554,7 +577,7 @@ export default function TrackRide() {
               <div className="photo-frame">
                 {isPhotoCaptured ? (
                   <img
-                    src="/assets/dog_passenger_hero.png"
+                    src="/assets/pawffeur_concept_interior.png"
                     alt={`${petName} pictured during pickup check-in`}
                   />
                 ) : (
@@ -564,21 +587,19 @@ export default function TrackRide() {
                   </div>
                 )}
               </div>
+              <p className="text-[10px] text-[#3A3F47]/65 italic mt-2 text-center leading-relaxed">
+                Vehicle concept visualization shown. Final vehicle configuration, service areas, pricing, and availability may vary as Pawffeur tests and refines operations.
+              </p>
 
               <div className="telemetry-meta">
                 <div className="meta-item">
-                  <span className="meta-label">Captured</span>
+                  <span className="meta-label">Time</span>
                   <span className="meta-value">{capturedTimeStr}</span>
                 </div>
 
-                <div className="meta-item">
+                <div className="meta-item col-span-2">
                   <span className="meta-label">Location</span>
-                  <span className="meta-value">{isDemo ? "Chicago, IL" : (activeTrip.pickup_location?.split(",")[1]?.trim() || "Chicago, IL")}</span>
-                </div>
-
-                <div className="meta-item">
-                  <span className="meta-label">GPS</span>
-                  <span className="meta-value">{isDemo ? "41.8781, -87.6298" : "41.8781, -87.6298"}</span>
+                  <span className="meta-value">{isDemo ? "Lincoln Park, Chicago" : (activeTrip.pickup_location || "Lincoln Park, Chicago")}</span>
                 </div>
 
                 <div className="meta-item">
@@ -647,6 +668,19 @@ export default function TrackRide() {
                   </div>
                 </li>
               </ol>
+
+              <div className="mt-6 pt-6 border-t border-[#273B2F]/10 space-y-4">
+                <div className="flex justify-between items-center text-xs font-semibold text-[#3A3F47]">
+                  <span className="text-[#273B2F] uppercase tracking-wide">Estimated Drop-Off</span>
+                  <span>{isDemo ? "4:15 PM" : (activeTrip.scheduled_time || "Pending")}</span>
+                </div>
+                <Button 
+                  onClick={() => toast.info("Messaging system is coming soon!")}
+                  className="w-full bg-[#273B2F] hover:bg-[#273B2F]/90 text-white rounded-xl py-3 text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition"
+                >
+                  Message your driver
+                </Button>
+              </div>
             </aside>
           </section>
 
@@ -661,7 +695,7 @@ export default function TrackRide() {
             </div>
 
             <p className="footer-disclaimer">
-              Photo check-ins are communication records. They do not certify safety, health,
+              Photo check-ins are communication records. They represent visual updates and do not confirm health,
               behavior, or ride outcome.
             </p>
           </footer>

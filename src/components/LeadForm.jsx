@@ -14,7 +14,7 @@ const RIDE_TYPES = [
   { value: "Grooming", label: "Grooming Appointment ✂️" },
   { value: "Daycare / Boarding", label: "Daycare & Boarding 🏡" },
   { value: "Airport Trip", label: "Airport Transport ✈️" },
-  { value: "Emergency / Same-Day", label: "Emergency & Same-Day 🚨" },
+  { value: "Urgent / Same-Day", label: "Urgent & Same-Day 🚨" },
   { value: "Other / Custom", label: "Other / Custom Ride 🐾" }
 ];
 

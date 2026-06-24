@@ -103,9 +103,9 @@ export default function Layout({ children, currentPageName }) {
         <div className="flex items-center justify-between px-4 h-16">
           <div className="flex items-center gap-2">
             <img src="/assets/pawffeur-icon.png" alt="Pawffeur" className="w-8 h-8" />
-            <span className="font-semibold text-[#1B4332] text-lg">Pawffeur™</span>
+            <span className="font-semibold text-[#273B2F] text-lg">Pawffeur™</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)} className="text-[#1B4332]">
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)} className="text-[#273B2F]">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
         </div>
@@ -128,7 +128,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex items-center gap-3">
               <img src="/assets/pawffeur-icon.png" alt="Pawffeur" className="w-10 h-10" />
               <div>
-                <h1 className="font-bold text-[#1B4332] text-lg tracking-tight">Pawffeur™</h1>
+                <h1 className="font-bold text-[#273B2F] text-lg tracking-tight">Pawffeur™</h1>
                 <p className="text-xs text-[#6B5B4F]/70 capitalize">
                   {effectiveRole === "admin" ? "Operations" : effectiveRole === "driver" ? "Driver Portal" : "Pet Transport"}
                 </p>
@@ -148,8 +148,8 @@ export default function Layout({ children, currentPageName }) {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
                     ${isActive
-                      ? "bg-[#1B4332] text-white shadow-lg shadow-[#1B4332]/20"
-                      : "text-[#6B5B4F] hover:bg-[#EDF7F0] hover:text-[#1B4332]"}
+                      ? "bg-[#273B2F] text-white shadow-lg shadow-[#273B2F]/20"
+                      : "text-[#6B5B4F] hover:bg-[#EDF7F0] hover:text-[#273B2F]"}
                   `}
                 >
                   <item.icon className="w-[18px] h-[18px]" />
@@ -167,7 +167,7 @@ export default function Layout({ children, currentPageName }) {
                 <User className="w-4 h-4 text-[#2D6A4F]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#1B4332] truncate">
+                <p className="text-sm font-medium text-[#273B2F] truncate">
                   {effectiveUser?.full_name || "User"}
                 </p>
                 <p className="text-xs text-[#6B5B4F]/60 capitalize">{effectiveRole}</p>
