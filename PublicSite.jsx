@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 import { Link } from "react-router-dom";
 import PriceEstimator from "@/components/PriceEstimator";
+import HowItWorks from "@/components/HowItWorks";
 
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -211,29 +212,8 @@ export default function PublicSite() {
           </div>
         </motion.div>
 
-        {/* How It Works */}
-        <motion.div {...fade(0.05)}>
-          <div className="bg-white rounded-3xl border border-[#EDF7F0] p-6 md:p-8">
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332]">How It Works</h2>
-            </div>
-            <div className="grid sm:grid-cols-3 gap-8">
-              {[
-                { n: "1", title: "Request a Ride", body: "Enter pickup, destination, and your pet details." },
-                { n: "2", title: "We Confirm", body: "We review the request and confirm availability." },
-                { n: "3", title: "Safe Ride for Your Pet", body: "Your pet is transported safely and comfortably." },
-              ].map(step => (
-                <div key={step.n} className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#1B4332] text-white flex items-center justify-center text-lg font-bold mb-4">
-                    {step.n}
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#1B4332] mb-2">{step.title}</h3>
-                  <p className="text-sm text-[#6B5B4F]/75">{step.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+        {/* How It Works - Detailed Timeline */}
+        <HowItWorks />
 
         {/* Pet Safety Promise */}
         <motion.div {...fade(0.05)}>
