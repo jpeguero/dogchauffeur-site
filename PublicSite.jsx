@@ -70,12 +70,12 @@ export default function PublicSite() {
             </motion.div>
             <motion.div {...fade(0.1)} className="bg-white/8 backdrop-blur-lg rounded-3xl border border-white/10 px-6 md:px-12 py-12 md:py-16 max-w-4xl mx-auto">
               <motion.h1 {...fade(0.1)} className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-6 text-white">
-                Safe, Reliable Pet<br />Transportation in Chicago
+                Premium Pet Transportation<br />Built for Large Dogs
               </motion.h1>
               <motion.p {...fade(0.2)} className="text-xl md:text-2xl text-white/95 max-w-3xl mx-auto mb-10 leading-relaxed">
-                Door-to-door rides for dogs, cats, and other pets.
+                Spacious, climate-controlled rides optimized for large dog breeds.
                 <br />
-                Vet visits • Grooming appointments • Airport trips • Daycare pickup.
+                Vet visits • Grooming appointments • Airport trips • Daycare pickup • Boarding.
               </motion.p>
               <motion.div {...fade(0.3)} className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
@@ -214,6 +214,23 @@ export default function PublicSite() {
 
         {/* How It Works - Detailed Timeline */}
         <HowItWorks />
+
+        {/* Cabin Layout - Optimized for Large Dogs */}
+        <motion.div {...fade(0.05)}>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1B4332] mb-3">Premium Cabin Design</h2>
+            <p className="text-base text-[#6B5B4F]/80 max-w-2xl mx-auto leading-relaxed">
+              Our cabin is optimized for large dog breeds with spacious XL and medium crates, individual climate control, and premium comfort amenities.
+            </p>
+          </div>
+          <div className="rounded-3xl overflow-hidden border border-[#EDF7F0] shadow-lg">
+            <img 
+              src="/assets/cabin_capacity_layout_optimized.png" 
+              alt="Pawffeur Premium Cabin Layout - Optimized for Large Dogs" 
+              className="w-full h-auto"
+            />
+          </div>
+        </motion.div>
 
         {/* Pet Safety Promise */}
         <motion.div {...fade(0.05)}>
