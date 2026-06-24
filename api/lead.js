@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       source
     } = body;
 
-    if (!full_name || !phone || !ride_type || !pickup_address || !dropoff_address || !preferred_date) {
+    if (!full_name || (!phone && !email) || !ride_type || !pickup_address || !dropoff_address || !preferred_date) {
       return res.status(400).json({
         success: false,
         error: "Missing required fields",
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const normalizedPhone = String(phone).replace(/\D/g, "");
+    const normalizedPhone = phone ? String(phone).replace(/\D/g, "") : "";
     const normalizedEmail = email ? String(email).trim().toLowerCase() : "";
 
     if (email && email.trim()) {
@@ -365,6 +365,126 @@ export default async function handler(req, res) {
             notificationStatus = "failed";
           } else {
             console.log("[api/lead] Resend notification sent successfully:", emailData);
+          }
+
+          // Send automated customer confirmation if email is present
+          if (normalizedEmail) {
+            console.log(`[api/lead] Sending customer confirmation receipt to: ${normalizedEmail}`);
+            const customerEmailHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Pawffeur Early Access Request Received</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F9F7F3; color: #2D2D2D; margin: 0; padding: 0; }
+                .wrapper { width: 100%; background-color: #F9F7F3; padding: 24px 0; -webkit-text-size-adjust: 100%; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #EDF7F0; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(27,67,50,0.05); }
+                .header { background: linear-gradient(135deg, #273b2f 0%, #2d6a4f 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
+                .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+                .header p { margin: 8px 0 0; font-size: 14px; color: #d8f3dc; font-weight: 500; }
+                .content { padding: 32px 24px; }
+                .greeting { font-size: 16px; font-weight: 600; color: #273b2f; margin-top: 0; }
+                .intro { font-size: 14px; color: #6b5b4f; line-height: 1.6; margin-bottom: 24px; }
+                .booking-card { background-color: #edf7f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 28px; }
+                .booking-label { font-size: 12px; color: #40916c; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
+                .booking-id { font-size: 22px; color: #273b2f; font-weight: 800; }
+                .section-title { font-size: 12px; color: #273b2f; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; border-bottom: 2px solid #edf7f0; padding-bottom: 8px; margin-bottom: 16px; }
+                .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
+                .detail-label { color: #273b2f; font-weight: 600; width: 130px; flex-shrink: 0; }
+                .detail-value { color: #6b5b4f; flex: 1; }
+                .next-steps { background-color: #f9f7f3; border-left: 4px solid #e08a2b; border-radius: 8px; padding: 16px; margin-top: 28px; }
+                .next-steps h4 { margin: 0 0 6px; font-size: 14px; color: #273b2f; font-weight: 700; }
+                .next-steps p { margin: 0; font-size: 13px; color: #6b5b4f; line-height: 1.5; }
+                .footer { text-align: center; padding: 28px 24px; background-color: #273b2f; color: #ffffff; font-size: 12px; }
+                .footer a { color: #d8f3dc; text-decoration: none; font-weight: 600; }
+                .footer p { margin: 6px 0; opacity: 0.8; }
+              </style>
+            </head>
+            <body>
+              <div class="wrapper">
+                <div class="container">
+                  <div class="header">
+                    <h1>Pawffeur™</h1>
+                    <p>Controlled Private Launch</p>
+                  </div>
+                  <div class="content">
+                    <p class="greeting">Hi ${full_name},</p>
+                    <p class="intro">Thanks for your interest in Pawffeur! We have successfully received your early access request for pet transportation. We are currently rolling out routes to a limited group of pet owners in our private test phase, and will reach out to you as suitable slots open up.</p>
+                    
+                    <div class="booking-card">
+                      <div class="booking-label">Your Request Reference</div>
+                      <div class="booking-id">${leadRef}</div>
+                    </div>
+
+                    <div class="section-title">Request Summary</div>
+                    <div class="detail-row">
+                      <div class="detail-label">Ride Type:</div>
+                      <div class="detail-value">${ride_type}</div>
+                    </div>
+                    <div class="detail-row">
+                      <div class="detail-label">Pickup Location:</div>
+                      <div class="detail-value">${pickup_address}</div>
+                    </div>
+                    <div class="detail-row">
+                      <div class="detail-label">Destination:</div>
+                      <div class="detail-value">${dropoff_address}</div>
+                    </div>
+                    <div class="detail-row">
+                      <div class="detail-label">Preferred Date:</div>
+                      <div class="detail-value">${preferred_date}</div>
+                    </div>
+                    ${preferred_time_window ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Time Window:</div>
+                      <div class="detail-value">${preferred_time_window}</div>
+                    </div>` : ""}
+                    <div class="detail-row">
+                      <div class="detail-label">Pet Name:</div>
+                      <div class="detail-value">${pet_name || "N/A"}</div>
+                    </div>
+                    <div class="detail-row">
+                      <div class="detail-label">Pet Details:</div>
+                      <div class="detail-value">${pet_type || "N/A"} ${pet_size ? '(' + pet_size + ')' : ""}</div>
+                    </div>
+
+                    <div class="next-steps">
+                      <h4>What happens next?</h4>
+                      <p>Our operations team reviews route requests to match them with our current test zones and schedules. We'll send you an email or text update as soon as we can accommodate your pet. If you have any questions, feel free to reply to this email or write to us at support@pawffeur.com.</p>
+                    </div>
+                  </div>
+                  <div class="footer">
+                    <p><strong>Pawffeur™</strong> &middot; Pet-First Transportation</p>
+                    <p>✉ <a href="mailto:support@pawffeur.com">support@pawffeur.com</a></p>
+                    <p style="margin-top: 16px; font-size: 10px; opacity: 0.6;">
+                      &copy; 2026 Pawffeur™. All rights reserved.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </body>
+            </html>
+            `;
+
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${resendApiKey}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                from: fromEmail,
+                to: [normalizedEmail],
+                subject: `Pawffeur Early Access Request Received! 🐕 [${leadRef}]`,
+                html: customerEmailHtml
+              })
+            }).then(async r => {
+              const d = await r.json().catch(() => ({}));
+              console.log("[api/lead] Resend customer email status:", r.status, d);
+            }).catch(e => {
+              console.error("[api/lead] Resend customer email error:", e);
+            });
           }
         } catch (emailErr) {
           console.error("[api/lead] Error sending email notification:", emailErr);

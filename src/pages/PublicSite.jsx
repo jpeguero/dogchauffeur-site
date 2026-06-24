@@ -68,16 +68,33 @@ export default function PublicSite() {
     if (!consent) return;
     setSubmitting(true);
     try {
-      await base44.entities.Lead.create({
-        name,
-        email,
-        phone: phone || undefined,
-        lead_source: "early_access_request",
-        estimate_zone: pickupZip,
-        estimate_service: destinationType,
-        urgency: timing || undefined,
-        notes: `Pet: ${petTypeSize} (${petCount} pets). Notes: ${notes}`,
+      const response = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: name,
+          email: email,
+          phone: phone || undefined,
+          pet_name: "",
+          pet_type: petTypeSize.includes("Dog") ? "Dog" : petTypeSize.includes("Cat") ? "Cat" : "Other",
+          pet_size: petTypeSize,
+          ride_type: destinationType,
+          pickup_address: pickupZip,
+          dropoff_address: destinationType,
+          preferred_date: new Date().toISOString().split("T")[0],
+          preferred_time_window: timing,
+          is_urgent: false,
+          notes: notes ? `Pets: ${petCount}. Notes: ${notes}` : `Pets: ${petCount}`,
+          consent: consent,
+          consent_text: "I understand this is an early access request, not a confirmed ride. Pawffeur will contact me to review details and schedule coordinates.",
+          source: "early_access_request"
+        })
       });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to submit early access request.");
+      }
       setSubmitted(true);
     } catch (err) {
       console.error("Failed to submit early access request:", err);
