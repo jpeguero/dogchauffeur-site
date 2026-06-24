@@ -161,7 +161,7 @@ export default function PublicSite() {
         <div className="absolute inset-0 opacity-5 pointer-events-none"
           style={{ backgroundImage: "radial-gradient(circle at 20% 80%, #E08A2B 0%, transparent 50%), radial-gradient(circle at 80% 20%, #E08A2B 0%, transparent 50%)" }}
         />
-        <div className="max-w-[1100px] mx-auto px-6 grid md:grid-cols-[1.2fr_1fr] gap-12 items-center relative z-10">
+        <div className="max-w-[1200px] mx-auto px-6 grid md:grid-cols-[1fr_1.3fr] gap-12 items-center relative z-10">
           <div className="space-y-6 text-left">
             <motion.div {...fade(0)} className="inline-flex items-center gap-2 bg-[#F7F1E3]/15 backdrop-blur-md rounded-full px-4 py-1.5 text-xs font-bold text-[#E08A2B] border border-[#F7F1E3]/20 tracking-wider uppercase">
               <Clock className="w-3.5 h-3.5" /> Controlled Private Launch
