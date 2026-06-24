@@ -191,9 +191,9 @@ export default function PublicSite() {
           <motion.div {...fade(0.2)} className="relative hidden md:block space-y-3">
             <div className="absolute inset-0 bg-[#E08A2B] rounded-3xl rotate-2 opacity-10 blur-sm pointer-events-none" />
             <img 
-              src="/assets/pawffeur_concept_interior.png" 
-              alt="Comfortable golden retriever inside climate-managed compartment cabin" 
-              className="rounded-3xl shadow-xl w-full object-cover aspect-[4/3] border border-[#F7F1E3]/10"
+              src="/assets/features_infographic.png" 
+              alt="Pawffeur vehicle features infographic showing climate control, separate pet compartments, low-entry ramp, and sanitization station" 
+              className="rounded-3xl shadow-xl w-full object-cover aspect-[16/9] border border-[#F7F1E3]/10"
               loading="lazy"
             />
             <p className="text-[10px] text-[#F7F1E3]/65 italic leading-relaxed text-center px-4">
@@ -306,9 +306,9 @@ export default function PublicSite() {
             </div>
             <figure className="space-y-2">
               <img 
-                src="/assets/pawffeur_concept_interior.png" 
-                alt="Inside the Pawffeur van showing climate-managed compartments and padded animal bays" 
-                className="rounded-2xl shadow-md w-full object-cover aspect-[4/3] border border-[#273B2F]/10"
+                src="/assets/cabin_capacity_layout.png" 
+                alt="Pawffeur vehicle cabin capacity layout and compartment specifications" 
+                className="rounded-2xl shadow-md w-full object-cover aspect-[16/9] border border-[#273B2F]/10"
                 loading="lazy"
               />
               <figcaption className="text-[10px] text-[#3A3F47]/65 text-center italic">
