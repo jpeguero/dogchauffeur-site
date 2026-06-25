@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { createPageUrl, IS_LLC_ACTIVE } from "@/utils";
 import { Link } from "react-router-dom";
 import PriceEstimator from "@/components/PriceEstimator";
+import HowItWorks from "@/components/HowItWorks";
 import { base44 } from "@/api/base44Client";
 
 const fade = (delay = 0) => ({
@@ -167,10 +168,12 @@ export default function PublicSite() {
               <Clock className="w-3.5 h-3.5" /> Controlled Private Launch
             </motion.div>
             <motion.h1 {...fade(0.1)} className="text-4xl md:text-6xl font-bold tracking-tight leading-tight text-[#F7F1E3]">
-              Pet-first transportation for local rides.
+              Premium Pet Transportation Built for Large Dogs
             </motion.h1>
             <motion.p {...fade(0.2)} className="text-lg md:text-xl text-[#F7F1E3]/85 leading-relaxed max-w-lg">
-              A calm, organized pet transportation service for rides to vets, groomers, boarding, daycare, and other local pet-care destinations. We're opening early access before our public launch.
+              Spacious, climate-controlled rides optimized for large dog breeds.
+              <br />
+              Vet visits • Grooming appointments • Airport trips • Daycare pickup • Boarding.
             </motion.p>
             <motion.div {...fade(0.3)} className="flex flex-col sm:flex-row gap-4 pt-2">
               <button 
@@ -245,33 +248,10 @@ export default function PublicSite() {
           </div>
         </motion.div>
 
-        {/* Section: How Early Access Works (#how) */}
-        <motion.div {...fade(0.05)} id="how">
-          <div className="bg-[#F7F1E3] rounded-3xl border border-[#273B2F]/10 p-8">
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold text-[#273B2F]">How Early Access Works</h2>
-            </div>
-            <div className="grid sm:grid-cols-4 gap-8">
-              {[
-                { n: "1", title: "Submit a request", body: "Tell us about your pet, your pickup area, and where you need to go." },
-                { n: "2", title: "We review details", body: "We check the routes, timing requirements, pet size, and vehicle schedule." },
-                { n: "3", title: "We reach out", body: "Our operations coordinator contacts you as suitable launch slots open." },
-                { n: "4", title: "Rides scheduled", body: "Rides are arranged directly with our team — nothing is confirmed automatically." },
-              ].map((step) => (
-                <div key={step.n} className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#273B2F] text-[#F7F1E3] flex items-center justify-center text-lg font-bold mb-4 shadow-sm">
-                    {step.n}
-                  </div>
-                  <h3 className="text-base font-bold text-[#273B2F] mb-2">{step.title}</h3>
-                  <p className="text-xs text-[#3A3F47]/85 leading-relaxed">{step.body}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-[#3A3F47]/60 mt-8 text-center italic">
-              Submitting a request does not guarantee immediate availability or a confirmed ride time.
-            </p>
-          </div>
-        </motion.div>
+        {/* How It Works - Detailed Timeline */}
+        <div id="how">
+          <HowItWorks />
+        </div>
 
         {/* Secondary Section: Typical Ride Cost Estimator */}
         <motion.div {...fade(0.05)} className="max-w-[820px] mx-auto border-t border-[#273B2F]/10 pt-16">
@@ -284,38 +264,25 @@ export default function PublicSite() {
           <PriceEstimator />
         </motion.div>
 
-        {/* Brand Asset: Cabin Capacity & Van Interior */}
-        <motion.div {...fade(0.05)} id="cabin-layout" className="bg-[#F7F1E3] rounded-3xl border border-[#273B2F]/10 p-6 md:p-8">
-          <div className="grid md:grid-cols-[1.2fr_1fr] gap-8 items-center">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-[#273B2F] mb-4">Inside the Cabin</h2>
-              <p className="text-sm text-[#3A3F47]/80 leading-relaxed mb-4">
-                Our vehicles are customized specifically for the unique needs of local pet transportation. We don't use cargo space or loose seating—instead, every pet enjoys a personalized, low-stimulation ride in a climate-managed cabin.
-              </p>
-              <ul className="space-y-2.5 text-sm text-[#3A3F47]">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" /> Separate individual pet compartments
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" /> Complete climate and temperature management
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E08A2B]" /> Low-entry ramp for elder or heavy animals
-                </li>
-              </ul>
-            </div>
-            <figure className="space-y-2">
-              <img 
-                src="/assets/cabin_capacity_layout.png" 
-                alt="Pawffeur vehicle cabin capacity layout and compartment specifications" 
-                className="rounded-2xl shadow-md w-full object-cover aspect-[16/9] border border-[#273B2F]/10"
-                loading="lazy"
-              />
-              <figcaption className="text-[10px] text-[#3A3F47]/65 text-center italic">
-                Vehicle concept visualization shown. Final vehicle configuration, service areas, pricing, and availability may vary as Pawffeur tests and refines operations.
-              </figcaption>
-            </figure>
+        {/* Cabin Layout - Optimized for Large Dogs */}
+        <motion.div {...fade(0.05)} id="cabin-layout">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#273B2F] mb-3">Premium Cabin Design</h2>
+            <p className="text-base text-[#3A3F47]/80 max-w-2xl mx-auto leading-relaxed">
+              Our cabin is optimized for large dog breeds with spacious XL and medium crates, individual climate control, and premium comfort amenities.
+            </p>
           </div>
+          <div className="rounded-3xl overflow-hidden border border-[#273B2F]/10 shadow-lg">
+            <img 
+              src="/assets/cabin_capacity_layout_optimized.png" 
+              alt="Pawffeur Premium Cabin Layout - Optimized for Large Dogs" 
+              className="w-full h-auto"
+              loading="lazy"
+            />
+          </div>
+          <p className="text-[10px] text-[#3A3F47]/65 text-center italic mt-3">
+            Vehicle concept visualization shown. Final vehicle configuration, service areas, pricing, and availability may vary as Pawffeur tests and refines operations.
+          </p>
         </motion.div>
 
         {/* Section: Early Access Ride Request Form (#early-access) */}
