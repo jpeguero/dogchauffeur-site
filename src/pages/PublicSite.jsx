@@ -141,6 +141,7 @@ export default function PublicSite() {
           
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#3A3F47]">
             <button onClick={() => scrollToId("about")} className="hover:text-[#E08A2B] transition-colors">What Pawffeur Is</button>
+            <button onClick={() => scrollToId("experience")} className="hover:text-[#E08A2B] transition-colors">Experience</button>
             <button onClick={() => scrollToId("rides")} className="hover:text-[#E08A2B] transition-colors">Common Rides</button>
             <button onClick={() => scrollToId("how")} className="hover:text-[#E08A2B] transition-colors">How It Works</button>
             <button onClick={() => scrollToId("early-access")} className="hover:text-[#E08A2B] transition-colors">Early Access</button>
@@ -219,6 +220,68 @@ export default function PublicSite() {
             <p className="text-base text-[#3A3F47]/90 leading-relaxed">
               Pawffeur is preparing a controlled private launch. We're collecting early ride requests from a limited group of pet owners before our public launch — so we can understand real routes, pet needs, timing, pricing, and local demand before expanding availability.
             </p>
+          </div>
+        </motion.div>
+
+        {/* Section: Experience / Video (#experience) */}
+        <motion.div 
+          {...fade(0.05)} 
+          id="experience" 
+          className="grid md:grid-cols-[1.2fr_1fr] gap-12 items-center bg-[#273B2F] text-[#F7F1E3] rounded-3xl p-8 md:p-12 shadow-xl border border-[#F7F1E3]/10 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 opacity-5 pointer-events-none"
+            style={{ backgroundImage: "radial-gradient(circle at 10% 20%, #E08A2B 0%, transparent 40%)" }}
+          />
+          <div className="space-y-6 relative z-10">
+            <div className="inline-flex items-center gap-2 bg-[#F7F1E3]/15 backdrop-blur-md rounded-full px-4 py-1.5 text-xs font-bold text-[#E08A2B] border border-[#F7F1E3]/20 tracking-wider uppercase">
+              <Zap className="w-3.5 h-3.5" /> Watch us in action
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#F7F1E3] leading-tight">
+              Calm, Caring Rides—Every Time
+            </h2>
+            <p className="text-[#F7F1E3]/85 text-base md:text-lg leading-relaxed">
+              At Pawffeur, your pet isn't cargo—they're the passenger. We've designed a transportation experience from the ground up to keep your dog relaxed, safe, and happy during their journey.
+            </p>
+            <ul className="space-y-3 text-sm text-[#F7F1E3]/80">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-[#E08A2B] flex-shrink-0 mt-0.5" />
+                <span>Climate-controlled, custom spacious cabins for large dogs.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-[#E08A2B] flex-shrink-0 mt-0.5" />
+                <span>Stress-free, low-stimulation environment with gentle music.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-[#E08A2B] flex-shrink-0 mt-0.5" />
+                <span>Trained handlers focused entirely on pet safety and comfort.</span>
+              </li>
+            </ul>
+            <div className="pt-2">
+              <button 
+                onClick={() => scrollToId("early-access")}
+                className="bg-[#E08A2B] hover:bg-[#E08A2B]/90 text-white font-bold rounded-full px-8 py-3.5 text-sm transition-all duration-180 hover:-translate-y-0.5 shadow-md active:scale-95"
+              >
+                Request Early Access
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-center relative z-10">
+            <div className="relative w-full max-w-[320px] rounded-[36px] p-3 bg-[#1E2E25] shadow-2xl border-4 border-[#3A4E42]">
+              {/* Camera Notch Mockup */}
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-4 bg-[#1E2E25] rounded-full z-20 flex items-center justify-center">
+                <div className="w-3 h-3 bg-black rounded-full mr-2" />
+                <div className="w-1.5 h-1.5 bg-[#0F1A13] rounded-full" />
+              </div>
+              <div className="overflow-hidden rounded-[28px] bg-black aspect-[9/16] relative">
+                <video 
+                  src="/assets/pawffeur_promo.mp4" 
+                  controls 
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                  poster="/assets/pawffeur_promo_poster.jpg"
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
 
