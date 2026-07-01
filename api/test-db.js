@@ -12,10 +12,6 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Query columns of the leads table
-    const { data: columns, error: colError } = await supabase.rpc('get_table_columns', { table_name: 'leads' })
-      .catch(() => ({ data: null, error: 'RPC not available' }));
-
     // Try a test insert
     const leadData = {
       lead_ref: `TEST-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -45,8 +41,6 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: false,
-      columns,
-      colError,
       insertError: insertError ? {
         message: insertError.message,
         details: insertError.details,
