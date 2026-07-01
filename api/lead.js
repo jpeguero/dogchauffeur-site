@@ -332,6 +332,27 @@ export default async function handler(req, res) {
         const subjectPrefix = possibleDuplicate ? "[possible dup] " : "";
         const emailSubject = `${subjectPrefix}New Lead Assigned to ${assignedTo} (${leadRef})`;
 
+        // Space Preference Maps
+        const spacePrefMap = {
+          standard: "Standard compartment",
+          xl_bay: "XL pet bay",
+          cabin_floor: "Cabin floor space",
+          extra_space: "Extra space requested",
+          not_sure: "Not sure"
+        };
+        const friendlySpacePreference = spacePrefMap[vehicle_space_preference] || vehicle_space_preference || "Standard compartment";
+
+        // Temperament Maps
+        const temperamentMap = {
+          Calm: "Comfortable around other pets",
+          Excited: "Excited / Energetic",
+          Anxious: "Anxious / Nervous",
+          Fearful: "Fearful / Needs gentle handling",
+          Reactive: "Needs separation / reactive around other pets",
+          not_sure: "Not sure"
+        };
+        const friendlyTemperament = temperamentMap[temperament] || temperament || "Comfortable around other pets";
+
         const emailHtml = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #2D2D2D; background-color: #F9F7F3;">
           <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #EDF7F0; overflow: hidden; box-shadow: 0 4px 12px rgba(27,67,50,0.05);">
@@ -377,16 +398,16 @@ export default async function handler(req, res) {
               <p><strong>Weight:</strong> ${weight_lbs ? weight_lbs + ' lbs' : 'N/A'}</p>
               <p><strong>Shoulder Height:</strong> ${height_inches ? height_inches + ' in' : 'N/A'}</p>
               <p><strong>Nose-to-Tail Length:</strong> ${length_inches ? length_inches + ' in' : 'N/A'}</p>
-              <p><strong>Ramp Required:</strong> ${ramp_required ? 'YES' : 'No'}</p>
-              <p><strong>Crate Trained:</strong> ${crate_trained ? 'Yes' : 'No'}</p>
-              <p><strong>Temperament:</strong> ${temperament || 'Calm'}</p>
-              <p><strong>Space Preference:</strong> ${vehicle_space_preference || 'Standard Crate'}</p>
+              <p><strong>Ramp / Loading Support:</strong> ${ramp_required ? 'Yes' : 'No'}</p>
+              <p><strong>Crate Comfort:</strong> ${crate_trained ? 'Yes' : 'No'}</p>
+              <p><strong>Temperament:</strong> ${friendlyTemperament}</p>
+              <p><strong>Space Preference:</strong> ${friendlySpacePreference}</p>
               
               <div style="background-color: ${allocation.requiredHumanReview ? '#FFF3CD' : '#EDF7F0'}; padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid ${allocation.requiredHumanReview ? '#FFEBAA' : '#D8F3DC'};">
                 <p style="margin: 0; font-weight: bold; color: ${allocation.requiredHumanReview ? '#856404' : '#1B4332'};">
-                  Fit Review Required: ${allocation.requiredHumanReview ? '⚠️ YES (Review Required)' : '🟢 No (Standard fit)'}
+                  Fit Review Required: ${allocation.requiredHumanReview ? 'Yes' : 'No'}
                 </p>
-                ${allocation.warnings.length > 0 ? `<p style="margin: 4px 0 0; font-size: 13px; color: #856404;"><strong>Warnings:</strong> ${allocation.warnings.join(', ')}</p>` : ''}
+                ${allocation.warnings.length > 0 ? `<p style="margin: 4px 0 0; font-size: 13px; color: #856404;"><strong>Operational Review Flags:</strong> ${allocation.warnings.join(', ')}</p>` : ''}
                 ${allocation.reasonCodes.length > 0 ? `<p style="margin: 4px 0 0; font-size: 13px; color: #856404;"><strong>Routing Rejections:</strong> ${allocation.reasonCodes.join(', ')}</p>` : ''}
               </div>
 
