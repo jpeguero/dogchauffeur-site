@@ -1,0 +1,9 @@
+-- SQL Migration: Add Biometric fields to leads table
+ALTER TABLE public.leads 
+ADD COLUMN IF NOT EXISTS weight_lbs NUMERIC(5, 2),
+ADD COLUMN IF NOT EXISTS height_inches NUMERIC(4, 1),
+ADD COLUMN IF NOT EXISTS length_inches NUMERIC(4, 1),
+ADD COLUMN IF NOT EXISTS ramp_required BOOLEAN DEFAULT FALSE NOT NULL,
+ADD COLUMN IF NOT EXISTS crate_trained BOOLEAN DEFAULT TRUE NOT NULL,
+ADD COLUMN IF NOT EXISTS temperament VARCHAR(50),
+ADD COLUMN IF NOT EXISTS vehicle_space_preference VARCHAR(50);

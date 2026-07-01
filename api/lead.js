@@ -42,6 +42,14 @@ export default async function handler(req, res) {
       notes,
       consent,
       consent_text,
+      // Biometrics
+      weight_lbs,
+      height_inches,
+      length_inches,
+      ramp_required,
+      crate_trained,
+      temperament,
+      vehicle_space_preference,
       // Source tracking parameters
       partner_id,
       qr_id,
@@ -232,7 +240,15 @@ export default async function handler(req, res) {
       possible_duplicate: possibleDuplicate,
       normalized_phone: normalizedPhone,
       normalized_email: normalizedEmail || null,
-      notification_status: "pending"
+      notification_status: "pending",
+      // Biometrics
+      weight_lbs: weight_lbs ? parseFloat(weight_lbs) : null,
+      height_inches: height_inches ? parseFloat(height_inches) : null,
+      length_inches: length_inches ? parseFloat(length_inches) : null,
+      ramp_required: !!ramp_required,
+      crate_trained: crate_trained !== undefined ? !!crate_trained : true,
+      temperament: temperament || null,
+      vehicle_space_preference: vehicle_space_preference || null
     };
 
     const { data: insertedLead, error: insertError } = await supabase
@@ -324,6 +340,13 @@ export default async function handler(req, res) {
               <h3 style="color: #1B4332; border-bottom: 1px solid #EDF7F0; padding-bottom: 6px;">Pet Details</h3>
               <p><strong>Pet Name:</strong> ${pet_name || "N/A"}</p>
               <p><strong>Type:</strong> ${pet_type || "N/A"} (${pet_size || "N/A"})</p>
+              <p><strong>Weight:</strong> ${weight_lbs ? weight_lbs + ' lbs' : 'N/A'}</p>
+              <p><strong>Shoulder Height:</strong> ${height_inches ? height_inches + ' in' : 'N/A'}</p>
+              <p><strong>Nose-to-Tail Length:</strong> ${length_inches ? length_inches + ' in' : 'N/A'}</p>
+              <p><strong>Ramp Required:</strong> ${ramp_required ? 'YES' : 'No'}</p>
+              <p><strong>Crate Trained:</strong> ${crate_trained ? 'Yes' : 'No'}</p>
+              <p><strong>Temperament:</strong> ${temperament || 'Calm'}</p>
+              <p><strong>Space Preference:</strong> ${vehicle_space_preference || 'Standard Crate'}</p>
 
               <h3 style="color: #1B4332; border-bottom: 1px solid #EDF7F0; padding-bottom: 6px;">Ride Details</h3>
               <p><strong>Ride Type:</strong> ${ride_type}</p>

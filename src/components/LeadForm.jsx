@@ -58,7 +58,14 @@ export default function LeadForm() {
     how_heard: "",
     notes: "",
     consent: false,
-    consent_text: CONSENT_TEXT
+    consent_text: CONSENT_TEXT,
+    weight_lbs: "",
+    height_inches: "",
+    length_inches: "",
+    ramp_required: false,
+    crate_trained: true,
+    temperament: "Calm",
+    vehicle_space_preference: "standard"
   });
 
   // Honeypot state
@@ -93,6 +100,23 @@ export default function LeadForm() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleWeightChange = (val) => {
+    const numeric = parseFloat(val);
+    let size = "Small (<20 lbs)";
+    if (!isNaN(numeric)) {
+      if (numeric >= 50) {
+        size = "Large (50+ lbs)";
+      } else if (numeric >= 20) {
+        size = "Medium (20-50 lbs)";
+      }
+    }
+    setForm((prev) => ({ 
+      ...prev, 
+      weight_lbs: val,
+      pet_size: size
+    }));
+  };
+
   const nextStep = () => {
     setError("");
     if (step === 1) {
@@ -111,6 +135,30 @@ export default function LeadForm() {
       if (!form.consent) {
         setError("Please accept the terms and SMS consent to proceed.");
         return;
+      }
+    } else if (step === 2) {
+      if (!form.weight_lbs) {
+        setError("Please enter your pet's weight.");
+        return;
+      }
+      const weightNum = parseFloat(form.weight_lbs);
+      if (isNaN(weightNum) || weightNum <= 0) {
+        setError("Please enter a valid positive number for weight.");
+        return;
+      }
+      if (form.height_inches) {
+        const heightNum = parseFloat(form.height_inches);
+        if (isNaN(heightNum) || heightNum <= 0) {
+          setError("Please enter a valid positive height or leave it blank.");
+          return;
+        }
+      }
+      if (form.length_inches) {
+        const lengthNum = parseFloat(form.length_inches);
+        if (isNaN(lengthNum) || lengthNum <= 0) {
+          setError("Please enter a valid positive length or leave it blank.");
+          return;
+        }
       }
     } else if (step === 3) {
       if (!form.pickup_address.trim() || !form.dropoff_address.trim() || !form.preferred_date) {
@@ -313,22 +361,22 @@ export default function LeadForm() {
               className="space-y-4"
             >
               <div className="space-y-2 text-center sm:text-left mb-6">
-                <h3 className="text-2xl font-bold text-[#1B4332]">Pet Details</h3>
-                <p className="text-sm text-[#6B5B4F]">Tell us about the VIP traveler.</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="pet_name" className="text-[#1B4332] font-semibold">Pet's Name</Label>
-                <Input 
-                  id="pet_name"
-                  placeholder="e.g. Luna" 
-                  value={form.pet_name} 
-                  onChange={(e) => handleChange("pet_name", e.target.value)} 
-                  className="rounded-xl border-[#D8F3DC] focus-visible:ring-[#52B788]"
-                />
+                <h3 className="text-2xl font-bold text-[#1B4332]">Pet Details & Biometrics</h3>
+                <p className="text-sm text-[#6B5B4F]">Help us check if your pet is a perfect fit for our vehicles.</p>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pet_name" className="text-[#1B4332] font-semibold">Pet's Name</Label>
+                  <Input 
+                    id="pet_name"
+                    placeholder="e.g. Luna" 
+                    value={form.pet_name} 
+                    onChange={(e) => handleChange("pet_name", e.target.value)} 
+                    className="rounded-xl border-[#D8F3DC] focus-visible:ring-[#52B788]"
+                  />
+                </div>
+
                 <div className="space-y-1.5">
                   <Label htmlFor="pet_type" className="text-[#1B4332] font-semibold">Pet Type</Label>
                   <Select value={form.pet_type} onValueChange={(val) => handleChange("pet_type", val)}>
@@ -342,18 +390,99 @@ export default function LeadForm() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="pet_size" className="text-[#1B4332] font-semibold">Weight Category</Label>
-                  <Select value={form.pet_size} onValueChange={(val) => handleChange("pet_size", val)}>
-                    <SelectTrigger id="pet_size" className="rounded-xl border-[#D8F3DC] focus:ring-[#52B788]">
-                      <SelectValue placeholder="Small (<20 lbs)" />
+                  <Label htmlFor="weight_lbs" className="text-[#1B4332] font-semibold text-xs">Weight (lbs) *</Label>
+                  <Input 
+                    id="weight_lbs"
+                    type="number"
+                    placeholder="e.g. 45" 
+                    value={form.weight_lbs} 
+                    onChange={(e) => handleWeightChange(e.target.value)} 
+                    className="rounded-xl border-[#D8F3DC] focus-visible:ring-[#52B788]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="height_inches" className="text-[#1B4332] font-semibold text-xs">Height (in, optional)</Label>
+                  <Input 
+                    id="height_inches"
+                    type="number"
+                    placeholder="e.g. 24" 
+                    value={form.height_inches} 
+                    onChange={(e) => handleChange("height_inches", e.target.value)} 
+                    className="rounded-xl border-[#D8F3DC] focus-visible:ring-[#52B788]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="length_inches" className="text-[#1B4332] font-semibold text-xs">Length (in, optional)</Label>
+                  <Input 
+                    id="length_inches"
+                    type="number"
+                    placeholder="e.g. 30" 
+                    value={form.length_inches} 
+                    onChange={(e) => handleChange("length_inches", e.target.value)} 
+                    className="rounded-xl border-[#D8F3DC] focus-visible:ring-[#52B788]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="temperament" className="text-[#1B4332] font-semibold">Pet Temperament</Label>
+                  <Select value={form.temperament} onValueChange={(val) => handleChange("temperament", val)}>
+                    <SelectTrigger id="temperament" className="rounded-xl border-[#D8F3DC] focus:ring-[#52B788]">
+                      <SelectValue placeholder="Calm" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PET_SIZES.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
+                      <SelectItem value="Calm">Calm & Friendly 🟢</SelectItem>
+                      <SelectItem value="Excited">Energetic / Excited 🟡</SelectItem>
+                      <SelectItem value="Anxious">Anxious / Nervous 🟡</SelectItem>
+                      <SelectItem value="Fearful">Fearful 🟠</SelectItem>
+                      <SelectItem value="Reactive">Reactive / Protective 🔴</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="vehicle_space_preference" className="text-[#1B4332] font-semibold">Space Preference</Label>
+                  <Select value={form.vehicle_space_preference} onValueChange={(val) => handleChange("vehicle_space_preference", val)}>
+                    <SelectTrigger id="vehicle_space_preference" className="rounded-xl border-[#D8F3DC] focus:ring-[#52B788]">
+                      <SelectValue placeholder="Standard Crate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard Secure Crate</SelectItem>
+                      <SelectItem value="xl_bay">XL Rear Cargo Bay (Giant Breeds)</SelectItem>
+                      <SelectItem value="cabin_floor">Cabin Floor Harness (Crate-free)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-[#F9F7F3] rounded-2xl p-4 border border-[#EDE8D9]">
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id="ramp_required" 
+                    checked={form.ramp_required}
+                    onCheckedChange={(checked) => handleChange("ramp_required", !!checked)}
+                    className="border-[#D8F3DC] text-[#1B4332] focus:ring-[#52B788]"
+                  />
+                  <Label htmlFor="ramp_required" className="text-xs text-[#6B5B4F] font-semibold cursor-pointer">
+                    Requires ramp loading
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    id="crate_trained" 
+                    checked={form.crate_trained}
+                    onCheckedChange={(checked) => handleChange("crate_trained", !!checked)}
+                    className="border-[#D8F3DC] text-[#1B4332] focus:ring-[#52B788]"
+                  />
+                  <Label htmlFor="crate_trained" className="text-xs text-[#6B5B4F] font-semibold cursor-pointer">
+                    Comfortable in a crate
+                  </Label>
                 </div>
               </div>
             </motion.div>
