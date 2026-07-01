@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { allocateRoute } from "../src/utils/routeAllocator.js";
 
 export default async function handler(req, res) {
   console.log("[api/lead] Route hit");
@@ -205,6 +206,34 @@ export default async function handler(req, res) {
     const followUpDue = new Date().toISOString();
     const consentAt = new Date().toISOString();
 
+    // 5. Smart OS Fields (Routing, Priority, Estimated Value)
+    // Run allocator to check for required human review
+    const defaultVehicle = {
+      id: "default-fleet-vehicle",
+      name: "Default Route Fleet",
+      max_weight_capacity_lbs: 300,
+      cargo_length_inches: 48,
+      cargo_height_inches: 40,
+      has_ramp_equipment: true,
+      standard_bay_capacity: 3,
+      xl_bay_capacity: 2
+    };
+
+    const allocation = allocateRoute({
+      pet: {
+        weight_lbs,
+        height_inches,
+        length_inches,
+        ramp_required,
+        crate_trained,
+        temperament,
+        vehicle_space_preference,
+        pet_type
+      },
+      vehicle: defaultVehicle,
+      activePassengers: []
+    });
+
     // 6. Insert Lead into Supabase
     const leadData = {
       lead_ref: leadRef,
@@ -241,14 +270,19 @@ export default async function handler(req, res) {
       normalized_phone: normalizedPhone,
       normalized_email: normalizedEmail || null,
       notification_status: "pending",
-      // Biometrics
-      weight_lbs: weight_lbs ? parseFloat(weight_lbs) : null,
-      height_inches: height_inches ? parseFloat(height_inches) : null,
-      length_inches: length_inches ? parseFloat(length_inches) : null,
+      // Biometrics database column mappings
+      pet_weight_lbs: weight_lbs ? parseFloat(weight_lbs) : null,
+      pet_weight_range: pet_size || null,
+      pet_shoulder_height_in: height_inches ? parseFloat(height_inches) : null,
+      pet_body_length_in: length_inches ? parseFloat(length_inches) : null,
       ramp_required: !!ramp_required,
       crate_trained: crate_trained !== undefined ? !!crate_trained : true,
-      temperament: temperament || null,
-      vehicle_space_preference: vehicle_space_preference || null
+      vehicle_space_preference: vehicle_space_preference || 'standard',
+      temperament_with_pets: temperament || 'Calm',
+      separation_preference: body.separation_preference || null,
+      fit_review_required: !!allocation.requiredHumanReview,
+      fit_review_reason_codes: allocation.reasonCodes || [],
+      fit_review_warnings: allocation.warnings || []
     };
 
     const { data: insertedLead, error: insertError } = await supabase
@@ -337,7 +371,7 @@ export default async function handler(req, res) {
               <p><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></p>
               <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
 
-              <h3 style="color: #1B4332; border-bottom: 1px solid #EDF7F0; padding-bottom: 6px;">Pet Details</h3>
+              <h3 style="color: #1B4332; border-bottom: 1px solid #EDF7F0; padding-bottom: 6px;">Pet Details & Fit Review</h3>
               <p><strong>Pet Name:</strong> ${pet_name || "N/A"}</p>
               <p><strong>Type:</strong> ${pet_type || "N/A"} (${pet_size || "N/A"})</p>
               <p><strong>Weight:</strong> ${weight_lbs ? weight_lbs + ' lbs' : 'N/A'}</p>
@@ -347,6 +381,14 @@ export default async function handler(req, res) {
               <p><strong>Crate Trained:</strong> ${crate_trained ? 'Yes' : 'No'}</p>
               <p><strong>Temperament:</strong> ${temperament || 'Calm'}</p>
               <p><strong>Space Preference:</strong> ${vehicle_space_preference || 'Standard Crate'}</p>
+              
+              <div style="background-color: ${allocation.requiredHumanReview ? '#FFF3CD' : '#EDF7F0'}; padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid ${allocation.requiredHumanReview ? '#FFEBAA' : '#D8F3DC'};">
+                <p style="margin: 0; font-weight: bold; color: ${allocation.requiredHumanReview ? '#856404' : '#1B4332'};">
+                  Fit Review Required: ${allocation.requiredHumanReview ? '⚠️ YES (Review Required)' : '🟢 No (Standard fit)'}
+                </p>
+                ${allocation.warnings.length > 0 ? `<p style="margin: 4px 0 0; font-size: 13px; color: #856404;"><strong>Warnings:</strong> ${allocation.warnings.join(', ')}</p>` : ''}
+                ${allocation.reasonCodes.length > 0 ? `<p style="margin: 4px 0 0; font-size: 13px; color: #856404;"><strong>Routing Rejections:</strong> ${allocation.reasonCodes.join(', ')}</p>` : ''}
+              </div>
 
               <h3 style="color: #1B4332; border-bottom: 1px solid #EDF7F0; padding-bottom: 6px;">Ride Details</h3>
               <p><strong>Ride Type:</strong> ${ride_type}</p>
